@@ -46,28 +46,48 @@ const mockMessages: Message[] = [
   {
     id: "1",
     content: "Hey everyone! How's it going?",
-    timestamp: "10:30 AM",
+    timestamp: "2024-01-15T10:30:00",
     isSent: false,
     senderName: "John Doe",
   },
   {
     id: "2",
     content: "Great! Working on the new project",
-    timestamp: "10:32 AM",
+    timestamp: "2024-01-15T10:32:00",
     isSent: true,
   },
   {
     id: "3",
     content: "Same here, just finished the design mockups",
-    timestamp: "10:35 AM",
+    timestamp: "2024-01-15T10:35:00",
     isSent: false,
     senderName: "Jane Smith",
   },
   {
     id: "4",
     content: "Awesome! Can't wait to see them",
-    timestamp: "10:36 AM",
+    timestamp: "2024-01-15T10:36:00",
     isSent: true,
+  },
+  {
+    id: "5",
+    content: "Let's schedule a meeting for tomorrow",
+    timestamp: "2024-01-16T09:15:00",
+    isSent: false,
+    senderName: "Mike Johnson",
+  },
+  {
+    id: "6",
+    content: "Sounds good! What time works for everyone?",
+    timestamp: "2024-01-16T09:20:00",
+    isSent: true,
+  },
+  {
+    id: "7",
+    content: "How about 2 PM?",
+    timestamp: "2024-01-16T14:00:00",
+    isSent: false,
+    senderName: "Sarah Wilson",
   },
 ];
 
