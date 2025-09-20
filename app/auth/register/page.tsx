@@ -1,6 +1,6 @@
-import { PageHeader } from "../../../components/molecules/PageHeader";
-import { RegisterForm } from "../../../components/organisms/RegisterForm";
-import { RegisterIllustration } from "../../../components/organisms/RegisterIllustration";
+import { PageHeader } from "@/components/molecules/PageHeader";
+import { RegisterForm } from "@/components/organisms/RegisterForm";
+import { RegisterIllustration } from "@/components/organisms/RegisterIllustration";
 
 export default function RegisterPage() {
   return (
