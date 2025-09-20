@@ -1,4 +1,5 @@
 import { MessageBubble } from "../atoms/MessageBubble";
+import { Avatar } from "../atoms/Avatar";
 
 interface MessageItemProps {
   id: string;
@@ -19,19 +20,27 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 }) => {
   return (
     <div
-      className={`flex flex-col mb-4 ${
-        isSent ? "items-end" : "items-start"
+      className={`flex mb-4 ${
+        isSent ? "items-end justify-end" : "items-start"
       } ${className}`}
     >
-      {!isSent && senderName && (
-        <span className="text-xs text-gray-500 mb-1">{senderName}</span>
+      {!isSent && (
+        <Avatar
+          src="/avatar_default.jpg"
+          alt={senderName || "User"}
+          size="sm"
+          className="mr-2 flex-shrink-0"
+        />
       )}
-      <MessageBubble
-        variant={isSent ? "sent" : "received"}
-        timestamp={timestamp}
-      >
-        {content}
-      </MessageBubble>
+      <div className={`flex flex-col ${isSent ? "items-end" : "items-start"}`}>
+        <MessageBubble
+          variant={isSent ? "sent" : "received"}
+          timestamp={timestamp}
+          senderName={!isSent ? senderName : undefined}
+        >
+          {content}
+        </MessageBubble>
+      </div>
     </div>
   );
 };

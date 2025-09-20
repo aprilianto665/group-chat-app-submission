@@ -1,7 +1,10 @@
+import { Heading } from "./Heading";
+
 interface MessageBubbleProps {
   variant?: "sent" | "received";
   children: React.ReactNode;
   timestamp?: string;
+  senderName?: string;
   className?: string;
 }
 
@@ -9,6 +12,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   variant = "received",
   children,
   timestamp,
+  senderName,
   className = "",
 }) => {
   const variantClasses = {
@@ -29,7 +33,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           ${variantClasses[variant]}
         `}
       >
-        <div className="pr-12">{children}</div>
+        <div className="pr-12">
+          {senderName && (
+            <Heading level={6} className="text-gray-600">
+              {senderName}
+            </Heading>
+          )}
+          {children}
+        </div>
         {timestamp && (
           <div
             className={`absolute bottom-1 right-2 text-xs ${timestampClasses[variant]}`}
