@@ -1,18 +1,21 @@
-// Atoms
-export { Logo } from "./atoms/Logo";
 export { Input } from "./atoms/Input";
 export { Button } from "./atoms/Button";
 export { Checkbox } from "./atoms/Checkbox";
 export { Heading } from "./atoms/Heading";
+export { Avatar } from "./atoms/Avatar";
+export { MessageBubble } from "./atoms/MessageBubble";
 
-// Molecules
 export { FormField } from "./molecules/FormField";
-export { RememberMeCheckbox } from "./molecules/RememberMeCheckbox";
 export { PageHeader } from "./molecules/PageHeader";
+export { GroupItem } from "./molecules/GroupItem";
+export { MessageItem } from "./molecules/MessageItem";
+export { SearchInput } from "./molecules/SearchInput";
 
-// Organisms
 export { LoginForm } from "./organisms/LoginForm";
 export { LoginIllustration } from "./organisms/LoginIllustration";
 export { RegisterForm } from "./organisms/RegisterForm";
 export { RegisterIllustration } from "./organisms/RegisterIllustration";
 export { Nav } from "./organisms/Nav";
+export { GroupList } from "./organisms/GroupList";
+export { MessageList } from "./organisms/MessageList";
+export { ChatArea } from "./organisms/ChatArea";

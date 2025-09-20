@@ -1,5 +1,5 @@
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "outline" | "icon" | "send";
   size?: "sm" | "md" | "lg";
   children: React.ReactNode;
 }
@@ -20,6 +20,8 @@ export const Button: React.FC<ButtonProps> = ({
       "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500",
     outline:
       "border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
+    icon: "text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
+    send: "bg-[#4F45E4] text-white hover:bg-[#4339D1] focus:ring-[#4F45E4]",
   };
 
   const sizeClasses = {
@@ -28,12 +30,26 @@ export const Button: React.FC<ButtonProps> = ({
     lg: "px-6 py-4 text-lg",
   };
 
+  const iconSizeClasses = {
+    sm: "w-8 h-8 p-0",
+    md: "w-10 h-10 p-0",
+    lg: "w-12 h-12 p-0",
+  };
+
+  const isIconVariant = variant === "icon" || variant === "send";
+  const sizeClass = isIconVariant ? iconSizeClasses[size] : sizeClasses[size];
+
   return (
     <button
       className={`
         ${baseClasses}
         ${variantClasses[variant]}
-        ${sizeClasses[size]}
+        ${sizeClass}
+        ${
+          isIconVariant
+            ? "flex items-center justify-center rounded-full flex-shrink-0"
+            : ""
+        }
         ${className}
       `}
       {...props}
