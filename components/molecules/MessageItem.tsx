@@ -1,4 +1,3 @@
-import React from "react";
 import { MessageBubble } from "../atoms/MessageBubble";
 
 interface MessageItemProps {

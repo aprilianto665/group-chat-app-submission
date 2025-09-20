@@ -15,7 +15,7 @@ export const Nav: React.FC<NavProps> = ({ className = "" }) => {
     <div
       className={`
         bg-white border-gray-200 relative
-        w-full h-16 flex items-center justify-between px-4 border-b
+        w-full h-16 flex items-center justify-between px-4 md:px-2 border-b
         md:w-16 md:h-screen md:flex-col md:items-center md:py-6 md:border-r md:border-b-0
         ${className}
       `}
@@ -23,9 +23,9 @@ export const Nav: React.FC<NavProps> = ({ className = "" }) => {
       <Image
         src="/binder_logo.png"
         alt="Logo"
-        width={48}
-        height={48}
-        className="w-10 h-10 md:w-12 md:h-12 md:mb-8 object-contain"
+        width={40}
+        height={40}
+        className="w-10 h-10 object-contain"
       />
 
       {isHomePage && (

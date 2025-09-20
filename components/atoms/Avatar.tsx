@@ -1,4 +1,4 @@
-import React from "react";
+import Image from "next/image";
 
 interface AvatarProps {
   src?: string;
@@ -26,9 +26,11 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   if (src) {
     return (
-      <img
+      <Image
         src={src}
         alt={alt}
+        width={size === "sm" ? 32 : size === "md" ? 40 : 48}
+        height={size === "sm" ? 32 : size === "md" ? 40 : 48}
         className={`${baseClasses} ${sizeClasses[size]} ${className}`}
       />
     );

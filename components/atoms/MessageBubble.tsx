@@ -1,5 +1,3 @@
-import React from "react";
-
 interface MessageBubbleProps {
   variant?: "sent" | "received";
   children: React.ReactNode;

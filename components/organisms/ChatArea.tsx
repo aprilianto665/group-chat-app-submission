@@ -1,4 +1,3 @@
-import React from "react";
 import { MessageList } from "./MessageList";
 import { Input } from "../atoms/Input";
 import { Button } from "../atoms/Button";
