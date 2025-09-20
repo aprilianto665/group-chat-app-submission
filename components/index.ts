@@ -13,4 +13,6 @@ export { PageHeader } from "./molecules/PageHeader";
 // Organisms
 export { LoginForm } from "./organisms/LoginForm";
 export { LoginIllustration } from "./organisms/LoginIllustration";
+export { RegisterForm } from "./organisms/RegisterForm";
+export { RegisterIllustration } from "./organisms/RegisterIllustration";
 export { Nav } from "./organisms/Nav";

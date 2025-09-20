@@ -2,25 +2,33 @@ import { FormField } from "../molecules/FormField";
 import { Button } from "../atoms/Button";
 import Link from "next/link";
 
-interface LoginFormProps {
+interface RegisterFormProps {
   className?: string;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({
+  className = "",
+}) => {
   return (
     <form className={`space-y-6 ${className}`}>
+      <FormField type="text" label="Name" />
+
+      <FormField type="text" label="Username" />
+
       <FormField type="email" label="Email Address" />
 
       <FormField type="password" label="Password" />
 
+      <FormField type="password" label="Confirm Password" />
+
       <div className="text-left">
         <p className="text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
+          Already have an account?{" "}
           <Link
-            href="/auth/register"
+            href="/auth/login"
             className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
           >
-            Sign up here
+            Sign in here
           </Link>
         </p>
       </div>
@@ -32,7 +40,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
           size="md"
           className="rounded-full px-8"
         >
-          Sign in
+          Create account
         </Button>
       </div>
     </form>
