@@ -10,6 +10,8 @@ export { PageHeader } from "./molecules/PageHeader";
 export { GroupItem } from "./molecules/GroupItem";
 export { MessageItem } from "./molecules/MessageItem";
 export { SearchInput } from "./molecules/SearchInput";
+export { ChatHeader } from "./molecules/ChatHeader";
+export { ChatInput } from "./molecules/ChatInput";
 
 export { LoginForm } from "./organisms/LoginForm";
 export { LoginIllustration } from "./organisms/LoginIllustration";
