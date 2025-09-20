@@ -1,5 +1,5 @@
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "icon" | "send";
+  variant?: "primary" | "secondary" | "outline" | "icon" | "send" | "text";
   size?: "sm" | "md" | "lg";
   children: React.ReactNode;
 }
@@ -20,8 +20,9 @@ export const Button: React.FC<ButtonProps> = ({
       "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500",
     outline:
       "border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
-    icon: "text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:ring-gray-500",
+    icon: "text-gray-400 hover:text-gray-600",
     send: "bg-[#4F45E4] text-white hover:bg-[#4339D1] focus:ring-[#4F45E4]",
+    text: "text-gray-600",
   };
 
   const sizeClasses = {
@@ -45,11 +46,7 @@ export const Button: React.FC<ButtonProps> = ({
         ${baseClasses}
         ${variantClasses[variant]}
         ${sizeClass}
-        ${
-          isIconVariant
-            ? "flex items-center justify-center rounded-full flex-shrink-0"
-            : ""
-        }
+        ${isIconVariant ? "flex items-center justify-center flex-shrink-0" : ""}
         ${className}
       `}
       {...props}

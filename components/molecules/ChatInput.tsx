@@ -25,7 +25,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({ className = "" }) => {
             />
           </svg>
         </Button>
-        <Button variant="send" size="md" disabled>
+        <Button
+          variant="send"
+          size="sm"
+          className="rounded-full flex-shrink-0"
+          disabled
+        >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
           </svg>

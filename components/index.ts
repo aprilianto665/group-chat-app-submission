@@ -12,12 +12,15 @@ export { MessageItem } from "./molecules/MessageItem";
 export { SearchInput } from "./molecules/SearchInput";
 export { ChatHeader } from "./molecules/ChatHeader";
 export { ChatInput } from "./molecules/ChatInput";
+export { GroupListHeader } from "./molecules/GroupListHeader";
+export { GroupList } from "./molecules/GroupList";
+export { GroupForm } from "./molecules/GroupForm";
 
 export { LoginForm } from "./organisms/LoginForm";
 export { LoginIllustration } from "./organisms/LoginIllustration";
 export { RegisterForm } from "./organisms/RegisterForm";
 export { RegisterIllustration } from "./organisms/RegisterIllustration";
 export { Nav } from "./organisms/Nav";
-export { GroupList } from "./organisms/GroupList";
+export { GroupManager } from "./organisms/GroupManager";
 export { MessageList } from "./organisms/MessageList";
 export { ChatArea } from "./organisms/ChatArea";

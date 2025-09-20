@@ -1,4 +1,6 @@
-import { GroupList, ChatArea } from "@/components";
+"use client";
+
+import { GroupManager, ChatArea } from "@/components";
 
 interface Group {
   id: string;
@@ -92,10 +94,19 @@ const mockMessages: Message[] = [
 ];
 
 export default function Home() {
+  const handleGroupCreated = (groupName: string) => {
+    console.log("New group created:", groupName);
+    // TODO: Add the new group to the groups list
+  };
+
   return (
     <div className="flex h-full">
       <div className="w-80 flex-shrink-0">
-        <GroupList groups={mockGroups} activeGroupId="1" />
+        <GroupManager
+          groups={mockGroups}
+          activeGroupId="1"
+          onGroupCreated={handleGroupCreated}
+        />
       </div>
       <div className="flex-1">
         <ChatArea groupName="General Discussion" messages={mockMessages} />
