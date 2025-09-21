@@ -2,13 +2,13 @@ import React from "react";
 import { Heading } from "../atoms/Heading";
 import { Button } from "../atoms/Button";
 
-interface GroupListHeaderProps {
-  onCreateGroup?: () => void;
+interface SpaceListHeaderProps {
+  onCreateSpace?: () => void;
   className?: string;
 }
 
-export const GroupListHeader: React.FC<GroupListHeaderProps> = ({
-  onCreateGroup,
+export const SpaceListHeader: React.FC<SpaceListHeaderProps> = ({
+  onCreateSpace,
   className = "",
 }) => {
   return (
@@ -19,7 +19,7 @@ export const GroupListHeader: React.FC<GroupListHeaderProps> = ({
       <Button
         variant="icon"
         size="sm"
-        onClick={onCreateGroup}
+        onClick={onCreateSpace}
         className="text-[#4F45E4] hover:text-[#4339D1]"
         title="Create a space"
       >

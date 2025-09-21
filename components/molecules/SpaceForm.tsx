@@ -3,32 +3,32 @@
 import React, { useState } from "react";
 import { Button } from "../atoms/Button";
 import { Input } from "../atoms/Input";
-import { GroupListHeader } from "./GroupListHeader";
+import { SpaceListHeader } from "./SpaceListHeader";
 
-interface GroupFormProps {
+interface SpaceFormProps {
   onCancel?: () => void;
-  onSubmit?: (groupName: string) => void;
+  onSubmit?: (spaceName: string) => void;
   className?: string;
 }
 
-export const GroupForm: React.FC<GroupFormProps> = ({
+export const SpaceForm: React.FC<SpaceFormProps> = ({
   onCancel,
   onSubmit,
   className = "",
 }) => {
-  const [groupName, setGroupName] = useState("");
+  const [spaceName, setSpaceName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (groupName.trim() && onSubmit) {
-      onSubmit(groupName.trim());
-      setGroupName("");
+    if (spaceName.trim() && onSubmit) {
+      onSubmit(spaceName.trim());
+      setSpaceName("");
     }
   };
 
   const handleCancel = () => {
-    setGroupName("");
+    setSpaceName("");
     setSelectedFile(null);
     if (onCancel) {
       onCancel();
@@ -45,7 +45,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
       className={`flex flex-col h-full bg-white border-r border-gray-200 ${className}`}
     >
       <div className="p-4 border-b border-gray-200">
-        <GroupListHeader onCreateGroup={undefined} />
+        <SpaceListHeader onCreateGroup={undefined} />
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="mb-4">
             <Button
@@ -71,7 +71,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                   strokeLinejoin="round"
                 />
               </svg>
-              Group List
+              Space List
             </Button>
           </div>
           <div>
@@ -82,10 +82,10 @@ export const GroupForm: React.FC<GroupFormProps> = ({
               Name your space
             </label>
             <Input
-              id="groupName"
+              id="spaceName"
               type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
+              value={spaceName}
+              onChange={(e) => setSpaceName(e.target.value)}
               className="w-full"
               autoFocus
             />
@@ -142,7 +142,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
               variant="send"
               size="md"
               className="w-full rounded-full"
-              disabled={!groupName.trim()}
+              disabled={!spaceName.trim()}
             >
               Create Space
             </Button>

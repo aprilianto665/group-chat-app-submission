@@ -1,6 +1,6 @@
 import { Avatar } from "../atoms/Avatar";
 
-interface GroupItemProps {
+interface SpaceItemProps {
   id: string;
   name: string;
   lastMessage?: string;
@@ -9,7 +9,7 @@ interface GroupItemProps {
   className?: string;
 }
 
-export const GroupItem: React.FC<GroupItemProps> = ({
+export const SpaceItem: React.FC<SpaceItemProps> = ({
   name,
   lastMessage,
   unreadCount = 0,
