@@ -52,6 +52,7 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
 
   useEffect(() => {
     const handleProfileTrigger = () => {
+      setIsCreatingSpace(false);
       showProfile();
     };
 
