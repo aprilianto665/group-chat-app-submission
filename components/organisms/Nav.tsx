@@ -5,19 +5,14 @@ import { usePathname } from "next/navigation";
 
 interface NavProps {
   className?: string;
-  onAvatarClick?: () => void;
 }
 
-export const Nav: React.FC<NavProps> = ({ className = "", onAvatarClick }) => {
+export const Nav: React.FC<NavProps> = ({ className = "" }) => {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
 
   const handleAvatarClick = () => {
     window.dispatchEvent(new CustomEvent("profileTrigger"));
-
-    if (onAvatarClick) {
-      onAvatarClick();
-    }
   };
 
   return (

@@ -1,12 +1,8 @@
 import { MessageBubble } from "../atoms/MessageBubble";
 import { Avatar } from "../atoms/Avatar";
+import type { Message } from "@/types";
 
-interface MessageItemProps {
-  id: string;
-  content: string;
-  timestamp: string;
-  isSent?: boolean;
-  senderName?: string;
+interface MessageItemProps extends Message {
   className?: string;
 }
 

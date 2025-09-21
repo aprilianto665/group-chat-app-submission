@@ -1,6 +1,7 @@
 import { Button } from "../atoms/Button";
 import { Heading } from "../atoms/Heading";
 import { Avatar } from "../atoms/Avatar";
+import { MenuIcon } from "../atoms/Icons";
 
 interface ChatHeaderProps {
   groupName: string;
@@ -23,19 +24,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           </Heading>
         </div>
         <Button variant="icon" size="sm">
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
+          <MenuIcon />
         </Button>
       </div>
     </div>

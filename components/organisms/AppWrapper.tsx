@@ -2,29 +2,8 @@
 
 import React, { useEffect } from "react";
 import { SpaceManager, ChatArea } from "@/components";
-import { useProfileStore } from "../../stores/profileStore";
-
-interface Space {
-  id: string;
-  name: string;
-  lastMessage?: string;
-  unreadCount?: number;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  isSent?: boolean;
-  senderName?: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-  username: string;
-  avatar?: string;
-}
+import { useProfileStore } from "@/stores/profileStore";
+import type { Space, Message, User } from "@/types";
 
 const mockSpaces: Space[] = [
   {

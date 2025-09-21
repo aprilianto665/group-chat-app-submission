@@ -1,6 +1,6 @@
-import { PageHeader } from "../../../components/molecules/PageHeader";
-import { LoginForm } from "../../../components/organisms/LoginForm";
-import { LoginIllustration } from "../../../components/organisms/LoginIllustration";
+import { PageHeader } from "@/components/molecules/PageHeader";
+import { LoginForm } from "@/components/organisms/LoginForm";
+import { LoginIllustration } from "@/components/organisms/LoginIllustration";
 
 export default function LoginPage() {
   return (

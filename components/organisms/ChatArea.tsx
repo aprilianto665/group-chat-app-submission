@@ -1,14 +1,7 @@
 import { MessageList } from "./MessageList";
 import { ChatHeader } from "../molecules/ChatHeader";
 import { ChatInput } from "../molecules/ChatInput";
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  isSent?: boolean;
-  senderName?: string;
-}
+import type { Message } from "@/types";
 
 interface ChatAreaProps {
   groupName?: string;

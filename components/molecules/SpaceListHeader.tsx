@@ -1,6 +1,7 @@
 import React from "react";
 import { Heading } from "../atoms/Heading";
 import { Button } from "../atoms/Button";
+import { PlusIcon } from "../atoms/Icons";
 
 interface SpaceListHeaderProps {
   onCreateSpace?: () => void;
@@ -24,15 +25,7 @@ export const SpaceListHeader: React.FC<SpaceListHeaderProps> = ({
           className="text-[#4F45E4] hover:text-[#4339D1]"
           title="Create a space"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 5V19M5 12H19"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <PlusIcon size={20} />
         </Button>
       )}
     </div>

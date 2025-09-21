@@ -1,20 +1,5 @@
 import { create } from "zustand";
-
-interface User {
-  id: string;
-  name: string;
-  username: string;
-  avatar?: string;
-}
-
-interface ProfileState {
-  currentView: "spaces" | "profile";
-  user: User | null;
-  setCurrentView: (view: "spaces" | "profile") => void;
-  setUser: (user: User | null) => void;
-  showProfile: () => void;
-  hideProfile: () => void;
-}
+import type { User, ProfileState } from "../types";
 
 export const useProfileStore = create<ProfileState>((set) => ({
   currentView: "spaces",

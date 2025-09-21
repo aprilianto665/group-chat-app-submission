@@ -1,7 +1,6 @@
 import { Avatar } from "../atoms/Avatar";
 
 interface SpaceItemProps {
-  id: string;
   name: string;
   lastMessage?: string;
   unreadCount?: number;

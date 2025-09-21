@@ -1,12 +1,6 @@
 import React from "react";
 import { SpaceItem } from "./SpaceItem";
-
-interface Space {
-  id: string;
-  name: string;
-  lastMessage?: string;
-  unreadCount?: number;
-}
+import type { Space } from "@/types";
 
 interface SpaceListProps {
   spaces: Space[];
@@ -22,7 +16,6 @@ export const SpaceList: React.FC<SpaceListProps> = ({
       {spaces.map((space) => (
         <SpaceItem
           key={space.id}
-          id={space.id}
           name={space.name}
           lastMessage={space.lastMessage}
           unreadCount={space.unreadCount}

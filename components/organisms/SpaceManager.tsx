@@ -6,14 +6,8 @@ import { SpaceForm } from "../molecules/SpaceForm";
 import { ProfileDetail } from "../molecules/ProfileDetail";
 import { SpaceListHeader } from "../molecules/SpaceListHeader";
 import { SearchInput } from "../molecules/SearchInput";
-import { useProfileStore } from "../../stores/profileStore";
-
-interface Space {
-  id: string;
-  name: string;
-  lastMessage?: string;
-  unreadCount?: number;
-}
+import { useProfileStore } from "@/stores/profileStore";
+import type { Space } from "@/types";
 
 interface SpaceManagerProps {
   spaces: Space[];

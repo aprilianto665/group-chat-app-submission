@@ -1,12 +1,6 @@
 import { MessageItem } from "../molecules/MessageItem";
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  isSent?: boolean;
-  senderName?: string;
-}
+import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
+import type { Message } from "@/types";
 
 interface MessageListProps {
   messages: Message[];
@@ -17,50 +11,6 @@ export const MessageList: React.FC<MessageListProps> = ({
   messages,
   className = "",
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    }
-
-    if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    }
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const groupMessagesByDate = (messages: Message[]) => {
-    const grouped: { [key: string]: Message[] } = {};
-
-    messages.forEach((message) => {
-      const messageDate = new Date(message.timestamp).toDateString();
-      if (!grouped[messageDate]) {
-        grouped[messageDate] = [];
-      }
-      grouped[messageDate].push(message);
-    });
-
-    return grouped;
-  };
-
   const groupedMessages = groupMessagesByDate(messages);
   const sortedDates = Object.keys(groupedMessages).sort(
     (a, b) => new Date(a).getTime() - new Date(b).getTime()

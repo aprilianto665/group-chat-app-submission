@@ -4,6 +4,8 @@ export { Checkbox } from "./atoms/Checkbox";
 export { Heading } from "./atoms/Heading";
 export { Avatar } from "./atoms/Avatar";
 export { MessageBubble } from "./atoms/MessageBubble";
+export * from "./atoms/Icons";
+export { AuthIllustration } from "./atoms/AuthIllustration";
 
 export { FormField } from "./molecules/FormField";
 export { PageHeader } from "./molecules/PageHeader";
