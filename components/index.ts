@@ -15,6 +15,7 @@ export { ChatInput } from "./molecules/ChatInput";
 export { SpaceListHeader } from "./molecules/SpaceListHeader";
 export { SpaceList } from "./molecules/SpaceList";
 export { SpaceForm } from "./molecules/SpaceForm";
+export { ProfileDetail } from "./molecules/ProfileDetail";
 
 export { LoginForm } from "./organisms/LoginForm";
 export { LoginIllustration } from "./organisms/LoginIllustration";
@@ -24,3 +25,4 @@ export { Nav } from "./organisms/Nav";
 export { SpaceManager } from "./organisms/SpaceManager";
 export { MessageList } from "./organisms/MessageList";
 export { ChatArea } from "./organisms/ChatArea";
+export { AppWrapper } from "./organisms/AppWrapper";
