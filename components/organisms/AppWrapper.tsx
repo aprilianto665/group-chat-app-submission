@@ -9,76 +9,80 @@ const initialSpaces: SpaceWithMessages[] = [
   {
     id: "1",
     name: "General Discussion",
-    unreadCount: 3,
     messages: [
       {
         id: "1",
         content: "Hey everyone! How's it going?",
         timestamp: "2024-01-15T10:30:00",
         senderName: "John Doe",
+        isRead: false,
       },
       {
         id: "2",
         content: "Great! Working on the new project",
         timestamp: "2024-01-15T10:32:00",
         senderName: "ambatucode",
+        isRead: false,
       },
       {
         id: "3",
         content: "Same here, just finished the design mockups",
         timestamp: "2024-01-15T10:35:00",
         senderName: "Jane Smith",
+        isRead: false,
       },
     ],
   },
   {
     id: "2",
     name: "Project Alpha",
-    unreadCount: 0,
     messages: [
       {
         id: "1",
         content: "Kickoff notes updated in the doc.",
         timestamp: "2024-02-10T09:00:00",
         senderName: "PM",
+        isRead: true,
       },
       {
         id: "2",
         content: "The deadline is next week",
         timestamp: "2024-02-11T12:00:00",
         senderName: "Lead",
+        isRead: true,
       },
     ],
   },
   {
     id: "3",
     name: "Random Chat",
-    unreadCount: 1,
     messages: [
       {
         id: "1",
         content: "Did you see that movie?",
         timestamp: "2024-03-01T20:00:00",
         senderName: "Friend",
+        isRead: false,
       },
       {
         id: "2",
         content: "Not yet, is it good?",
         timestamp: "2024-03-01T20:05:00",
         senderName: "ambatucode",
+        isRead: true,
       },
     ],
   },
   {
     id: "4",
     name: "Tech Updates",
-    unreadCount: 0,
     messages: [
       {
         id: "1",
         content: "New framework released!",
         timestamp: "2024-04-05T08:00:00",
         senderName: "Bot",
+        isRead: true,
       },
     ],
   },
@@ -118,6 +122,17 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     return copy;
   }, [spaces]);
 
+  // Calculate unread count for each space
+  const spacesWithUnreadCount = useMemo(() => {
+    return sortedSpaces.map((space) => {
+      const unreadCount = space.messages.filter((msg) => !msg.isRead).length;
+      return {
+        ...space,
+        unreadCount,
+      };
+    });
+  }, [sortedSpaces]);
+
   const handleSpaceCreated = (spaceName: string) => {
     const newId = String(Date.now());
     setSpaces((prev) => [
@@ -125,7 +140,6 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
       {
         id: newId,
         name: spaceName,
-        unreadCount: 0,
         messages: [],
       },
     ]);
@@ -139,6 +153,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
       content,
       timestamp: new Date().toISOString(),
       senderName: user?.username,
+      isRead: true,
     };
     setSpaces((prev) =>
       prev.map((s) =>
@@ -152,18 +167,34 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     );
   };
 
+  const handleSelectSpace = (spaceId: string) => {
+    setActiveSpaceId(spaceId);
+    setSpaces((prev) =>
+      prev.map((s) =>
+        s.id === spaceId
+          ? {
+              ...s,
+              messages: s.messages.map((msg) => ({ ...msg, isRead: true })),
+            }
+          : s
+      )
+    );
+  };
+
   return (
     <div className="flex h-full">
       <div className="w-80 flex-shrink-0">
         <SpaceManager
-          spaces={sortedSpaces.map(({ id, name, unreadCount, messages }) => ({
-            id,
-            name,
-            unreadCount,
-            lastMessage: messages[messages.length - 1]?.content,
-          }))}
+          spaces={spacesWithUnreadCount.map(
+            ({ id, name, messages, unreadCount }) => ({
+              id,
+              name,
+              lastMessage: messages[messages.length - 1]?.content,
+              unreadCount,
+            })
+          )}
           activeSpaceId={activeSpaceId}
-          onSelectSpace={setActiveSpaceId}
+          onSelectSpace={handleSelectSpace}
           onSpaceCreated={handleSpaceCreated}
         />
       </div>

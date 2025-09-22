@@ -21,6 +21,7 @@ export interface Message {
   timestamp: string;
   isSent?: boolean;
   senderName?: string;
+  isRead?: boolean;
 }
 
 export interface ProfileState {
