@@ -81,19 +81,18 @@ const mockMessages: Message[] = [
   },
 ];
 
-const mockUser: User = {
-  id: "1",
-  name: "John Doe",
-  username: "johndoe",
-  avatar: "/avatar_default.jpg",
-};
-
-export const AppWrapper: React.FC = () => {
+export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
   const { setUser } = useProfileStore();
 
   useEffect(() => {
-    setUser(mockUser);
-  }, [setUser]);
+    setUser({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar ?? "/avatar_default.jpg",
+    });
+  }, [user, setUser]);
 
   return (
     <div className="flex h-full">

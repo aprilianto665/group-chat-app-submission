@@ -51,6 +51,7 @@ export async function registerAction(
         username,
         email,
         password: hashedPassword,
+        avatar: "/avatar_default.jpg",
       },
     });
   } catch (error) {

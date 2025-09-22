@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { User, ProfileState } from "../types";
+import type { ProfileState } from "../types";
 
 export const useProfileStore = create<ProfileState>((set) => ({
   currentView: "spaces",
