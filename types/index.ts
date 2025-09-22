@@ -12,7 +12,9 @@ export interface Space {
   id: string;
   name: string;
   lastMessage?: string;
+  lastMessageSender?: string;
   unreadCount?: number;
+  createdAt?: string;
 }
 
 export interface Message {

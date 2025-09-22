@@ -4,6 +4,7 @@ import { Avatar } from "../atoms/Avatar";
 interface SpaceItemProps {
   name: string;
   lastMessage?: string;
+  lastMessageSender?: string;
   unreadCount?: number;
   isActive?: boolean;
   className?: string;
@@ -13,6 +14,7 @@ interface SpaceItemProps {
 const SpaceItemComponent: React.FC<SpaceItemProps> = ({
   name,
   lastMessage,
+  lastMessageSender,
   unreadCount = 0,
   isActive = false,
   className = "",
@@ -51,7 +53,11 @@ const SpaceItemComponent: React.FC<SpaceItemProps> = ({
           )}
         </div>
         {lastMessage && (
-          <p className="text-xs text-gray-500 truncate mt-1">{lastMessage}</p>
+          <p className="text-xs text-gray-500 truncate mt-1">
+            {lastMessageSender
+              ? `${lastMessageSender}: ${lastMessage}`
+              : lastMessage}
+          </p>
         )}
       </div>
     </div>

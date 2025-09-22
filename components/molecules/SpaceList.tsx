@@ -26,6 +26,7 @@ const SpaceListComponent: React.FC<SpaceListProps> = ({
           key={space.id}
           name={space.name}
           lastMessage={space.lastMessage}
+          lastMessageSender={space.lastMessageSender}
           unreadCount={space.unreadCount}
           isActive={activeSpaceId === space.id}
           onClick={() => handleSelect(space.id)}

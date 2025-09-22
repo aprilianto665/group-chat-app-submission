@@ -9,6 +9,7 @@ const initialSpaces: SpaceWithMessages[] = [
   {
     id: "1",
     name: "General Discussion",
+    createdAt: "2024-01-15T10:00:00",
     messages: [
       {
         id: "1",
@@ -36,6 +37,7 @@ const initialSpaces: SpaceWithMessages[] = [
   {
     id: "2",
     name: "Project Alpha",
+    createdAt: "2024-02-10T08:50:00",
     messages: [
       {
         id: "1",
@@ -56,6 +58,7 @@ const initialSpaces: SpaceWithMessages[] = [
   {
     id: "3",
     name: "Random Chat",
+    createdAt: "2024-03-01T19:50:00",
     messages: [
       {
         id: "1",
@@ -76,6 +79,7 @@ const initialSpaces: SpaceWithMessages[] = [
   {
     id: "4",
     name: "Tech Updates",
+    createdAt: "2024-04-05T07:50:00",
     messages: [
       {
         id: "1",
@@ -116,14 +120,15 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     copy.sort((a, b) => {
       const aLast = a.messages[a.messages.length - 1]?.timestamp;
       const bLast = b.messages[b.messages.length - 1]?.timestamp;
-      const aTs = aLast ? new Date(aLast).getTime() : 0;
-      const bTs = bLast ? new Date(bLast).getTime() : 0;
+      const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const aTs = Math.max(aLast ? new Date(aLast).getTime() : 0, aCreated);
+      const bTs = Math.max(bLast ? new Date(bLast).getTime() : 0, bCreated);
       return bTs - aTs;
     });
     return copy;
   }, [spaces]);
 
-  // Calculate unread count for each space
   const spacesWithUnreadCount = useMemo(() => {
     return sortedSpaces.map((space) => {
       const unreadCount = space.messages.filter((msg) => !msg.isRead).length;
@@ -141,6 +146,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
       {
         id: newId,
         name: spaceName,
+        createdAt: new Date().toISOString(),
         messages: [],
       },
     ]);
@@ -191,6 +197,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
               id,
               name,
               lastMessage: messages[messages.length - 1]?.content,
+              lastMessageSender: messages[messages.length - 1]?.senderName,
               unreadCount,
             })
           )}
