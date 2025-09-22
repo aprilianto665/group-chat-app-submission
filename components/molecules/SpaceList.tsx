@@ -5,11 +5,13 @@ import type { Space } from "@/types";
 interface SpaceListProps {
   spaces: Space[];
   activeSpaceId?: string;
+  onSelectSpace?: (spaceId: string) => void;
 }
 
 export const SpaceList: React.FC<SpaceListProps> = ({
   spaces,
   activeSpaceId,
+  onSelectSpace,
 }) => {
   return (
     <>
@@ -20,6 +22,7 @@ export const SpaceList: React.FC<SpaceListProps> = ({
           lastMessage={space.lastMessage}
           unreadCount={space.unreadCount}
           isActive={activeSpaceId === space.id}
+          onClick={() => onSelectSpace?.(space.id)}
         />
       ))}
     </>

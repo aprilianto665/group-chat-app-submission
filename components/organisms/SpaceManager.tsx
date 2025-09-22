@@ -14,6 +14,7 @@ interface SpaceManagerProps {
   activeSpaceId?: string;
   className?: string;
   onSpaceCreated?: (spaceName: string) => void;
+  onSelectSpace?: (spaceId: string) => void;
 }
 
 export const SpaceManager: React.FC<SpaceManagerProps> = ({
@@ -21,8 +22,10 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
   activeSpaceId,
   className = "",
   onSpaceCreated,
+  onSelectSpace,
 }) => {
   const [isCreatingSpace, setIsCreatingSpace] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { currentView, user, showProfile, hideProfile } = useProfileStore();
 
   const handleCreateSpace = () => {
@@ -70,7 +73,11 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
           }
         />
         {!isCreatingSpace && currentView !== "profile" && (
-          <SearchInput placeholder="Search spaces..." />
+          <SearchInput
+            placeholder="Search spaces..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         )}
       </div>
       <div className="flex-1 overflow-y-auto">
@@ -87,7 +94,13 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
             onSubmit={handleSpaceCreated}
           />
         ) : (
-          <SpaceList spaces={spaces} activeSpaceId={activeSpaceId} />
+          <SpaceList
+            spaces={spaces.filter((s) =>
+              s.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )}
+            activeSpaceId={activeSpaceId}
+            onSelectSpace={onSelectSpace}
+          />
         )}
       </div>
     </div>

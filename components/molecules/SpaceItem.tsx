@@ -6,6 +6,7 @@ interface SpaceItemProps {
   unreadCount?: number;
   isActive?: boolean;
   className?: string;
+  onClick?: () => void;
 }
 
 export const SpaceItem: React.FC<SpaceItemProps> = ({
@@ -14,6 +15,7 @@ export const SpaceItem: React.FC<SpaceItemProps> = ({
   unreadCount = 0,
   isActive = false,
   className = "",
+  onClick,
 }) => {
   return (
     <div
@@ -22,6 +24,14 @@ export const SpaceItem: React.FC<SpaceItemProps> = ({
         ${isActive ? "bg-blue-50 border-r-2 border-blue-500" : ""}
         ${className}
       `}
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onClick?.();
+        }
+      }}
     >
       <Avatar size="md" className="mr-3">
         {name.charAt(0).toUpperCase()}
