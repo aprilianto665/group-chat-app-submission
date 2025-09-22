@@ -1,9 +1,12 @@
+"use client";
+
 import React from "react";
-import { useRouter } from "next/navigation";
+
 import { Avatar } from "../atoms/Avatar";
 import { Heading } from "../atoms/Heading";
 import { Button } from "../atoms/Button";
 import { BackArrowIcon, LogoutIcon } from "../atoms/Icons";
+import { signOut } from "next-auth/react";
 
 interface ProfileDetailProps {
   avatar?: string;
@@ -18,10 +21,8 @@ export const ProfileDetail: React.FC<ProfileDetailProps> = ({
   username,
   onBack,
 }) => {
-  const router = useRouter();
-
-  const handleLogout = () => {
-    router.push("/auth/login");
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: "/auth/login" });
   };
   return (
     <div className="p-4">
