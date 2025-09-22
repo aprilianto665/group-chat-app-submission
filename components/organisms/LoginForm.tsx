@@ -3,7 +3,8 @@
 import { FormField } from "../molecules/FormField";
 import { Button } from "../atoms/Button";
 import Link from "next/link";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { signIn } from "next-auth/react";
 import { loginAction, type LoginActionState } from "@/app/actions/login";
 import { useRouter } from "next/navigation";
@@ -18,21 +19,27 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
     loginAction,
     {}
   );
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     const doSignIn = async () => {
       if (state?.ok && state.email && state.password) {
-        const result = await signIn("credentials", {
-          redirect: false,
-          email: state.email,
-          password: state.password,
-          callbackUrl: "/",
-        });
-        if (result?.error) {
-          return;
-        }
-        if (result?.ok) {
-          router.replace(result.url ?? "/");
+        try {
+          setIsSigningIn(true);
+          const result = await signIn("credentials", {
+            redirect: false,
+            email: state.email,
+            password: state.password,
+            callbackUrl: "/",
+          });
+          if (result?.error) {
+            return;
+          }
+          if (result?.ok) {
+            router.replace(result.url ?? "/");
+          }
+        } finally {
+          setIsSigningIn(false);
         }
       }
     };
@@ -64,15 +71,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
       </div>
 
       <div className="flex justify-start">
-        <Button
-          type="submit"
-          variant="primary"
-          size="md"
-          className="rounded-full px-8"
-        >
-          Sign in
-        </Button>
+        <SubmitButton isSigningIn={isSigningIn} />
       </div>
     </form>
+  );
+};
+
+const SubmitButton: React.FC<{ isSigningIn: boolean }> = ({ isSigningIn }) => {
+  const { pending } = useFormStatus();
+  const disabled = pending || isSigningIn;
+  return (
+    <Button
+      type="submit"
+      variant="primary"
+      size="md"
+      className="rounded-full px-8"
+      disabled={disabled}
+    >
+      {disabled ? "Signing in..." : "Sign in"}
+    </Button>
   );
 };
