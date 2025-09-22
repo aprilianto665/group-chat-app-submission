@@ -31,3 +31,8 @@ export interface ProfileState {
   showProfile: () => void;
   hideProfile: () => void;
 }
+
+// Composite types
+export type SpaceWithMessages = Omit<Space, "lastMessage"> & {
+  messages: Message[];
+};

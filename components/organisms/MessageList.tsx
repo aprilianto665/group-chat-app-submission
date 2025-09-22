@@ -1,5 +1,6 @@
 import { MessageItem } from "../molecules/MessageItem";
 import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
+import { useProfileStore } from "@/stores/profileStore";
 import type { Message } from "@/types";
 
 interface MessageListProps {
@@ -11,6 +12,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   messages,
   className = "",
 }) => {
+  const { user } = useProfileStore();
   const groupedMessages = groupMessagesByDate(messages);
   const sortedDates = Object.keys(groupedMessages).sort(
     (a, b) => new Date(a).getTime() - new Date(b).getTime()
@@ -36,7 +38,11 @@ export const MessageList: React.FC<MessageListProps> = ({
                 id={message.id}
                 content={message.content}
                 timestamp={formatTime(message.timestamp)}
-                isSent={message.isSent}
+                isSent={
+                  message.senderName
+                    ? message.senderName === user?.username
+                    : !!message.isSent
+                }
                 senderName={message.senderName}
               />
             ))}

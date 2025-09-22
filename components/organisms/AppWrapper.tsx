@@ -3,102 +3,93 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { SpaceManager, ChatArea } from "@/components";
 import { useProfileStore } from "@/stores/profileStore";
-import type { Space, Message, User } from "@/types";
+import type { Message, User, SpaceWithMessages } from "@/types";
 
-const mockMessagesBySpace: Record<string, Message[]> = {
-  "1": [
-    {
-      id: "1",
-      content: "Hey everyone! How's it going?",
-      timestamp: "2024-01-15T10:30:00",
-      isSent: false,
-      senderName: "John Doe",
-    },
-    {
-      id: "2",
-      content: "Great! Working on the new project",
-      timestamp: "2024-01-15T10:32:00",
-      isSent: true,
-    },
-    {
-      id: "3",
-      content: "Same here, just finished the design mockups",
-      timestamp: "2024-01-15T10:35:00",
-      isSent: false,
-      senderName: "Jane Smith",
-    },
-  ],
-  "2": [
-    {
-      id: "1",
-      content: "Kickoff notes updated in the doc.",
-      timestamp: "2024-02-10T09:00:00",
-      isSent: false,
-      senderName: "PM",
-    },
-    {
-      id: "2",
-      content: "The deadline is next week",
-      timestamp: "2024-02-11T12:00:00",
-      isSent: false,
-      senderName: "Lead",
-    },
-  ],
-  "3": [
-    {
-      id: "1",
-      content: "Did you see that movie?",
-      timestamp: "2024-03-01T20:00:00",
-      isSent: false,
-      senderName: "Friend",
-    },
-    {
-      id: "2",
-      content: "Not yet, is it good?",
-      timestamp: "2024-03-01T20:05:00",
-      isSent: true,
-    },
-  ],
-  "4": [
-    {
-      id: "1",
-      content: "New framework released!",
-      timestamp: "2024-04-05T08:00:00",
-      isSent: false,
-      senderName: "Bot",
-    },
-  ],
-};
-
-const mockSpaceMetas: Array<
-  Pick<Space, "id" | "name"> & { unreadCount?: number }
-> = [
-  { id: "1", name: "General Discussion", unreadCount: 3 },
-  { id: "2", name: "Project Alpha", unreadCount: 0 },
-  { id: "3", name: "Random Chat", unreadCount: 1 },
-  { id: "4", name: "Tech Updates", unreadCount: 0 },
+const initialSpaces: SpaceWithMessages[] = [
+  {
+    id: "1",
+    name: "General Discussion",
+    unreadCount: 3,
+    messages: [
+      {
+        id: "1",
+        content: "Hey everyone! How's it going?",
+        timestamp: "2024-01-15T10:30:00",
+        senderName: "John Doe",
+      },
+      {
+        id: "2",
+        content: "Great! Working on the new project",
+        timestamp: "2024-01-15T10:32:00",
+        senderName: "ambatucode",
+      },
+      {
+        id: "3",
+        content: "Same here, just finished the design mockups",
+        timestamp: "2024-01-15T10:35:00",
+        senderName: "Jane Smith",
+      },
+    ],
+  },
+  {
+    id: "2",
+    name: "Project Alpha",
+    unreadCount: 0,
+    messages: [
+      {
+        id: "1",
+        content: "Kickoff notes updated in the doc.",
+        timestamp: "2024-02-10T09:00:00",
+        senderName: "PM",
+      },
+      {
+        id: "2",
+        content: "The deadline is next week",
+        timestamp: "2024-02-11T12:00:00",
+        senderName: "Lead",
+      },
+    ],
+  },
+  {
+    id: "3",
+    name: "Random Chat",
+    unreadCount: 1,
+    messages: [
+      {
+        id: "1",
+        content: "Did you see that movie?",
+        timestamp: "2024-03-01T20:00:00",
+        senderName: "Friend",
+      },
+      {
+        id: "2",
+        content: "Not yet, is it good?",
+        timestamp: "2024-03-01T20:05:00",
+        senderName: "ambatucode",
+      },
+    ],
+  },
+  {
+    id: "4",
+    name: "Tech Updates",
+    unreadCount: 0,
+    messages: [
+      {
+        id: "1",
+        content: "New framework released!",
+        timestamp: "2024-04-05T08:00:00",
+        senderName: "Bot",
+      },
+    ],
+  },
 ];
-
-// Precomputed spaces are no longer used directly; state is initialized below.
 
 export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
   const { setUser } = useProfileStore();
   const [activeSpaceId, setActiveSpaceId] = useState<string>("1");
-  const [messagesBySpace, setMessagesBySpace] = useState<
-    Record<string, Message[]>
-  >(() => mockMessagesBySpace);
-  const [spaces, setSpaces] = useState<Space[]>(() => {
-    return mockSpaceMetas.map((meta) => {
-      const messages = mockMessagesBySpace[meta.id] ?? [];
-      const last = messages[messages.length - 1];
-      return {
-        id: meta.id,
-        name: meta.name,
-        unreadCount: meta.unreadCount,
-        lastMessage: last?.content,
-      };
-    });
-  });
+  const [spaces, setSpaces] = useState<SpaceWithMessages[]>(
+    () => initialSpaces
+  );
 
   useEffect(() => {
     setUser({
@@ -115,35 +106,48 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     [activeSpaceId, spaces]
   );
 
+  const sortedSpaces = useMemo(() => {
+    const copy = [...spaces];
+    copy.sort((a, b) => {
+      const aLast = a.messages[a.messages.length - 1]?.timestamp;
+      const bLast = b.messages[b.messages.length - 1]?.timestamp;
+      const aTs = aLast ? new Date(aLast).getTime() : 0;
+      const bTs = bLast ? new Date(bLast).getTime() : 0;
+      return bTs - aTs;
+    });
+    return copy;
+  }, [spaces]);
+
   const handleSpaceCreated = (spaceName: string) => {
     const newId = String(Date.now());
-    setMessagesBySpace((prev) => ({ ...prev, [newId]: [] }));
     setSpaces((prev) => [
       ...prev,
       {
         id: newId,
         name: spaceName,
         unreadCount: 0,
-        lastMessage: undefined,
+        messages: [],
       },
     ]);
     setActiveSpaceId(newId);
   };
 
   const handleSendMessage = (content: string) => {
+    const { user } = useProfileStore.getState();
     const newMessage: Message = {
       id: String(Date.now()),
       content,
       timestamp: new Date().toISOString(),
-      isSent: true,
+      senderName: user?.username,
     };
-    setMessagesBySpace((prev) => {
-      const prevMsgs = prev[activeSpaceId] ?? [];
-      return { ...prev, [activeSpaceId]: [...prevMsgs, newMessage] };
-    });
     setSpaces((prev) =>
       prev.map((s) =>
-        s.id === activeSpaceId ? { ...s, lastMessage: content } : s
+        s.id === activeSpaceId
+          ? {
+              ...s,
+              messages: [...s.messages, newMessage],
+            }
+          : s
       )
     );
   };
@@ -152,7 +156,12 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     <div className="flex h-full">
       <div className="w-80 flex-shrink-0">
         <SpaceManager
-          spaces={spaces}
+          spaces={sortedSpaces.map(({ id, name, unreadCount, messages }) => ({
+            id,
+            name,
+            unreadCount,
+            lastMessage: messages[messages.length - 1]?.content,
+          }))}
           activeSpaceId={activeSpaceId}
           onSelectSpace={setActiveSpaceId}
           onSpaceCreated={handleSpaceCreated}
@@ -161,7 +170,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
       <div className="flex-1">
         <ChatArea
           groupName={activeSpace?.name}
-          messages={messagesBySpace[activeSpaceId] ?? []}
+          messages={activeSpace?.messages ?? []}
           onSendMessage={handleSendMessage}
         />
       </div>
