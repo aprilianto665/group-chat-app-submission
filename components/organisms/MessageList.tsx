@@ -1,3 +1,4 @@
+import React, { memo, useMemo } from "react";
 import { MessageItem } from "../molecules/MessageItem";
 import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
 import { useProfileStore } from "@/stores/profileStore";
@@ -8,14 +9,21 @@ interface MessageListProps {
   className?: string;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({
+const MessageListComponent: React.FC<MessageListProps> = ({
   messages,
   className = "",
 }) => {
   const { user } = useProfileStore();
-  const groupedMessages = groupMessagesByDate(messages);
-  const sortedDates = Object.keys(groupedMessages).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+  const groupedMessages = useMemo(
+    () => groupMessagesByDate(messages),
+    [messages]
+  );
+  const sortedDates = useMemo(
+    () =>
+      Object.keys(groupedMessages).sort(
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+      ),
+    [groupedMessages]
   );
 
   return (
@@ -52,3 +60,5 @@ export const MessageList: React.FC<MessageListProps> = ({
     </div>
   );
 };
+
+export const MessageList = memo(MessageListComponent);

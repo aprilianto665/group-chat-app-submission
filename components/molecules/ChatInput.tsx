@@ -1,3 +1,4 @@
+import React, { memo, useCallback, useMemo } from "react";
 import { Input } from "../atoms/Input";
 import { Button } from "../atoms/Button";
 import { AttachmentIcon, SendIcon } from "../atoms/Icons";
@@ -10,21 +11,27 @@ interface ChatInputProps {
   disabled?: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({
+const ChatInputComponent: React.FC<ChatInputProps> = ({
   className = "",
   value,
   onChange,
   onSend,
   disabled,
 }) => {
-  const canSend = !!value && value.trim().length > 0 && !disabled;
+  const canSend = useMemo(
+    () => !!value && value.trim().length > 0 && !disabled,
+    [value, disabled]
+  );
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (canSend) onSend?.();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (canSend) onSend?.();
+      }
+    },
+    [canSend, onSend]
+  );
 
   return (
     <div className={`p-4 border-t border-gray-200 ${className}`}>
@@ -53,3 +60,5 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     </div>
   );
 };
+
+export const ChatInput = memo(ChatInputComponent);

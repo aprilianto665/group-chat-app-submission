@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useCallback } from "react";
 import { SpaceItem } from "./SpaceItem";
 import type { Space } from "@/types";
 
@@ -8,11 +8,17 @@ interface SpaceListProps {
   onSelectSpace?: (spaceId: string) => void;
 }
 
-export const SpaceList: React.FC<SpaceListProps> = ({
+const SpaceListComponent: React.FC<SpaceListProps> = ({
   spaces,
   activeSpaceId,
   onSelectSpace,
 }) => {
+  const handleSelect = useCallback(
+    (spaceId: string) => {
+      onSelectSpace?.(spaceId);
+    },
+    [onSelectSpace]
+  );
   return (
     <>
       {spaces.map((space) => (
@@ -22,9 +28,11 @@ export const SpaceList: React.FC<SpaceListProps> = ({
           lastMessage={space.lastMessage}
           unreadCount={space.unreadCount}
           isActive={activeSpaceId === space.id}
-          onClick={() => onSelectSpace?.(space.id)}
+          onClick={() => handleSelect(space.id)}
         />
       ))}
     </>
   );
 };
+
+export const SpaceList = memo(SpaceListComponent);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { MessageList } from "./MessageList";
 import { ChatHeader } from "../molecules/ChatHeader";
 import { ChatInput } from "../molecules/ChatInput";
@@ -11,7 +11,7 @@ interface ChatAreaProps {
   onSendMessage?: (content: string) => void;
 }
 
-export const ChatArea: React.FC<ChatAreaProps> = ({
+const ChatAreaComponent: React.FC<ChatAreaProps> = ({
   groupName,
   messages,
   className = "",
@@ -19,12 +19,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 }) => {
   const [draft, setDraft] = useState("");
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const trimmed = draft.trim();
     if (!trimmed) return;
     onSendMessage?.(trimmed);
     setDraft("");
-  };
+  }, [draft, onSendMessage]);
   return (
     <div className={`flex flex-col h-full bg-white ${className}`}>
       {groupName && <ChatHeader groupName={groupName} />}
@@ -37,3 +37,5 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     </div>
   );
 };
+
+export const ChatArea = memo(ChatAreaComponent);

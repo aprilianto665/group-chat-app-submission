@@ -1,3 +1,4 @@
+import React, { memo, useCallback } from "react";
 import { Avatar } from "../atoms/Avatar";
 
 interface SpaceItemProps {
@@ -9,7 +10,7 @@ interface SpaceItemProps {
   onClick?: () => void;
 }
 
-export const SpaceItem: React.FC<SpaceItemProps> = ({
+const SpaceItemComponent: React.FC<SpaceItemProps> = ({
   name,
   lastMessage,
   unreadCount = 0,
@@ -17,6 +18,14 @@ export const SpaceItem: React.FC<SpaceItemProps> = ({
   className = "",
   onClick,
 }) => {
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        onClick?.();
+      }
+    },
+    [onClick]
+  );
   return (
     <div
       className={`
@@ -27,11 +36,7 @@ export const SpaceItem: React.FC<SpaceItemProps> = ({
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          onClick?.();
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       <Avatar size="md" className="mr-3">
         {name.charAt(0).toUpperCase()}
@@ -52,3 +57,5 @@ export const SpaceItem: React.FC<SpaceItemProps> = ({
     </div>
   );
 };
+
+export const SpaceItem = memo(SpaceItemComponent);

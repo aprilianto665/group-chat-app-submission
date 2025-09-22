@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { SpaceList } from "../molecules/SpaceList";
 import { SpaceForm } from "../molecules/SpaceForm";
 import { ProfileDetail } from "../molecules/ProfileDetail";
@@ -28,24 +28,35 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const { currentView, user, showProfile, hideProfile } = useProfileStore();
 
-  const handleCreateSpace = () => {
+  const filteredSpaces = useMemo(
+    () =>
+      spaces.filter((s) =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [spaces, searchQuery]
+  );
+
+  const handleCreateSpace = useCallback(() => {
     setIsCreatingSpace(true);
-  };
+  }, []);
 
-  const handleCancelCreate = () => {
+  const handleCancelCreate = useCallback(() => {
     setIsCreatingSpace(false);
-  };
+  }, []);
 
-  const handleSpaceCreated = (spaceName: string) => {
-    if (onSpaceCreated) {
-      onSpaceCreated(spaceName);
-    }
-    setIsCreatingSpace(false);
-  };
+  const handleSpaceCreated = useCallback(
+    (spaceName: string) => {
+      if (onSpaceCreated) {
+        onSpaceCreated(spaceName);
+      }
+      setIsCreatingSpace(false);
+    },
+    [onSpaceCreated]
+  );
 
-  const handleBackToSpaces = () => {
+  const handleBackToSpaces = useCallback(() => {
     hideProfile();
-  };
+  }, [hideProfile]);
 
   useEffect(() => {
     const handleProfileTrigger = () => {
@@ -95,9 +106,7 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
           />
         ) : (
           <SpaceList
-            spaces={spaces.filter((s) =>
-              s.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )}
+            spaces={filteredSpaces}
             activeSpaceId={activeSpaceId}
             onSelectSpace={onSelectSpace}
           />

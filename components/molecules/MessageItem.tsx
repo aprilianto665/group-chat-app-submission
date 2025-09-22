@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { MessageBubble } from "../atoms/MessageBubble";
 import { Avatar } from "../atoms/Avatar";
 import type { Message } from "@/types";
@@ -6,8 +7,7 @@ interface MessageItemProps extends Message {
   className?: string;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({
-  id,
+const MessageItemComponent: React.FC<MessageItemProps> = ({
   content,
   timestamp,
   isSent = false,
@@ -40,3 +40,5 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     </div>
   );
 };
+
+export const MessageItem = memo(MessageItemComponent);
