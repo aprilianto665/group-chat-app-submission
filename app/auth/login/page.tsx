@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/molecules/PageHeader";
 import { LoginForm } from "@/components/organisms/LoginForm";
-import { LoginIllustration } from "@/components/organisms/LoginIllustration";
+import { AuthIllustration } from "@/components/atoms/AuthIllustration";
 
 export default function LoginPage() {
   return (
@@ -18,7 +18,7 @@ export default function LoginPage() {
       </div>
 
       <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:px-8 bg-white">
-        <LoginIllustration />
+        <AuthIllustration alt="Login illustration showing data analysis dashboard" />
       </div>
     </div>
   );

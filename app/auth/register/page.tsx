@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/molecules/PageHeader";
 import { RegisterForm } from "@/components/organisms/RegisterForm";
-import { RegisterIllustration } from "@/components/organisms/RegisterIllustration";
+import { AuthIllustration } from "@/components/atoms/AuthIllustration";
 
 export default function RegisterPage() {
   return (
@@ -18,7 +18,7 @@ export default function RegisterPage() {
       </div>
 
       <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:px-8 bg-white">
-        <RegisterIllustration />
+        <AuthIllustration alt="Register illustration showing data analysis dashboard" />
       </div>
     </div>
   );

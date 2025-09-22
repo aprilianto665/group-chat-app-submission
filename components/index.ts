@@ -20,9 +20,7 @@ export { SpaceForm } from "./molecules/SpaceForm";
 export { ProfileDetail } from "./molecules/ProfileDetail";
 
 export { LoginForm } from "./organisms/LoginForm";
-export { LoginIllustration } from "./organisms/LoginIllustration";
 export { RegisterForm } from "./organisms/RegisterForm";
-export { RegisterIllustration } from "./organisms/RegisterIllustration";
 export { Nav } from "./organisms/Nav";
 export { SpaceManager } from "./organisms/SpaceManager";
 export { MessageList } from "./organisms/MessageList";
