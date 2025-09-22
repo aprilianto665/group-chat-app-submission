@@ -130,6 +130,24 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     setActiveSpaceId(newId);
   };
 
+  const handleSendMessage = (content: string) => {
+    const newMessage: Message = {
+      id: String(Date.now()),
+      content,
+      timestamp: new Date().toISOString(),
+      isSent: true,
+    };
+    setMessagesBySpace((prev) => {
+      const prevMsgs = prev[activeSpaceId] ?? [];
+      return { ...prev, [activeSpaceId]: [...prevMsgs, newMessage] };
+    });
+    setSpaces((prev) =>
+      prev.map((s) =>
+        s.id === activeSpaceId ? { ...s, lastMessage: content } : s
+      )
+    );
+  };
+
   return (
     <div className="flex h-full">
       <div className="w-80 flex-shrink-0">
@@ -144,6 +162,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
         <ChatArea
           groupName={activeSpace?.name}
           messages={messagesBySpace[activeSpaceId] ?? []}
+          onSendMessage={handleSendMessage}
         />
       </div>
     </div>
