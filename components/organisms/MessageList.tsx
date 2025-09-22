@@ -47,8 +47,8 @@ const MessageListComponent: React.FC<MessageListProps> = ({
                 content={message.content}
                 timestamp={formatTime(message.timestamp)}
                 isSent={
-                  message.senderName
-                    ? message.senderName === user?.username
+                  message.username
+                    ? message.username === user?.username
                     : !!message.isSent
                 }
                 senderName={message.senderName}

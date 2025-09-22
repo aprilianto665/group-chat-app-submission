@@ -23,6 +23,7 @@ export interface Message {
   timestamp: string;
   isSent?: boolean;
   senderName?: string;
+  username?: string;
   isRead?: boolean;
 }
 
