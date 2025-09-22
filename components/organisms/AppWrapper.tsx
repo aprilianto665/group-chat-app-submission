@@ -90,7 +90,7 @@ const initialSpaces: SpaceWithMessages[] = [
 
 export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
   const { setUser } = useProfileStore();
-  const [activeSpaceId, setActiveSpaceId] = useState<string>("1");
+  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [spaces, setSpaces] = useState<SpaceWithMessages[]>(
     () => initialSpaces
   );
@@ -106,7 +106,8 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
   }, [user, setUser]);
 
   const activeSpace = useMemo(
-    () => spaces.find((s) => s.id === activeSpaceId) ?? spaces[0],
+    () =>
+      activeSpaceId ? spaces.find((s) => s.id === activeSpaceId) : undefined,
     [activeSpaceId, spaces]
   );
 
@@ -193,17 +194,23 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
               unreadCount,
             })
           )}
-          activeSpaceId={activeSpaceId}
+          activeSpaceId={activeSpaceId ?? undefined}
           onSelectSpace={handleSelectSpace}
           onSpaceCreated={handleSpaceCreated}
         />
       </div>
       <div className="flex-1">
-        <ChatArea
-          groupName={activeSpace?.name}
-          messages={activeSpace?.messages ?? []}
-          onSendMessage={handleSendMessage}
-        />
+        {activeSpace ? (
+          <ChatArea
+            groupName={activeSpace.name}
+            messages={activeSpace.messages}
+            onSendMessage={handleSendMessage}
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center text-gray-500">
+            Select a space to start chatting
+          </div>
+        )}
       </div>
     </div>
   );
