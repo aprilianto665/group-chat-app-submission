@@ -414,13 +414,32 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
 
   const handleDeleteNote = useCallback(() => {
     if (!activeSpaceId || !activeNoteId) return;
-    setSpaces((prev) =>
-      prev.map((s) =>
+    const { user } = useProfileStore.getState();
+    const now = new Date().toISOString();
+    setSpaces((prev) => {
+      const targetSpace = prev.find((s) => s.id === activeSpaceId);
+      const deletedNote = targetSpace?.notes.find((n) => n.id === activeNoteId);
+      const safeTitle = deletedNote?.title || "Untitled";
+      const safeSender = user?.name ?? "Someone";
+      const activityMessage: Message = {
+        id: String(Date.now()),
+        content: `<strong>${safeSender}</strong> deleted a note: <strong>${safeTitle}</strong>`,
+        timestamp: now,
+        senderName: user?.name,
+        username: user?.username,
+        isRead: true,
+        type: "activity",
+      };
+      return prev.map((s) =>
         s.id === activeSpaceId
-          ? { ...s, notes: s.notes.filter((n) => n.id !== activeNoteId) }
+          ? {
+              ...s,
+              notes: s.notes.filter((n) => n.id !== activeNoteId),
+              messages: [...s.messages, activityMessage],
+            }
           : s
-      )
-    );
+      );
+    });
     setActiveNoteForSpace(activeSpaceId, undefined);
   }, [activeSpaceId, activeNoteId, setActiveNoteForSpace]);
 
