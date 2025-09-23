@@ -312,6 +312,20 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
             onSelectNote={handleSelectNote}
             onSaveNote={handleSaveNote}
             onDeleteNote={handleDeleteNote}
+            onReorderNotes={(orderedIds) => {
+              setSpaces((prev) =>
+                prev.map((s) =>
+                  s.id === activeSpace.id
+                    ? {
+                        ...s,
+                        notes: orderedIds
+                          .map((id) => s.notes.find((n) => n.id === id))
+                          .filter((n): n is Note => Boolean(n)),
+                      }
+                    : s
+                )
+              );
+            }}
           />
         ) : (
           <div className="h-full flex items-center justify-center text-gray-500">

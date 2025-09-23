@@ -10,6 +10,7 @@ interface NotesPanelProps {
   onSelectNote: (noteId: string) => void;
   onSave: (draft: { title: string; blocks: NoteBlock[] }) => void;
   onDeleteNote: () => void;
+  onReorderNotes?: (orderedIds: string[]) => void;
 }
 
 const NotesPanelComponent: React.FC<NotesPanelProps> = ({
@@ -19,6 +20,7 @@ const NotesPanelComponent: React.FC<NotesPanelProps> = ({
   onSelectNote,
   onSave,
   onDeleteNote,
+  onReorderNotes,
 }) => {
   const activeNote = notes.find((n) => n.id === activeNoteId);
 
@@ -30,6 +32,7 @@ const NotesPanelComponent: React.FC<NotesPanelProps> = ({
           activeNoteId={activeNoteId}
           onSelect={onSelectNote}
           onAdd={onAddNote}
+          onReorder={onReorderNotes}
         />
       </div>
       <div className="flex-1 p-3">

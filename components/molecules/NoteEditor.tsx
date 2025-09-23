@@ -30,6 +30,10 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import {
+  restrictToVerticalAxis,
+  restrictToParentElement,
+} from "@dnd-kit/modifiers";
 
 interface NoteEditorProps {
   note?: Note;
@@ -143,12 +147,13 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
           />
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {isEditing ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           >
             <SortableContext
               items={blockIds}

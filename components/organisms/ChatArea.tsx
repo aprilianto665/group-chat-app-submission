@@ -16,6 +16,7 @@ interface ChatAreaProps {
   onSelectNote?: (noteId: string) => void;
   onSaveNote?: (draft: { title: string; blocks: NoteBlock[] }) => void;
   onDeleteNote?: () => void;
+  onReorderNotes?: (orderedIds: string[]) => void;
 }
 
 const ChatAreaComponent: React.FC<ChatAreaProps> = ({
@@ -29,6 +30,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
   onSelectNote,
   onSaveNote,
   onDeleteNote,
+  onReorderNotes,
 }) => {
   const [draft, setDraft] = useState("");
   const [showNotes, setShowNotes] = useState(false);
@@ -64,6 +66,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
             onSelectNote={(id) => onSelectNote?.(id)}
             onSave={(draft) => onSaveNote?.(draft)}
             onDeleteNote={onDeleteNote || (() => {})}
+            onReorderNotes={(ids) => onReorderNotes?.(ids)}
           />
         </div>
       )}
