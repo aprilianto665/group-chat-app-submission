@@ -1,39 +1,52 @@
 import { Button } from "../atoms/Button";
 import { Heading } from "../atoms/Heading";
 import { Avatar } from "../atoms/Avatar";
-import { MenuIcon } from "../atoms/Icons";
+import { NoteIcon } from "../atoms/Icons";
 
 interface ChatHeaderProps {
-  groupName: string;
-  groupIcon?: string;
+  spaceName: string;
+  spaceIcon?: string;
   className?: string;
   onToggleNotes?: () => void;
+  onOpenSpaceInfo?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
-  groupName,
-  groupIcon,
+  spaceName,
+  spaceIcon,
   className = "",
   onToggleNotes,
+  onOpenSpaceInfo,
 }) => {
   return (
     <div className={`p-4 border-b border-gray-200 bg-gray-50 ${className}`}>
       <div className="flex justify-between items-center">
         <div className="flex items-center">
-          <Avatar
-            size="md"
-            className="mr-3"
-            src={groupIcon && groupIcon.length > 0 ? groupIcon : undefined}
+          <button
+            type="button"
+            className="mr-3 focus:outline-none"
+            onClick={onOpenSpaceInfo}
+            title="Space info"
           >
-            {(!groupIcon || groupIcon.length === 0) &&
-              groupName.charAt(0).toUpperCase()}
-          </Avatar>
+            <Avatar
+              size="md"
+              src={spaceIcon && spaceIcon.length > 0 ? spaceIcon : undefined}
+            >
+              {(!spaceIcon || spaceIcon.length === 0) &&
+                spaceName.charAt(0).toUpperCase()}
+            </Avatar>
+          </button>
           <Heading level={3} className="text-gray-900">
-            {groupName}
+            {spaceName}
           </Heading>
         </div>
-        <Button variant="icon" size="sm" onClick={onToggleNotes}>
-          <MenuIcon />
+        <Button
+          variant="icon"
+          size="sm"
+          onClick={onToggleNotes}
+          title="Toggle notes"
+        >
+          <NoteIcon className="w-7 h-7" />
         </Button>
       </div>
     </div>

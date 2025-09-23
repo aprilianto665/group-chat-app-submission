@@ -29,3 +29,4 @@ export { MessageList } from "./organisms/MessageList";
 export { ChatArea } from "./organisms/ChatArea";
 export { AppWrapper } from "./organisms/AppWrapper";
 export { NotesPanel } from "./organisms/NotesPanel";
+export { SpaceInfoPanel } from "./organisms/SpaceInfoPanel";

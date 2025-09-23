@@ -3,11 +3,13 @@ import { MessageList } from "./MessageList";
 import { ChatHeader } from "../molecules/ChatHeader";
 import { ChatInput } from "../molecules/ChatInput";
 import { NotesPanel } from "./NotesPanel";
+import { SpaceInfoPanel } from "./SpaceInfoPanel";
 import type { Message, Note, NoteBlock } from "@/types";
 
 interface ChatAreaProps {
-  groupName?: string;
-  groupIcon?: string;
+  spaceName?: string;
+  spaceIcon?: string;
+  spaceDescription?: string;
   messages: Message[];
   className?: string;
   onSendMessage?: (content: string) => void;
@@ -24,8 +26,9 @@ interface ChatAreaProps {
 }
 
 const ChatAreaComponent: React.FC<ChatAreaProps> = ({
-  groupName,
-  groupIcon,
+  spaceName,
+  spaceIcon,
+  spaceDescription,
   messages,
   className = "",
   onSendMessage,
@@ -42,6 +45,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
 }) => {
   const [draft, setDraft] = useState("");
   const [showNotes, setShowNotes] = useState(false);
+  const [showSpaceInfo, setShowSpaceInfo] = useState(false);
 
   const handleSend = useCallback(() => {
     const trimmed = draft.trim();
@@ -52,11 +56,21 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
   return (
     <div className="flex h-full ">
       <div className={`flex-1 flex flex-col bg-white ${className}`}>
-        {groupName && (
+        {spaceName && (
           <ChatHeader
-            groupName={groupName}
-            groupIcon={groupIcon}
-            onToggleNotes={() => setShowNotes((v) => !v)}
+            spaceName={spaceName}
+            spaceIcon={spaceIcon}
+            onToggleNotes={() => {
+              setShowNotes((v) => {
+                const next = !v;
+                if (next) setShowSpaceInfo(false);
+                return next;
+              });
+            }}
+            onOpenSpaceInfo={() => {
+              setShowSpaceInfo(true);
+              setShowNotes(false);
+            }}
           />
         )}
         <MessageList messages={messages} />
@@ -66,20 +80,33 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
           onSend={handleSend}
         />
       </div>
-      {showNotes && (
-        <div className="w-[40rem] shrink-0 h-full border-l bg-white">
-          <NotesPanel
-            notes={notes}
-            activeNoteId={activeNoteId}
-            onAddNote={() => onAddNote?.()}
-            onSelectNote={(id) => onSelectNote?.(id)}
-            onSave={(draft) => onSaveNote?.(draft)}
-            onDeleteNote={onDeleteNote || (() => {})}
-            onReorderNotes={(ids) => onReorderNotes?.(ids)}
-            draftNote={draftNote}
-            onCommitDraft={onCommitDraft}
-            onCancelDraft={onCancelDraft}
-          />
+      {(showNotes || showSpaceInfo) && (
+        <div
+          className={`${
+            showSpaceInfo ? "w-[26rem]" : "w-[40rem]"
+          } shrink-0 h-full border-l bg-white`}
+        >
+          {showSpaceInfo ? (
+            <SpaceInfoPanel
+              name={spaceName || ""}
+              icon={spaceIcon}
+              description={spaceDescription}
+              onClose={() => setShowSpaceInfo(false)}
+            />
+          ) : (
+            <NotesPanel
+              notes={notes}
+              activeNoteId={activeNoteId}
+              onAddNote={() => onAddNote?.()}
+              onSelectNote={(id) => onSelectNote?.(id)}
+              onSave={(draft) => onSaveNote?.(draft)}
+              onDeleteNote={onDeleteNote || (() => {})}
+              onReorderNotes={(ids) => onReorderNotes?.(ids)}
+              draftNote={draftNote}
+              onCommitDraft={onCommitDraft}
+              onCancelDraft={onCancelDraft}
+            />
+          )}
         </div>
       )}
     </div>

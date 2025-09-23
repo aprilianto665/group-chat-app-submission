@@ -10,6 +10,7 @@ const initialSpaces: SpaceWithNotes[] = [
     id: "1",
     name: "General Discussion",
     icon: "",
+    description: "Tempat ngobrol umum seputar tim dan update harian.",
     createdAt: "2024-01-15T10:00:00",
     members: [
       {
@@ -69,6 +70,7 @@ const initialSpaces: SpaceWithNotes[] = [
     id: "2",
     name: "Project Alpha",
     icon: "",
+    description: "Diskusi dan koordinasi untuk Project Alpha.",
     createdAt: "2024-02-10T08:50:00",
     members: [
       {
@@ -120,6 +122,7 @@ const initialSpaces: SpaceWithNotes[] = [
     id: "3",
     name: "Random Chat",
     icon: "",
+    description: "Obrolan santai dan hal-hal random.",
     createdAt: "2024-03-01T19:50:00",
     members: [
       {
@@ -159,6 +162,7 @@ const initialSpaces: SpaceWithNotes[] = [
     id: "4",
     name: "Tech Updates",
     icon: "",
+    description: "Berita dan update teknologi terbaru.",
     createdAt: "2024-04-05T07:50:00",
     members: [
       {
@@ -399,8 +403,9 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
       <div className="flex-1">
         {activeSpace ? (
           <ChatArea
-            groupName={activeSpace.name}
-            groupIcon={activeSpace.icon}
+            spaceName={activeSpace.name}
+            spaceIcon={activeSpace.icon}
+            spaceDescription={activeSpace.description}
             messages={activeSpace.messages}
             onSendMessage={handleSendMessage}
             notes={activeSpace.notes}

@@ -12,6 +12,7 @@ export interface Space {
   id: string;
   name: string;
   icon?: string; // empty string means show initials
+  description?: string;
   lastMessage?: string;
   lastMessageSender?: string;
   unreadCount?: number;
