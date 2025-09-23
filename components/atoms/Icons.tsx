@@ -58,6 +58,49 @@ export const MenuIcon: React.FC<IconProps> = ({ className = "w-8 h-8" }) => (
   </svg>
 );
 
+export const KebabIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
+  <svg
+    className={className}
+    fill="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="5" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="12" cy="19" r="2" />
+  </svg>
+);
+
+export const PencilIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M13.586 3.586a2 2 0 112.828 2.828l-9.193 9.193a2 2 0 01-.878.507l-3.297.824a.5.5 0 01-.606-.606l.824-3.297a2 2 0 01.507-.878l9.193-9.193z" />
+  </svg>
+);
+
+export const TrashIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+  </svg>
+);
+
 export const PlusIcon: React.FC<IconProps> = ({
   className = "w-5 h-5",
   size = 20,
@@ -134,5 +177,42 @@ export const LogoutIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
     />
     <polyline points="16,17 21,12 16,7" />
     <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
+
+export const DragDotsIcon: React.FC<IconProps> = ({
+  className = "w-4 h-4",
+}) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <circle cx="8" cy="6" r="1.5" />
+    <circle cx="8" cy="12" r="1.5" />
+    <circle cx="8" cy="18" r="1.5" />
+    <circle cx="14" cy="6" r="1.5" />
+    <circle cx="14" cy="12" r="1.5" />
+    <circle cx="14" cy="18" r="1.5" />
+  </svg>
+);
+
+export const TextBlockIcon: React.FC<IconProps> = ({
+  className = "w-4 h-4",
+}) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <line x1="4" y1="7" x2="14" y2="7" />
+    <line x1="4" y1="12" x2="12" y2="12" />
+    <line x1="4" y1="17" x2="10" y2="17" />
   </svg>
 );

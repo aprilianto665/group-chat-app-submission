@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { SpaceManager, ChatArea } from "@/components";
 import { useProfileStore } from "@/stores/profileStore";
-import type { Message, User, SpaceWithMessages } from "@/types";
+import type { Message, User, SpaceWithNotes, Note, NoteBlock } from "@/types";
 
-const initialSpaces: SpaceWithMessages[] = [
+const initialSpaces: SpaceWithNotes[] = [
   {
     id: "1",
     name: "General Discussion",
@@ -36,6 +36,7 @@ const initialSpaces: SpaceWithMessages[] = [
         isRead: false,
       },
     ],
+    notes: [],
   },
   {
     id: "2",
@@ -59,6 +60,7 @@ const initialSpaces: SpaceWithMessages[] = [
         isRead: true,
       },
     ],
+    notes: [],
   },
   {
     id: "3",
@@ -82,6 +84,7 @@ const initialSpaces: SpaceWithMessages[] = [
         isRead: true,
       },
     ],
+    notes: [],
   },
   {
     id: "4",
@@ -97,15 +100,17 @@ const initialSpaces: SpaceWithMessages[] = [
         isRead: true,
       },
     ],
+    notes: [],
   },
 ];
 
 export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
   const { setUser } = useProfileStore();
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
-  const [spaces, setSpaces] = useState<SpaceWithMessages[]>(
-    () => initialSpaces
-  );
+  const [spaces, setSpaces] = useState<SpaceWithNotes[]>(() => initialSpaces);
+  const [activeNoteIdBySpace, setActiveNoteIdBySpace] = useState<
+    Record<string, string | undefined>
+  >({});
 
   useEffect(() => {
     setUser({
@@ -156,6 +161,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
         name: spaceName,
         createdAt: new Date().toISOString(),
         messages: [],
+        notes: [],
       },
     ]);
     setActiveSpaceId(newId);
@@ -197,6 +203,85 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     );
   };
 
+  // Notes handlers (per space)
+  const activeNoteId = activeSpaceId
+    ? activeNoteIdBySpace[activeSpaceId]
+    : undefined;
+
+  const setActiveNoteForSpace = useCallback(
+    (spaceId: string, noteId?: string) => {
+      setActiveNoteIdBySpace((prev) => ({ ...prev, [spaceId]: noteId }));
+    },
+    []
+  );
+
+  const handleAddNote = useCallback(() => {
+    if (!activeSpaceId) return;
+    const newNoteId = `note_${Date.now()}`;
+    const now = new Date().toISOString();
+    const newNote: Note = {
+      id: newNoteId,
+      title: "Untitled",
+      blocks: [{ id: `block_${Date.now()}`, type: "text", content: "" }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    setSpaces((prev) =>
+      prev.map((s) =>
+        s.id === activeSpaceId ? { ...s, notes: [newNote, ...s.notes] } : s
+      )
+    );
+    setActiveNoteForSpace(activeSpaceId, newNoteId);
+  }, [activeSpaceId, setActiveNoteForSpace]);
+
+  const handleSelectNote = useCallback(
+    (noteId: string) => {
+      if (!activeSpaceId) return;
+      setActiveNoteForSpace(activeSpaceId, noteId);
+    },
+    [activeSpaceId, setActiveNoteForSpace]
+  );
+
+  // Save note changes only on explicit Save
+  const handleSaveNote = useCallback(
+    (draft: { title: string; blocks: NoteBlock[] }) => {
+      if (!activeSpaceId || !activeNoteId) return;
+      const now = new Date().toISOString();
+      setSpaces((prev) =>
+        prev.map((s) =>
+          s.id === activeSpaceId
+            ? {
+                ...s,
+                notes: s.notes.map((n) =>
+                  n.id === activeNoteId
+                    ? {
+                        ...n,
+                        title: draft.title,
+                        blocks: draft.blocks,
+                        updatedAt: now,
+                      }
+                    : n
+                ),
+              }
+            : s
+        )
+      );
+    },
+    [activeSpaceId, activeNoteId]
+  );
+
+  const handleDeleteNote = useCallback(() => {
+    if (!activeSpaceId || !activeNoteId) return;
+    setSpaces((prev) =>
+      prev.map((s) =>
+        s.id === activeSpaceId
+          ? { ...s, notes: s.notes.filter((n) => n.id !== activeNoteId) }
+          : s
+      )
+    );
+    setActiveNoteForSpace(activeSpaceId, undefined);
+  }, [activeSpaceId, activeNoteId, setActiveNoteForSpace]);
+
   return (
     <div className="flex h-full">
       <div className="w-80 flex-shrink-0">
@@ -221,6 +306,12 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
             groupName={activeSpace.name}
             messages={activeSpace.messages}
             onSendMessage={handleSendMessage}
+            notes={activeSpace.notes}
+            activeNoteId={activeNoteId}
+            onAddNote={handleAddNote}
+            onSelectNote={handleSelectNote}
+            onSaveNote={handleSaveNote}
+            onDeleteNote={handleDeleteNote}
           />
         ) : (
           <div className="h-full flex items-center justify-center text-gray-500">

@@ -6,11 +6,13 @@ import { MenuIcon } from "../atoms/Icons";
 interface ChatHeaderProps {
   groupName: string;
   className?: string;
+  onToggleNotes?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
   groupName,
   className = "",
+  onToggleNotes,
 }) => {
   return (
     <div className={`p-4 border-b border-gray-200 bg-gray-50 ${className}`}>
@@ -23,7 +25,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             {groupName}
           </Heading>
         </div>
-        <Button variant="icon" size="sm">
+        <Button variant="icon" size="sm" onClick={onToggleNotes}>
           <MenuIcon />
         </Button>
       </div>

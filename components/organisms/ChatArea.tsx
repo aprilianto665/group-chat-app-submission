@@ -2,13 +2,20 @@ import React, { memo, useCallback, useState } from "react";
 import { MessageList } from "./MessageList";
 import { ChatHeader } from "../molecules/ChatHeader";
 import { ChatInput } from "../molecules/ChatInput";
-import type { Message } from "@/types";
+import { NotesPanel } from "./NotesPanel";
+import type { Message, Note, NoteBlock } from "@/types";
 
 interface ChatAreaProps {
   groupName?: string;
   messages: Message[];
   className?: string;
   onSendMessage?: (content: string) => void;
+  notes?: Note[];
+  activeNoteId?: string;
+  onAddNote?: () => void;
+  onSelectNote?: (noteId: string) => void;
+  onSaveNote?: (draft: { title: string; blocks: NoteBlock[] }) => void;
+  onDeleteNote?: () => void;
 }
 
 const ChatAreaComponent: React.FC<ChatAreaProps> = ({
@@ -16,8 +23,15 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
   messages,
   className = "",
   onSendMessage,
+  notes = [],
+  activeNoteId,
+  onAddNote,
+  onSelectNote,
+  onSaveNote,
+  onDeleteNote,
 }) => {
   const [draft, setDraft] = useState("");
+  const [showNotes, setShowNotes] = useState(false);
 
   const handleSend = useCallback(() => {
     const trimmed = draft.trim();
@@ -26,14 +40,33 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
     setDraft("");
   }, [draft, onSendMessage]);
   return (
-    <div className={`flex flex-col h-full bg-white ${className}`}>
-      {groupName && <ChatHeader groupName={groupName} />}
-      <MessageList messages={messages} />
-      <ChatInput
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onSend={handleSend}
-      />
+    <div className="flex h-full ">
+      <div className={`flex-1 flex flex-col bg-white ${className}`}>
+        {groupName && (
+          <ChatHeader
+            groupName={groupName}
+            onToggleNotes={() => setShowNotes((v) => !v)}
+          />
+        )}
+        <MessageList messages={messages} />
+        <ChatInput
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onSend={handleSend}
+        />
+      </div>
+      {showNotes && (
+        <div className="w-[40rem] shrink-0 h-full border-l bg-white">
+          <NotesPanel
+            notes={notes}
+            activeNoteId={activeNoteId}
+            onAddNote={() => onAddNote?.()}
+            onSelectNote={(id) => onSelectNote?.(id)}
+            onSave={(draft) => onSaveNote?.(draft)}
+            onDeleteNote={onDeleteNote || (() => {})}
+          />
+        </div>
+      )}
     </div>
   );
 };

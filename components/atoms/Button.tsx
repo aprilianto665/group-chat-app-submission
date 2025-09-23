@@ -13,8 +13,12 @@ export const Button: React.FC<ButtonProps> = ({
   className = "",
   ...props
 }) => {
-  const baseClasses =
-    "font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const isIconVariant = variant === "icon" || variant === "send";
+  const isNoRing = isIconVariant || variant === "text";
+  const focusClasses = isNoRing
+    ? "focus:outline-none"
+    : "focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const baseClasses = `font-medium transition-all duration-200 ease-in-out ${focusClasses}`;
 
   const variantClasses = {
     primary: "bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-500",
@@ -39,7 +43,6 @@ export const Button: React.FC<ButtonProps> = ({
     lg: "w-12 h-12 p-0",
   };
 
-  const isIconVariant = variant === "icon" || variant === "send";
   const sizeClass = isIconVariant ? iconSizeClasses[size] : sizeClasses[size];
 
   return (

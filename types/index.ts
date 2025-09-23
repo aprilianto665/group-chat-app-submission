@@ -40,3 +40,22 @@ export interface ProfileState {
 export type SpaceWithMessages = Omit<Space, "lastMessage"> & {
   messages: Message[];
 };
+
+// Notes
+export interface NoteBlock {
+  id: string;
+  type: "text"; // Only text supported
+  content: string;
+}
+
+export interface Note {
+  id: string;
+  title: string;
+  blocks: NoteBlock[];
+  updatedAt: string;
+  createdAt: string;
+}
+
+export type SpaceWithNotes = SpaceWithMessages & {
+  notes: Note[];
+};

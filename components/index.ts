@@ -18,6 +18,8 @@ export { SpaceListHeader } from "./molecules/SpaceListHeader";
 export { SpaceList } from "./molecules/SpaceList";
 export { SpaceForm } from "./molecules/SpaceForm";
 export { ProfileDetail } from "./molecules/ProfileDetail";
+export { NoteList } from "./molecules/NoteList";
+export { NoteEditor } from "./molecules/NoteEditor";
 
 export { LoginForm } from "./organisms/LoginForm";
 export { RegisterForm } from "./organisms/RegisterForm";
@@ -26,3 +28,4 @@ export { SpaceManager } from "./organisms/SpaceManager";
 export { MessageList } from "./organisms/MessageList";
 export { ChatArea } from "./organisms/ChatArea";
 export { AppWrapper } from "./organisms/AppWrapper";
+export { NotesPanel } from "./organisms/NotesPanel";
