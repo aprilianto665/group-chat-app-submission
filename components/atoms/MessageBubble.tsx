@@ -30,11 +30,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     <div className={`relative ${className}`}>
       <div
         className={`
-          max-w-xs px-4 py-2 rounded-xl relative
+          max-w-xs px-4 py-2 rounded-xl relative break-words whitespace-pre-wrap
           ${variantClasses[variant]}
         `}
       >
-        <div className="pr-12">
+        <div className="pr-12 break-words whitespace-pre-wrap">
           {senderName && (
             <Heading level={6} className="text-gray-600">
               {senderName}

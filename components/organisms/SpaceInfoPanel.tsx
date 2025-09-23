@@ -2,6 +2,8 @@ import React from "react";
 import { Avatar } from "../atoms/Avatar";
 import { Heading } from "../atoms/Heading";
 import { CloseIcon } from "../atoms/Icons";
+import { Button } from "../atoms/Button";
+import { LogoutIcon } from "../atoms/Icons";
 import type { SpaceMember } from "@/types";
 
 interface SpaceInfoPanelProps {
@@ -11,6 +13,7 @@ interface SpaceInfoPanelProps {
   className?: string;
   onClose?: () => void;
   members?: SpaceMember[];
+  onLeaveSpace?: () => void;
 }
 
 const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
@@ -20,6 +23,7 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
   className = "",
   onClose,
   members = [],
+  onLeaveSpace,
 }) => {
   const mapRole = (role: string) => {
     switch (role) {
@@ -106,6 +110,17 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
             <li className="py-3 text-sm text-gray-500">No members</li>
           )}
         </ul>
+        <div className="mt-6">
+          <Button
+            variant="text"
+            size="sm"
+            className="text-red-600 flex items-center gap-2"
+            onClick={() => onLeaveSpace?.()}
+          >
+            <LogoutIcon className="w-4 h-4" />
+            Leave space
+          </Button>
+        </div>
       </div>
     </div>
   );
