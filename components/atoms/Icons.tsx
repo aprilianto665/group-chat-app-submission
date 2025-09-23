@@ -203,6 +203,21 @@ export const TextBlockIcon: React.FC<IconProps> = ({
   </svg>
 );
 
+export const HeadingIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M6 4v16M18 4v16M6 12h12" />
+  </svg>
+);
+
 export const NoteIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
   <svg
     className={className}

@@ -14,6 +14,7 @@ import {
   TrashIcon,
   DragDotsIcon,
   TextBlockIcon,
+  HeadingIcon,
 } from "../atoms/Icons";
 import {
   DndContext,
@@ -79,8 +80,6 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     }
   }, [note?.id]);
 
-  // Deprecated: input title replaced by textarea for auto-resize
-
   const handleTitleAreaChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setTitle(e.target.value);
@@ -112,10 +111,10 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     []
   );
 
-  const handleAddBlock = useCallback(() => {
+  const handleAddBlock = useCallback((type: NoteBlock["type"]) => {
     setBlocks((prev) => [
       ...prev,
-      { id: `block_${Date.now()}`, type: "text", content: "" },
+      { id: `block_${Date.now()}`, type, content: "" },
     ]);
   }, []);
 
@@ -200,7 +199,11 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                 ref={(el) => {
                   blockRefs.current[block.id] = el;
                 }}
-                className="w-full resize-none outline-none text-sm text-gray-900 placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70"
+                className={`w-full resize-none outline-none placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70 ${
+                  block.type === "heading"
+                    ? "text-base font-semibold text-gray-900"
+                    : "text-sm text-gray-900"
+                }`}
                 rows={1}
                 value={block.content}
                 onChange={(e) => handleChangeBlock(block.id, e)}
@@ -211,19 +214,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
           ))
         )}
       </div>
-      {isEditing && (
-        <div className="pt-3">
-          <Button
-            variant="text"
-            size="sm"
-            className="inline-flex items-center gap-2 text-gray-700 hover:bg-gray-50 px-2 py-1 rounded"
-            onClick={handleAddBlock}
-          >
-            <TextBlockIcon className="w-4 h-4" />
-            Text
-          </Button>
-        </div>
-      )}
+      {isEditing && <AddBlockMenu onAdd={handleAddBlock} />}
       {isEditing && (
         <button
           onClick={handleSave}
@@ -243,6 +234,49 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
             />
           </svg>
         </button>
+      )}
+    </div>
+  );
+};
+
+const AddBlockMenu: React.FC<{
+  onAdd: (type: NoteBlock["type"]) => void;
+}> = ({ onAdd }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative pt-1">
+      <Button
+        variant="text"
+        size="sm"
+        className="inline-flex items-center gap-2 text-gray-700 hover:bg-gray-50 px-2 py-1 rounded"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <TextBlockIcon className="w-4 h-4" />
+        Text
+      </Button>
+      {open && (
+        <div className="absolute left-0 bottom-full mb-1 bg-white border border-gray-200 rounded shadow-md z-30 p-1 min-w-[10rem]">
+          <button
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left"
+            onClick={() => {
+              onAdd("text");
+              setOpen(false);
+            }}
+          >
+            <TextBlockIcon className="w-4 h-4" />
+            Paragraph
+          </button>
+          <button
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left"
+            onClick={() => {
+              onAdd("heading");
+              setOpen(false);
+            }}
+          >
+            <HeadingIcon className="w-4 h-4" />
+            Heading
+          </button>
+        </div>
       )}
     </div>
   );
@@ -334,7 +368,11 @@ const SortableBlockRow: React.FC<{
         ref={(el) => {
           blockRefs.current[block.id] = el;
         }}
-        className="w-full resize-none outline-none text-sm text-gray-900 placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70"
+        className={`w-full resize-none outline-none placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70 ${
+          block.type === "heading"
+            ? "text-base font-semibold text-gray-900"
+            : "text-sm text-gray-900"
+        }`}
         rows={1}
         value={block.content}
         onChange={(e) => handleChangeBlock(block.id, e)}

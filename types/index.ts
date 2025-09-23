@@ -46,7 +46,7 @@ export type SpaceWithMessages = Omit<Space, "lastMessage"> & {
 
 export interface NoteBlock {
   id: string;
-  type: "text";
+  type: "text" | "heading";
   content: string;
 }
 
