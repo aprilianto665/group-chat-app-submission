@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo, useCallback } from "react";
 import { SpaceItem } from "./SpaceItem";
 import type { Space } from "@/types";

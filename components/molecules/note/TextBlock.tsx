@@ -1,5 +1,7 @@
+"use client";
+
 import React, { memo } from "react";
-import { AutoResizeTextarea } from "../atoms/AutoResizeTextarea";
+import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
 import type { NoteBlock } from "@/types";
 
 interface TextBlockProps {

@@ -1,7 +1,9 @@
+"use client";
+
 import React, { memo } from "react";
-import { KebabIcon, PencilIcon, TrashIcon } from "../atoms/Icons";
-import { Button } from "../atoms/Button";
-import { AutoResizeTextarea } from "../atoms/AutoResizeTextarea";
+import { KebabIcon, PencilIcon, TrashIcon } from "../../atoms/Icons";
+import { Button } from "../../atoms/Button";
+import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
 
 interface NoteHeaderProps {
   title: string;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Heading } from "./Heading";
+import { Heading } from "../Heading";
 
 interface MessageBubbleProps {
   variant?: "sent" | "received";
@@ -19,12 +19,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const variantClasses = {
     sent: "bg-blue-500 text-white ml-auto",
     received: "bg-gray-100 text-gray-900 mr-auto",
-  };
+  } as const;
 
   const timestampClasses = {
     sent: "text-blue-100",
     received: "text-gray-400",
-  };
+  } as const;
 
   return (
     <div className={`relative ${className}`}>

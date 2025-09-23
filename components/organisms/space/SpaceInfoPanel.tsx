@@ -1,9 +1,11 @@
+"use client";
+
 import React from "react";
-import { Avatar } from "../atoms/Avatar";
-import { Heading } from "../atoms/Heading";
-import { CloseIcon } from "../atoms/Icons";
-import { Button } from "../atoms/Button";
-import { LogoutIcon } from "../atoms/Icons";
+import { Avatar } from "../../atoms/Avatar";
+import { Heading } from "../../atoms/Heading";
+import { CloseIcon } from "../../atoms/Icons";
+import { Button } from "../../atoms/Button";
+import { LogoutIcon } from "../../atoms/Icons";
 import type { SpaceMember } from "@/types";
 
 interface SpaceInfoPanelProps {

@@ -1,7 +1,7 @@
 "use client";
 
-import { FormField } from "../molecules/FormField";
-import { Button } from "../atoms/Button";
+import { FormField } from "../../molecules/FormField";
+import { Button } from "../../atoms/Button";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";

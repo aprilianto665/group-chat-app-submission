@@ -1,7 +1,9 @@
+"use client";
+
 import React, { memo, useMemo } from "react";
-import { Button } from "../atoms/Button";
-import { PlusIcon } from "../atoms/Icons";
-import { Heading } from "../atoms/Heading";
+import { Button } from "../../atoms/Button";
+import { PlusIcon } from "../../atoms/Icons";
+import { Heading } from "../../atoms/Heading";
 import type { Note } from "@/types";
 import {
   DndContext,

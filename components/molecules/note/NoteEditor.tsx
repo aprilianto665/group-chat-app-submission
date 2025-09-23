@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   memo,
   useCallback,
@@ -16,7 +18,7 @@ import {
   TrashIcon,
   PlusIcon,
   ChevronDownIcon,
-} from "../atoms/Icons";
+} from "../../atoms/Icons";
 import {
   DndContext,
   DragOverlay,
@@ -237,7 +239,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                   isEditing={isEditing}
                   isDraggingAnyBlock={isDraggingAnyBlock}
                   isActive={activeBlockId === block.id}
-                  setBlockRowRef={(el) => {
+                  setBlockRowRef={(el: HTMLDivElement | null) => {
                     blockRowRefs.current[block.id] = el;
                   }}
                   openBlockMenuId={openBlockMenuId}

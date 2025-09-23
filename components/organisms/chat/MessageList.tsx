@@ -1,7 +1,9 @@
+"use client";
+
 import React, { memo, useMemo } from "react";
-import { NoteIcon } from "../atoms/Icons";
-import { MessageItem } from "../molecules/MessageItem";
-import { EmptyState } from "../atoms/EmptyState";
+import { NoteIcon } from "../../atoms/Icons";
+import { MessageItem } from "../../molecules/chat/MessageItem";
+import { EmptyState } from "../../atoms/EmptyState";
 import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
 import { useProfileStore } from "@/stores/profileStore";
 import type { Message } from "@/types";

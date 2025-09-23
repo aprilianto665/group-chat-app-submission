@@ -1,7 +1,9 @@
+"use client";
+
 import React, { memo } from "react";
 import type { Note, NoteBlock } from "@/types";
-import { NoteList } from "../molecules/NoteList";
-import { NoteEditor } from "../molecules/NoteEditor";
+import { NoteList } from "../../molecules/note/NoteList";
+import { NoteEditor } from "../../molecules/note/NoteEditor";
 
 interface NotesPanelProps {
   notes: Note[];

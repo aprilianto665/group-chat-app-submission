@@ -1,6 +1,8 @@
+"use client";
+
 import React, { memo } from "react";
-import { MessageBubble } from "../atoms/MessageBubble";
-import { Avatar } from "../atoms/Avatar";
+import { MessageBubble } from "../../atoms/chat/MessageBubble";
+import { Avatar } from "../../atoms/Avatar";
 import type { Message } from "@/types";
 
 interface MessageItemProps extends Message {

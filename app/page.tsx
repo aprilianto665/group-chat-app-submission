@@ -1,4 +1,4 @@
-import { AppWrapper } from "@/components/organisms/AppWrapper";
+import { AppWrapper } from "@/components";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 

@@ -1,7 +1,9 @@
+"use client";
+
 import React, { memo } from "react";
-import { DragDotsIcon, TrashIcon } from "../atoms/Icons";
-import { Button } from "../atoms/Button";
-import { AutoResizeTextarea } from "../atoms/AutoResizeTextarea";
+import { DragDotsIcon, TrashIcon } from "../../atoms/Icons";
+import { Button } from "../../atoms/Button";
+import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
 import type { NoteBlockItem } from "@/types";
 
 interface TodoItemProps {

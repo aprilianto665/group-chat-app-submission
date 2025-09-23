@@ -1,7 +1,9 @@
+"use client";
+
 import React, { memo, useCallback, useMemo } from "react";
-import { Input } from "../atoms/Input";
-import { Button } from "../atoms/Button";
-import { AttachmentIcon, SendIcon } from "../atoms/Icons";
+import { Input } from "../../atoms/Input";
+import { Button } from "../../atoms/Button";
+import { AttachmentIcon, SendIcon } from "../../atoms/Icons";
 
 interface ChatInputProps {
   className?: string;

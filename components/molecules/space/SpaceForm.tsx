@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { Button } from "../atoms/Button";
-import { Input } from "../atoms/Input";
-import { FormLabel } from "../atoms/FormLabel";
-import { BackArrowIcon, ImageIcon } from "../atoms/Icons";
+import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
+import { FormLabel } from "../../atoms/FormLabel";
+import { BackArrowIcon, ImageIcon } from "../../atoms/Icons";
 
 interface SpaceFormProps {
   onCancel?: () => void;

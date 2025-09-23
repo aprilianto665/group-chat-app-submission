@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { SpaceList } from "../molecules/SpaceList";
-import { SpaceForm } from "../molecules/SpaceForm";
-import { ProfileDetail } from "../molecules/ProfileDetail";
-import { SpaceListHeader } from "../molecules/SpaceListHeader";
-import { SearchInput } from "../molecules/SearchInput";
+import { SpaceList } from "../../molecules/space/SpaceList";
+import { SpaceForm } from "../../molecules/space/SpaceForm";
+import { ProfileDetail } from "../../molecules/profile/ProfileDetail";
+import { SpaceListHeader } from "../../molecules/space/SpaceListHeader";
+import { SearchInput } from "../../molecules/SearchInput";
 import { useProfileStore } from "@/stores/profileStore";
 import type { Space } from "@/types";
 

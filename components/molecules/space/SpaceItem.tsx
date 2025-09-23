@@ -1,5 +1,7 @@
+"use client";
+
 import React, { memo, useCallback } from "react";
-import { Avatar } from "../atoms/Avatar";
+import { Avatar } from "../../atoms/Avatar";
 
 interface SpaceItemProps {
   name: string;

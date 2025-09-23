@@ -1,3 +1,5 @@
+"use client";
+
 import React, { forwardRef, useCallback } from "react";
 
 interface AutoResizeTextareaProps
@@ -11,11 +13,9 @@ export const AutoResizeTextarea = forwardRef<
 >(({ className = "", onChange, ...props }, ref) => {
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      // Auto-resize functionality
       e.currentTarget.style.height = "auto";
       e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
 
-      // Call original onChange if provided
       onChange?.(e);
     },
     [onChange]

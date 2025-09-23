@@ -1,9 +1,13 @@
+"use client";
+
 import React, { memo, useCallback, useState } from "react";
-import { MessageList } from "./MessageList";
-import { ChatHeader } from "../molecules/ChatHeader";
-import { ChatInput } from "../molecules/ChatInput";
-import { NotesPanel } from "./NotesPanel";
-import { SpaceInfoPanel } from "./SpaceInfoPanel";
+import {
+  MessageList,
+  ChatHeader,
+  ChatInput,
+  NotesPanel,
+  SpaceInfoPanel,
+} from "@/components";
 import type { Message, Note, NoteBlock } from "@/types";
 
 interface ChatAreaProps {

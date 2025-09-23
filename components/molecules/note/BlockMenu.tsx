@@ -1,6 +1,8 @@
+"use client";
+
 import React, { memo } from "react";
-import { Button } from "../atoms/Button";
-import { TrashIcon } from "../atoms/Icons";
+import { Button } from "../../atoms/Button";
+import { TrashIcon } from "../../atoms/Icons";
 
 interface BlockMenuProps {
   isOpen: boolean;

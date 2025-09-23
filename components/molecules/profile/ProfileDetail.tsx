@@ -2,10 +2,10 @@
 
 import React from "react";
 
-import { Avatar } from "../atoms/Avatar";
-import { Heading } from "../atoms/Heading";
-import { Button } from "../atoms/Button";
-import { BackArrowIcon, LogoutIcon } from "../atoms/Icons";
+import { Avatar } from "../../atoms/Avatar";
+import { Heading } from "../../atoms/Heading";
+import { Button } from "../../atoms/Button";
+import { BackArrowIcon, LogoutIcon } from "../../atoms/Icons";
 import { signOut } from "next-auth/react";
 
 interface ProfileDetailProps {

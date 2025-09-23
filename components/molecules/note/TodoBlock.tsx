@@ -1,8 +1,10 @@
+"use client";
+
 import React, { memo, useState, useCallback, useMemo } from "react";
-import { ChevronDownIcon, PlusIcon } from "../atoms/Icons";
-import { Button } from "../atoms/Button";
-import { AutoResizeTextarea } from "../atoms/AutoResizeTextarea";
-import { ProgressBar } from "../atoms/ProgressBar";
+import { ChevronDownIcon, PlusIcon } from "../../atoms/Icons";
+import { Button } from "../../atoms/Button";
+import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
+import { ProgressBar } from "../../atoms/ProgressBar";
 import { TodoItem } from "./TodoItem";
 import type { NoteBlock } from "@/types";
 import {

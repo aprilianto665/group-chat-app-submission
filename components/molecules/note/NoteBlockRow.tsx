@@ -1,5 +1,7 @@
+"use client";
+
 import React, { memo, useEffect, useRef } from "react";
-import { DragDotsIcon } from "../atoms/Icons";
+import { DragDotsIcon } from "../../atoms/Icons";
 import { TodoBlock } from "./TodoBlock";
 import { TextBlock } from "./TextBlock";
 import { BlockMenu } from "./BlockMenu";

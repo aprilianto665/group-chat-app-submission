@@ -1,7 +1,7 @@
 import React from "react";
-import { Heading } from "../atoms/Heading";
-import { Button } from "../atoms/Button";
-import { PlusIcon } from "../atoms/Icons";
+import { Heading } from "../../atoms/Heading";
+import { Button } from "../../atoms/Button";
+import { PlusIcon } from "../../atoms/Icons";
 
 interface SpaceListHeaderProps {
   onCreateSpace?: () => void;

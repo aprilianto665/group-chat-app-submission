@@ -1,6 +1,8 @@
+"use client";
+
 import React, { memo, useState } from "react";
-import { Button } from "../atoms/Button";
-import { TextBlockIcon, TodoIcon, HeadingIcon } from "../atoms/Icons";
+import { Button } from "../../atoms/Button";
+import { TextBlockIcon, TodoIcon, HeadingIcon } from "../../atoms/Icons";
 import type { NoteBlock } from "@/types";
 
 interface AddBlockMenuProps {

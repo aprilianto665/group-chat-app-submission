@@ -1,7 +1,9 @@
-import { Button } from "../atoms/Button";
-import { Heading } from "../atoms/Heading";
-import { Avatar } from "../atoms/Avatar";
-import { NoteIcon } from "../atoms/Icons";
+"use client";
+
+import { Button } from "../../atoms/Button";
+import { Heading } from "../../atoms/Heading";
+import { Avatar } from "../../atoms/Avatar";
+import { NoteIcon } from "../../atoms/Icons";
 
 interface ChatHeaderProps {
   spaceName: string;
