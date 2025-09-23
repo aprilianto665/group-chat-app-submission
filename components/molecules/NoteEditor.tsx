@@ -51,6 +51,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [openBlockMenuId, setOpenBlockMenuId] = useState<string | null>(null);
   const blockRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const titleRef = useRef<HTMLTextAreaElement | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -71,14 +72,26 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
         el.style.height = `${el.scrollHeight}px`;
       }
     });
+    if (titleRef.current) {
+      autoResize(titleRef.current);
+    }
   }, [note?.id]);
 
-  const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Deprecated: input title replaced by textarea for auto-resize
+
+  const handleTitleAreaChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setTitle(e.target.value);
+      autoResize(e.currentTarget);
     },
     []
   );
+
+  useEffect(() => {
+    if (titleRef.current) {
+      autoResize(titleRef.current);
+    }
+  }, [title]);
 
   const autoResize = (el: HTMLTextAreaElement | null) => {
     if (!el) return;
@@ -132,11 +145,15 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   return (
     <div className="flex flex-col h-full relative">
       <div className="flex items-start justify-between mb-2">
-        <input
-          className="py-1 text-2xl font-bold leading-tight text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:outline-none focus:ring-0 w-full disabled:opacity-70"
+        <textarea
+          ref={titleRef}
+          className="py-1 text-2xl font-bold leading-tight text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:outline-none focus:ring-0 w-full disabled:opacity-70 resize-none overflow-hidden"
           placeholder="Untitled"
+          rows={1}
           value={title}
-          onChange={handleTitleChange}
+          onChange={
+            isEditing ? handleTitleAreaChange : (e) => setTitle(e.target.value)
+          }
           disabled={!isEditing}
         />
         <div className="ml-2 relative">
