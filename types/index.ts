@@ -25,6 +25,7 @@ export interface Message {
   senderName?: string;
   username?: string;
   isRead?: boolean;
+  type?: "text" | "activity";
 }
 
 export interface ProfileState {

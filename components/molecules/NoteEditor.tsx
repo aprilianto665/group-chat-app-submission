@@ -48,7 +48,9 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
 }) => {
   const [title, setTitle] = useState<string>(note?.title ?? "");
   const [blocks, setBlocks] = useState<NoteBlock[]>(note?.blocks ?? []);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(
+    note?.id === "draft" ? true : false
+  );
   const [openBlockMenuId, setOpenBlockMenuId] = useState<string | null>(null);
   const blockRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
@@ -61,7 +63,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   useEffect(() => {
     setTitle(note?.title ?? "");
     setBlocks(note?.blocks ?? []);
-    setIsEditing(false);
+    setIsEditing(note?.id === "draft");
     setOpenBlockMenuId(null);
   }, [note?.id, note?.title, note?.blocks]);
 
@@ -362,19 +364,20 @@ const Kebab: React.FC<{
       </Button>
       {open && (
         <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-10 p-1">
-          <Button
-            variant="text"
-            size="sm"
-            className="w-full flex items-center gap-2 justify-start text-gray-700 hover:bg-gray-50 px-2 py-2"
-            onClick={() => {
-              setOpen(false);
-              onEdit();
-            }}
-            disabled={isEditing}
-          >
-            <PencilIcon />
-            Edit note
-          </Button>
+          {!isEditing && (
+            <Button
+              variant="text"
+              size="sm"
+              className="w-full flex items-center gap-2 justify-start text-gray-700 hover:bg-gray-50 px-2 py-2"
+              onClick={() => {
+                setOpen(false);
+                onEdit();
+              }}
+            >
+              <PencilIcon />
+              Edit note
+            </Button>
+          )}
           <Button
             variant="text"
             size="sm"

@@ -1,4 +1,5 @@
 import React, { memo, useMemo } from "react";
+import { NoteIcon } from "../atoms/Icons";
 import { MessageItem } from "../molecules/MessageItem";
 import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
 import { useProfileStore } from "@/stores/profileStore";
@@ -35,25 +36,39 @@ const MessageListComponent: React.FC<MessageListProps> = ({
       ) : (
         sortedDates.map((date) => (
           <div key={date}>
-            <div className="flex items-center justify-center my-4">
-              <div className="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
-                {formatDate(date)}
-              </div>
+            <div className="flex items-center gap-3 my-4 px-2 select-none">
+              <div className="flex-1 h-px bg-gray-300/60 rounded-full" />
+              <div className="text-gray-600 text-xs">{formatDate(date)}</div>
+              <div className="flex-1 h-px bg-gray-300/60 rounded-full" />
             </div>
-            {groupedMessages[date].map((message) => (
-              <MessageItem
-                key={message.id}
-                id={message.id}
-                content={message.content}
-                timestamp={formatTime(message.timestamp)}
-                isSent={
-                  message.username
-                    ? message.username === user?.username
-                    : !!message.isSent
-                }
-                senderName={message.senderName}
-              />
-            ))}
+            {groupedMessages[date].map((message) =>
+              message.type === "activity" ? (
+                <div
+                  key={message.id}
+                  className="flex items-center justify-center my-2"
+                >
+                  <div className="flex items-center gap-1.5 bg-[#efeaff] text-[#6b61c4] text-xs px-2.5 py-1 rounded-full shadow-sm">
+                    <NoteIcon className="w-4 h-4" />
+                    <span
+                      dangerouslySetInnerHTML={{ __html: message.content }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <MessageItem
+                  key={message.id}
+                  id={message.id}
+                  content={message.content}
+                  timestamp={formatTime(message.timestamp)}
+                  isSent={
+                    message.username
+                      ? message.username === user?.username
+                      : !!message.isSent
+                  }
+                  senderName={message.senderName}
+                />
+              )
+            )}
           </div>
         ))
       )}

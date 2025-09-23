@@ -111,6 +111,9 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
   const [activeNoteIdBySpace, setActiveNoteIdBySpace] = useState<
     Record<string, string | undefined>
   >({});
+  const [creatingDraftBySpace, setCreatingDraftBySpace] = useState<
+    Record<string, { title: string; blocks: NoteBlock[] } | undefined>
+  >({});
 
   useEffect(() => {
     setUser({
@@ -217,22 +220,15 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
 
   const handleAddNote = useCallback(() => {
     if (!activeSpaceId) return;
-    const newNoteId = `note_${Date.now()}`;
-    const now = new Date().toISOString();
-    const newNote: Note = {
-      id: newNoteId,
-      title: "Untitled",
-      blocks: [{ id: `block_${Date.now()}`, type: "text", content: "" }],
-      createdAt: now,
-      updatedAt: now,
-    };
-    setSpaces((prev) =>
-      prev.map((s) =>
-        s.id === activeSpaceId ? { ...s, notes: [newNote, ...s.notes] } : s
-      )
-    );
-    setActiveNoteForSpace(activeSpaceId, newNoteId);
-  }, [activeSpaceId, setActiveNoteForSpace]);
+    // Start draft mode instead of creating immediately
+    setCreatingDraftBySpace((prev) => ({
+      ...prev,
+      [activeSpaceId]: {
+        title: "Untitled",
+        blocks: [{ id: `block_${Date.now()}`, type: "text", content: "" }],
+      },
+    }));
+  }, [activeSpaceId]);
 
   const handleSelectNote = useCallback(
     (noteId: string) => {
@@ -247,6 +243,18 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     (draft: { title: string; blocks: NoteBlock[] }) => {
       if (!activeSpaceId || !activeNoteId) return;
       const now = new Date().toISOString();
+      const { user } = useProfileStore.getState();
+      const safeTitle = draft.title || "Untitled";
+      const safeSender = user?.name ?? "Someone";
+      const activityMessage: Message = {
+        id: String(Date.now()),
+        content: `<strong>${safeSender}</strong> just edited a note: <strong>${safeTitle}</strong>`,
+        timestamp: now,
+        senderName: user?.name,
+        username: user?.username,
+        isRead: true,
+        type: "activity",
+      };
       setSpaces((prev) =>
         prev.map((s) =>
           s.id === activeSpaceId
@@ -262,6 +270,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
                       }
                     : n
                 ),
+                messages: [...s.messages, activityMessage],
               }
             : s
         )
@@ -290,8 +299,12 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
             ({ id, name, messages, unreadCount }) => ({
               id,
               name,
-              lastMessage: messages[messages.length - 1]?.content,
-              lastMessageSender: messages[messages.length - 1]?.senderName,
+              lastMessage: [...messages]
+                .reverse()
+                .find((m) => m.type !== "activity")?.content,
+              lastMessageSender: [...messages]
+                .reverse()
+                .find((m) => m.type !== "activity")?.senderName,
               unreadCount,
             })
           )}
@@ -325,6 +338,52 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
                     : s
                 )
               );
+            }}
+            draftNote={creatingDraftBySpace[activeSpace.id]}
+            onCommitDraft={(draft) => {
+              const newNoteId = `note_${Date.now()}`;
+              const now = new Date().toISOString();
+              const newNote: Note = {
+                id: newNoteId,
+                title: draft.title,
+                blocks: draft.blocks,
+                createdAt: now,
+                updatedAt: now,
+              };
+              const { user } = useProfileStore.getState();
+              const safeTitle = draft.title || "Untitled";
+              const safeSender = user?.name ?? "Someone";
+              const activityMessage: Message = {
+                id: String(Date.now()),
+                content: `<strong>${safeSender}</strong> just added a new note: <strong>${safeTitle}</strong>`,
+                timestamp: now,
+                senderName: user?.name,
+                username: user?.username,
+                isRead: true,
+                type: "activity",
+              };
+              setSpaces((prev) =>
+                prev.map((s) =>
+                  s.id === activeSpace.id
+                    ? {
+                        ...s,
+                        notes: [newNote, ...s.notes],
+                        messages: [...s.messages, activityMessage],
+                      }
+                    : s
+                )
+              );
+              setActiveNoteForSpace(activeSpace.id, newNoteId);
+              setCreatingDraftBySpace((prev) => ({
+                ...prev,
+                [activeSpace.id]: undefined,
+              }));
+            }}
+            onCancelDraft={() => {
+              setCreatingDraftBySpace((prev) => ({
+                ...prev,
+                [activeSpace!.id]: undefined,
+              }));
             }}
           />
         ) : (
