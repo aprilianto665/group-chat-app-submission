@@ -42,8 +42,6 @@ export const SearchIcon: React.FC<IconProps> = ({ className = "h-4 w-4" }) => (
   </svg>
 );
 
-// MenuIcon removed; using NoteIcon in ChatHeader
-
 export const KebabIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
   <svg
     className={className}
@@ -218,6 +216,25 @@ export const HeadingIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
+export const TodoIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="4" width="6" height="6" rx="1" />
+    <path d="M4.5 7l1.5 1.5L7.5 6" />
+    <line x1="11" y1="7" x2="21" y2="7" />
+    <line x1="3" y1="14" x2="21" y2="14" />
+    <line x1="3" y1="18" x2="16" y2="18" />
+  </svg>
+);
+
 export const NoteIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
   <svg
     className={className}
@@ -249,5 +266,22 @@ export const CloseIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => (
   >
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+export const ChevronDownIcon: React.FC<IconProps> = ({
+  className = "w-5 h-5",
+}) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polyline points="6 9 12 15 18 9" />
   </svg>
 );

@@ -44,10 +44,20 @@ export type SpaceWithMessages = Omit<Space, "lastMessage"> & {
   messages: Message[];
 };
 
+export interface NoteBlockItem {
+  id: string;
+  text: string;
+  done: boolean;
+  description?: string;
+}
+
 export interface NoteBlock {
   id: string;
-  type: "text" | "heading";
+  type: "text" | "heading" | "todo";
   content: string;
+  todoTitle?: string;
+  items?: NoteBlockItem[];
+  collapsed?: boolean;
 }
 
 export interface Note {
