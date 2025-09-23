@@ -11,7 +11,7 @@ export interface User {
 export interface Space {
   id: string;
   name: string;
-  icon?: string; // empty string means show initials
+  icon?: string;
   description?: string;
   lastMessage?: string;
   lastMessageSender?: string;
@@ -40,15 +40,13 @@ export interface ProfileState {
   hideProfile: () => void;
 }
 
-// Composite types
 export type SpaceWithMessages = Omit<Space, "lastMessage"> & {
   messages: Message[];
 };
 
-// Notes
 export interface NoteBlock {
   id: string;
-  type: "text"; // Only text supported
+  type: "text";
   content: string;
 }
 
@@ -64,8 +62,7 @@ export type SpaceWithNotes = SpaceWithMessages & {
   notes: Note[];
 };
 
-// Members & Roles
-export type Role = "OWNER" | "ADMIN" | "MEMBER";
+export type Role = "ADMIN" | "MEMBER";
 
 export interface SpaceMemberUser {
   id: string;

@@ -10,6 +10,7 @@ interface ChatAreaProps {
   spaceName?: string;
   spaceIcon?: string;
   spaceDescription?: string;
+  spaceMembers?: import("@/types").SpaceMember[];
   messages: Message[];
   className?: string;
   onSendMessage?: (content: string) => void;
@@ -29,6 +30,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
   spaceName,
   spaceIcon,
   spaceDescription,
+  spaceMembers,
   messages,
   className = "",
   onSendMessage,
@@ -91,6 +93,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
               name={spaceName || ""}
               icon={spaceIcon}
               description={spaceDescription}
+              members={spaceMembers}
               onClose={() => setShowSpaceInfo(false)}
             />
           ) : (

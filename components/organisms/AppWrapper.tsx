@@ -15,7 +15,7 @@ const initialSpaces: SpaceWithNotes[] = [
     members: [
       {
         id: "m1",
-        role: "OWNER",
+        role: "ADMIN",
         user: {
           id: "u1",
           name: "John Doe",
@@ -37,6 +37,18 @@ const initialSpaces: SpaceWithNotes[] = [
         },
         joinedAt: "2024-01-12T10:00:00",
       },
+      {
+        id: "m7",
+        role: "MEMBER",
+        user: {
+          id: "u7",
+          name: "amb4tron",
+          username: "ambatucode",
+          email: "ambatucode@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-01-13T10:00:00",
+      },
     ],
     messages: [
       {
@@ -51,7 +63,7 @@ const initialSpaces: SpaceWithNotes[] = [
         id: "2",
         content: "Great! Working on the new project",
         timestamp: "2024-01-15T10:32:00",
-        senderName: "ambatucode",
+        senderName: "amb4tron",
         username: "ambatucode",
         isRead: false,
       },
@@ -97,6 +109,18 @@ const initialSpaces: SpaceWithNotes[] = [
         },
         joinedAt: "2024-02-02T08:50:00",
       },
+      {
+        id: "m8",
+        role: "ADMIN",
+        user: {
+          id: "u7",
+          name: "amb4tron",
+          username: "ambatucode",
+          email: "ambatucode@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-02-03T08:50:00",
+      },
     ],
     messages: [
       {
@@ -127,7 +151,7 @@ const initialSpaces: SpaceWithNotes[] = [
     members: [
       {
         id: "m5",
-        role: "OWNER",
+        role: "MEMBER",
         user: {
           id: "u5",
           name: "Friend",
@@ -136,6 +160,18 @@ const initialSpaces: SpaceWithNotes[] = [
           avatar: "/avatar_default.jpg",
         },
         joinedAt: "2024-03-01T19:00:00",
+      },
+      {
+        id: "m9",
+        role: "ADMIN",
+        user: {
+          id: "u7",
+          name: "amb4tron",
+          username: "ambatucode",
+          email: "ambatucode@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-03-01T19:10:00",
       },
     ],
     messages: [
@@ -152,7 +188,7 @@ const initialSpaces: SpaceWithNotes[] = [
         content: "Not yet, is it good?",
         timestamp: "2024-03-01T20:05:00",
         senderName: "amb4tron",
-        username: "ambatucode",
+        username: "amb4tron",
         isRead: true,
       },
     ],
@@ -176,6 +212,18 @@ const initialSpaces: SpaceWithNotes[] = [
           avatar: "/avatar_default.jpg",
         },
         joinedAt: "2024-04-01T07:50:00",
+      },
+      {
+        id: "m10",
+        role: "MEMBER",
+        user: {
+          id: "u7",
+          name: "amb4tron",
+          username: "ambatucode",
+          email: "ambatucode@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-04-02T07:50:00",
       },
     ],
     messages: [
@@ -307,7 +355,6 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
 
   const handleAddNote = useCallback(() => {
     if (!activeSpaceId) return;
-    // Start draft mode instead of creating immediately
     setCreatingDraftBySpace((prev) => ({
       ...prev,
       [activeSpaceId]: {
@@ -405,6 +452,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
           <ChatArea
             spaceName={activeSpace.name}
             spaceIcon={activeSpace.icon}
+            spaceMembers={activeSpace.members}
             spaceDescription={activeSpace.description}
             messages={activeSpace.messages}
             onSendMessage={handleSendMessage}
