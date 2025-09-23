@@ -25,6 +25,7 @@ const SpaceListComponent: React.FC<SpaceListProps> = ({
         <SpaceItem
           key={space.id}
           name={space.name}
+          icon={space.icon}
           lastMessage={space.lastMessage}
           lastMessageSender={space.lastMessageSender}
           unreadCount={space.unreadCount}

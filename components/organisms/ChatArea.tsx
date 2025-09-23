@@ -7,6 +7,7 @@ import type { Message, Note, NoteBlock } from "@/types";
 
 interface ChatAreaProps {
   groupName?: string;
+  groupIcon?: string;
   messages: Message[];
   className?: string;
   onSendMessage?: (content: string) => void;
@@ -24,6 +25,7 @@ interface ChatAreaProps {
 
 const ChatAreaComponent: React.FC<ChatAreaProps> = ({
   groupName,
+  groupIcon,
   messages,
   className = "",
   onSendMessage,
@@ -53,6 +55,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
         {groupName && (
           <ChatHeader
             groupName={groupName}
+            groupIcon={groupIcon}
             onToggleNotes={() => setShowNotes((v) => !v)}
           />
         )}

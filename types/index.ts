@@ -11,10 +11,12 @@ export interface User {
 export interface Space {
   id: string;
   name: string;
+  icon?: string; // empty string means show initials
   lastMessage?: string;
   lastMessageSender?: string;
   unreadCount?: number;
   createdAt?: string;
+  members?: SpaceMember[];
 }
 
 export interface Message {
@@ -60,3 +62,21 @@ export interface Note {
 export type SpaceWithNotes = SpaceWithMessages & {
   notes: Note[];
 };
+
+// Members & Roles
+export type Role = "OWNER" | "ADMIN" | "MEMBER";
+
+export interface SpaceMemberUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatar?: string;
+}
+
+export interface SpaceMember {
+  id: string;
+  user: SpaceMemberUser;
+  role: Role;
+  joinedAt?: string;
+}

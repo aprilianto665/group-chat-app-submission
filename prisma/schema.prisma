@@ -20,6 +20,7 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   messages  Message[]
+  memberships SpaceMember[]
 
   @@map("users")
 }
@@ -27,10 +28,12 @@ model User {
 model Space {
   id          String    @id @default(cuid())
   name        String
+  icon        String?
   description String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   messages    Message[]
+  members     SpaceMember[]
 
   @@map("spaces")
 }
@@ -47,4 +50,25 @@ model Message {
   user  User  @relation(fields: [userId], references: [id])
 
   @@map("messages")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model SpaceMember {
+  id        String   @id @default(cuid())
+  spaceId   String
+  userId    String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([spaceId, userId])
+  @@map("space_members")
 }

@@ -9,7 +9,34 @@ const initialSpaces: SpaceWithNotes[] = [
   {
     id: "1",
     name: "General Discussion",
+    icon: "",
     createdAt: "2024-01-15T10:00:00",
+    members: [
+      {
+        id: "m1",
+        role: "OWNER",
+        user: {
+          id: "u1",
+          name: "John Doe",
+          username: "johndoe",
+          email: "john@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-01-10T10:00:00",
+      },
+      {
+        id: "m2",
+        role: "MEMBER",
+        user: {
+          id: "u2",
+          name: "Jane Smith",
+          username: "janesmith",
+          email: "jane@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-01-12T10:00:00",
+      },
+    ],
     messages: [
       {
         id: "1",
@@ -41,7 +68,34 @@ const initialSpaces: SpaceWithNotes[] = [
   {
     id: "2",
     name: "Project Alpha",
+    icon: "",
     createdAt: "2024-02-10T08:50:00",
+    members: [
+      {
+        id: "m3",
+        role: "ADMIN",
+        user: {
+          id: "u3",
+          name: "Project Lead",
+          username: "lead",
+          email: "lead@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-02-01T08:50:00",
+      },
+      {
+        id: "m4",
+        role: "MEMBER",
+        user: {
+          id: "u4",
+          name: "Product Manager",
+          username: "pm",
+          email: "pm@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-02-02T08:50:00",
+      },
+    ],
     messages: [
       {
         id: "1",
@@ -65,7 +119,22 @@ const initialSpaces: SpaceWithNotes[] = [
   {
     id: "3",
     name: "Random Chat",
+    icon: "",
     createdAt: "2024-03-01T19:50:00",
+    members: [
+      {
+        id: "m5",
+        role: "OWNER",
+        user: {
+          id: "u5",
+          name: "Friend",
+          username: "friend",
+          email: "friend@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-03-01T19:00:00",
+      },
+    ],
     messages: [
       {
         id: "1",
@@ -89,7 +158,22 @@ const initialSpaces: SpaceWithNotes[] = [
   {
     id: "4",
     name: "Tech Updates",
+    icon: "",
     createdAt: "2024-04-05T07:50:00",
+    members: [
+      {
+        id: "m6",
+        role: "ADMIN",
+        user: {
+          id: "u6",
+          name: "Bot",
+          username: "bot",
+          email: "bot@example.com",
+          avatar: "/avatar_default.jpg",
+        },
+        joinedAt: "2024-04-01T07:50:00",
+      },
+    ],
     messages: [
       {
         id: "1",
@@ -206,7 +290,6 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     );
   };
 
-  // Notes handlers (per space)
   const activeNoteId = activeSpaceId
     ? activeNoteIdBySpace[activeSpaceId]
     : undefined;
@@ -238,7 +321,6 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     [activeSpaceId, setActiveNoteForSpace]
   );
 
-  // Save note changes only on explicit Save
   const handleSaveNote = useCallback(
     (draft: { title: string; blocks: NoteBlock[] }) => {
       if (!activeSpaceId || !activeNoteId) return;
@@ -296,9 +378,10 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
       <div className="w-80 flex-shrink-0">
         <SpaceManager
           spaces={spacesWithUnreadCount.map(
-            ({ id, name, messages, unreadCount }) => ({
+            ({ id, name, icon, messages, unreadCount }) => ({
               id,
               name,
+              icon,
               lastMessage: [...messages]
                 .reverse()
                 .find((m) => m.type !== "activity")?.content,
@@ -317,6 +400,7 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
         {activeSpace ? (
           <ChatArea
             groupName={activeSpace.name}
+            groupIcon={activeSpace.icon}
             messages={activeSpace.messages}
             onSendMessage={handleSendMessage}
             notes={activeSpace.notes}

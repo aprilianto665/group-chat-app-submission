@@ -3,6 +3,7 @@ import { Avatar } from "../atoms/Avatar";
 
 interface SpaceItemProps {
   name: string;
+  icon?: string;
   lastMessage?: string;
   lastMessageSender?: string;
   unreadCount?: number;
@@ -13,6 +14,7 @@ interface SpaceItemProps {
 
 const SpaceItemComponent: React.FC<SpaceItemProps> = ({
   name,
+  icon,
   lastMessage,
   lastMessageSender,
   unreadCount = 0,
@@ -40,8 +42,12 @@ const SpaceItemComponent: React.FC<SpaceItemProps> = ({
       onClick={onClick}
       onKeyDown={handleKeyDown}
     >
-      <Avatar size="md" className="mr-3">
-        {name.charAt(0).toUpperCase()}
+      <Avatar
+        size="md"
+        className="mr-3"
+        src={icon && icon.length > 0 ? icon : undefined}
+      >
+        {(!icon || icon.length === 0) && name.charAt(0).toUpperCase()}
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
