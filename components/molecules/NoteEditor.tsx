@@ -1,4 +1,11 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Note, NoteBlock } from "@/types";
 import { Button } from "../atoms/Button";
 import {
@@ -8,6 +15,21 @@ import {
   DragDotsIcon,
   TextBlockIcon,
 } from "../atoms/Icons";
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface NoteEditorProps {
   note?: Note;
@@ -25,6 +47,11 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [openBlockMenuId, setOpenBlockMenuId] = useState<string | null>(null);
   const blockRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
 
   useEffect(() => {
     setTitle(note?.title ?? "");
@@ -81,6 +108,19 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     onSave({ title, blocks });
   }, [onSave, title, blocks]);
 
+  const blockIds = useMemo(() => blocks.map((b) => b.id), [blocks]);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setBlocks((prev) => {
+      const oldIndex = prev.findIndex((b) => b.id === active.id);
+      const newIndex = prev.findIndex((b) => b.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }, []);
+
   if (!note) {
     return <div className="text-sm text-gray-600">Select or create a note</div>;
   }
@@ -104,61 +144,48 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {blocks.map((block) => (
-          <div key={block.id} className="group rounded relative pl-4 pr-4">
-            <div
-              className={`absolute -left-3 -top-1.5 transition-opacity ${
-                openBlockMenuId === block.id
-                  ? "opacity-100"
-                  : isEditing
-                  ? "opacity-0 group-hover:opacity-100"
-                  : "opacity-0 pointer-events-none"
-              }`}
+        {isEditing ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={blockIds}
+              strategy={verticalListSortingStrategy}
             >
-              <Button
-                variant="icon"
-                size="sm"
-                className="w-5 h-5 p-0 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-0 focus:ring-offset-0"
-                onClick={() =>
-                  setOpenBlockMenuId((prev) =>
-                    prev === block.id ? null : block.id
-                  )
-                }
-                aria-label="Block actions"
+              {blocks.map((block) => (
+                <SortableBlockRow
+                  key={block.id}
+                  block={block}
+                  isEditing={isEditing}
+                  openBlockMenuId={openBlockMenuId}
+                  setOpenBlockMenuId={setOpenBlockMenuId}
+                  handleChangeBlock={handleChangeBlock}
+                  handleDeleteBlock={handleDeleteBlock}
+                  blockRefs={blockRefs}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          blocks.map((block) => (
+            <div key={block.id} className="group rounded relative pl-4 pr-4">
+              <div className="absolute -left-3 -top-1.5 opacity-0 pointer-events-none" />
+              <textarea
+                ref={(el) => {
+                  blockRefs.current[block.id] = el;
+                }}
+                className="w-full resize-none outline-none text-sm text-gray-900 placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70"
+                rows={1}
+                value={block.content}
+                onChange={(e) => handleChangeBlock(block.id, e)}
+                placeholder={""}
                 disabled={!isEditing}
-              >
-                <DragDotsIcon className="w-4 h-4" />
-              </Button>
-              {openBlockMenuId === block.id && (
-                <div className="absolute left-3 top-4 mt-2 bg-white border border-gray-200 rounded shadow-md z-10 p-1">
-                  <Button
-                    variant="icon"
-                    size="sm"
-                    className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-0 focus:ring-offset-0"
-                    onClick={() => {
-                      setOpenBlockMenuId(null);
-                      handleDeleteBlock(block.id);
-                    }}
-                    aria-label="Delete block"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+              />
             </div>
-            <textarea
-              ref={(el) => {
-                blockRefs.current[block.id] = el;
-              }}
-              className="w-full resize-none outline-none text-sm text-gray-900 placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70"
-              rows={1}
-              value={block.content}
-              onChange={(e) => handleChangeBlock(block.id, e)}
-              placeholder={isEditing ? "Type here..." : ""}
-              disabled={!isEditing}
-            />
-          </div>
-        ))}
+          ))
+        )}
       </div>
       {isEditing && (
         <div className="pt-3">
@@ -198,6 +225,101 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
 };
 
 export const NoteEditor = memo(NoteEditorComponent);
+
+const SortableBlockRow: React.FC<{
+  block: NoteBlock;
+  isEditing: boolean;
+  openBlockMenuId: string | null;
+  setOpenBlockMenuId: React.Dispatch<React.SetStateAction<string | null>>;
+  handleChangeBlock: (
+    blockId: string,
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => void;
+  handleDeleteBlock: (blockId: string) => void;
+  blockRefs: React.MutableRefObject<Record<string, HTMLTextAreaElement | null>>;
+}> = ({
+  block,
+  isEditing,
+  openBlockMenuId,
+  setOpenBlockMenuId,
+  handleChangeBlock,
+  handleDeleteBlock,
+  blockRefs,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: block.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.9 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group rounded relative pl-4 pr-4"
+    >
+      <div
+        className={`absolute left-0 top-0 transition-opacity z-10 ${
+          openBlockMenuId === block.id
+            ? "opacity-100"
+            : isEditing
+            ? "opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <button
+          ref={setActivatorNodeRef}
+          className="w-5 h-5 p-0 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-0 focus:ring-offset-0 cursor-grab active:cursor-grabbing z-20"
+          onClick={() =>
+            setOpenBlockMenuId((prev) => (prev === block.id ? null : block.id))
+          }
+          aria-label="Block actions"
+          disabled={!isEditing}
+          {...attributes}
+          {...listeners}
+        >
+          <DragDotsIcon className="w-4 h-4" />
+        </button>
+        {openBlockMenuId === block.id && (
+          <div className="absolute left-3 top-4 mt-2 bg-white border border-gray-200 rounded shadow-md z-10 p-1">
+            <Button
+              variant="icon"
+              size="sm"
+              className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-0 focus:ring-offset-0"
+              onClick={() => {
+                setOpenBlockMenuId(null);
+                handleDeleteBlock(block.id);
+              }}
+              aria-label="Delete block"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+      <textarea
+        ref={(el) => {
+          blockRefs.current[block.id] = el;
+        }}
+        className="w-full resize-none outline-none text-sm text-gray-900 placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70"
+        rows={1}
+        value={block.content}
+        onChange={(e) => handleChangeBlock(block.id, e)}
+        placeholder={isEditing ? "Type here..." : ""}
+        disabled={!isEditing}
+      />
+    </div>
+  );
+};
 
 const Kebab: React.FC<{
   onDelete: () => void;
