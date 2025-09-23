@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "../atoms/Button";
 import { Input } from "../atoms/Input";
+import { FormLabel } from "../atoms/FormLabel";
 import { BackArrowIcon, ImageIcon } from "../atoms/Icons";
 
 interface SpaceFormProps {
@@ -79,12 +80,9 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
           </Button>
         </div>
         <div>
-          <label
-            htmlFor="groupName"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <FormLabel htmlFor="spaceName" required>
             Name your space
-          </label>
+          </FormLabel>
           <Input
             id="spaceName"
             type="text"
@@ -96,9 +94,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Space Photo
-          </label>
+          <FormLabel className="mb-2">Space Photo</FormLabel>
           <div className="space-y-4">
             <div className="flex justify-center">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden relative">

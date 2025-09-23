@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { NoteIcon } from "../atoms/Icons";
 import { MessageItem } from "../molecules/MessageItem";
+import { EmptyState } from "../atoms/EmptyState";
 import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
 import { useProfileStore } from "@/stores/profileStore";
 import type { Message } from "@/types";
@@ -30,9 +31,11 @@ const MessageListComponent: React.FC<MessageListProps> = ({
   return (
     <div className={`flex-1 overflow-y-auto p-4 px-5 space-y-1 ${className}`}>
       {messages.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-gray-500">
-          <p>No messages yet. Start a conversation!</p>
-        </div>
+        <EmptyState
+          title="No messages yet"
+          description="Start a conversation by sending your first message!"
+          className="h-full"
+        />
       ) : (
         sortedDates.map((date) => (
           <div key={date}>

@@ -6,16 +6,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { Note, NoteBlock, NoteBlockItem } from "@/types";
-import { Button } from "../atoms/Button";
+import type { Note, NoteBlock } from "@/types";
+import { NoteHeader } from "./NoteHeader";
+import { NoteBlockRow } from "./NoteBlockRow";
+import { AddBlockMenu } from "./AddBlockMenu";
+import { SaveButton } from "./SaveButton";
 import {
-  KebabIcon,
-  PencilIcon,
-  TrashIcon,
   DragDotsIcon,
-  TextBlockIcon,
-  HeadingIcon,
-  TodoIcon,
+  TrashIcon,
   PlusIcon,
   ChevronDownIcon,
 } from "../atoms/Icons";
@@ -32,10 +30,8 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
-  useSortable,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   restrictToVerticalAxis,
   restrictToParentElement,
@@ -89,30 +85,14 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
         el.style.height = `${el.scrollHeight}px`;
       }
     });
-    if (titleRef.current) {
-      autoResize(titleRef.current);
-    }
   }, [note?.id]);
 
   const handleTitleAreaChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setTitle(e.target.value);
-      autoResize(e.currentTarget);
     },
     []
   );
-
-  useEffect(() => {
-    if (titleRef.current) {
-      autoResize(titleRef.current);
-    }
-  }, [title]);
-
-  const autoResize = (el: HTMLTextAreaElement | null) => {
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  };
 
   const handleChangeBlock = useCallback(
     (blockId: string, e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -120,7 +100,6 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
       setBlocks((prev) =>
         prev.map((b) => (b.id === blockId ? { ...b, content } : b))
       );
-      autoResize(e.currentTarget);
     },
     []
   );
@@ -193,26 +172,14 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
 
   return (
     <div className="flex flex-col h-full relative">
-      <div className="flex items-start justify-between mb-2">
-        <textarea
-          ref={titleRef}
-          className="py-1 text-2xl font-bold leading-tight text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:outline-none focus:ring-0 w-full disabled:opacity-70 resize-none overflow-hidden"
-          placeholder="Untitled"
-          rows={1}
-          value={title}
-          onChange={
-            isEditing ? handleTitleAreaChange : (e) => setTitle(e.target.value)
-          }
-          disabled={!isEditing}
-        />
-        <div className="ml-2 relative">
-          <Kebab
-            onDelete={onDeleteNote}
-            onEdit={() => setIsEditing(true)}
-            isEditing={isEditing}
-          />
-        </div>
-      </div>
+      <NoteHeader
+        title={title}
+        isEditing={isEditing}
+        onTitleChange={handleTitleAreaChange}
+        onEdit={() => setIsEditing(true)}
+        onDelete={onDeleteNote}
+        titleRef={titleRef as React.RefObject<HTMLTextAreaElement>}
+      />
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {isEditing ? (
           <DndContext
@@ -258,13 +225,13 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
             }}
             modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           >
-            {isDraggingAnyBlock && <TopDropZone />}
+            <TopDropZone />
             <SortableContext
               items={blockIds}
               strategy={verticalListSortingStrategy}
             >
               {blocks.map((block) => (
-                <SortableBlockRow
+                <NoteBlockRow
                   key={block.id}
                   block={block}
                   isEditing={isEditing}
@@ -529,80 +496,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
         )}
       </div>
       {isEditing && <AddBlockMenu onAdd={handleAddBlock} />}
-      {(isEditing || hasChanges) && (
-        <button
-          onClick={handleSave}
-          aria-label="Save note"
-          className="absolute bottom-3 right-3 h-10 w-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-5 w-5"
-          >
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414l2.293 2.293 6.543-6.543a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-      )}
-    </div>
-  );
-};
-
-const AddBlockMenu: React.FC<{
-  onAdd: (type: NoteBlock["type"]) => void;
-}> = ({ onAdd }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative pt-1">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="text"
-          size="sm"
-          className="inline-flex items-center gap-2 text-gray-700 hover:bg-gray-50 px-2 py-1 rounded"
-          onClick={() => setOpen((v) => !v)}
-        >
-          <TextBlockIcon className="w-4 h-4" />
-          Text
-        </Button>
-        <Button
-          variant="text"
-          size="sm"
-          className="inline-flex items-center gap-2 text-gray-700 hover:bg-gray-50 px-2 py-1 rounded"
-          onClick={() => onAdd("todo")}
-        >
-          <TodoIcon className="w-4 h-4" />
-          To-do
-        </Button>
-      </div>
-      {open && (
-        <div className="absolute left-0 bottom-full mb-1 bg-white border border-gray-200 rounded shadow-md z-30 p-1 min-w-[10rem]">
-          <button
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left"
-            onClick={() => {
-              onAdd("text");
-              setOpen(false);
-            }}
-          >
-            <TextBlockIcon className="w-4 h-4" />
-            Paragraph
-          </button>
-          <button
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left"
-            onClick={() => {
-              onAdd("heading");
-              setOpen(false);
-            }}
-          >
-            <HeadingIcon className="w-4 h-4" />
-            Heading
-          </button>
-        </div>
-      )}
+      <SaveButton isVisible={isEditing || hasChanges} onClick={handleSave} />
     </div>
   );
 };
@@ -610,508 +504,13 @@ const AddBlockMenu: React.FC<{
 export const NoteEditor = memo(NoteEditorComponent);
 
 const TopDropZone: React.FC = () => {
-  const { setNodeRef, isOver } = useDroppable({ id: "top-drop-zone" });
+  const { setNodeRef } = useDroppable({ id: "top-drop-zone" });
   return (
     <div
       ref={setNodeRef}
-      className={`w-full h-3 -mt-2 mb-1 ${isOver ? "bg-blue-100/70" : ""}`}
+      className={`w-full h-8 -mt-4 mb-2`}
       aria-hidden
       style={{ borderRadius: 4 }}
     />
-  );
-};
-
-const SortableBlockRow: React.FC<{
-  block: NoteBlock;
-  isEditing: boolean;
-  isDraggingAnyBlock: boolean;
-  isActive: boolean;
-  setBlockRowRef: (el: HTMLDivElement | null) => void;
-  openBlockMenuId: string | null;
-  setOpenBlockMenuId: React.Dispatch<React.SetStateAction<string | null>>;
-  handleChangeBlock: (
-    blockId: string,
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => void;
-  handleDeleteBlock: (blockId: string) => void;
-  handleUpdateBlock: (
-    blockId: string,
-    updater: (b: NoteBlock) => NoteBlock
-  ) => void;
-  handleUpdateBlockUI?: (
-    blockId: string,
-    updater: (b: NoteBlock) => NoteBlock
-  ) => void;
-  blockRefs: React.MutableRefObject<Record<string, HTMLTextAreaElement | null>>;
-}> = ({
-  block,
-  isEditing,
-  isDraggingAnyBlock,
-  isActive,
-  setBlockRowRef,
-  openBlockMenuId,
-  setOpenBlockMenuId,
-  handleChangeBlock,
-  handleDeleteBlock,
-  handleUpdateBlock,
-  handleUpdateBlockUI,
-  blockRefs,
-}) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id });
-  const nodeElRef = React.useRef<HTMLDivElement | null>(null);
-  const [dragWidth, setDragWidth] = useState<number | undefined>(undefined);
-  const [dragHeight, setDragHeight] = useState<number | undefined>(undefined);
-
-  const handleSetNodeRef = (el: HTMLDivElement | null) => {
-    setNodeRef(el);
-    nodeElRef.current = el;
-    setBlockRowRef(el);
-  };
-
-  useEffect(() => {
-    if (isDragging && nodeElRef.current) {
-      const rect = nodeElRef.current.getBoundingClientRect();
-      setDragWidth(rect.width);
-      setDragHeight(rect.height);
-    } else if (!isDragging) {
-      setDragWidth(undefined);
-      setDragHeight(undefined);
-    }
-  }, [isDragging]);
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.9 : 1,
-    width: isDragging && dragWidth ? `${dragWidth}px` : undefined,
-    height: isDragging && dragHeight ? `${dragHeight}px` : undefined,
-    zIndex: isDragging ? 60 : undefined,
-  };
-
-  const contentContainerRef = React.useRef<HTMLDivElement | null>(null);
-  const updateUIOnly = handleUpdateBlockUI ?? handleUpdateBlock;
-  const [showAddTodoModal, setShowAddTodoModal] = useState(false);
-  const [newTodoText, setNewTodoText] = useState("");
-  const [newTodoDescription, setNewTodoDescription] = useState("");
-
-  useEffect(() => {
-    if (!contentContainerRef.current) return;
-    const areas = contentContainerRef.current.querySelectorAll(
-      "textarea"
-    ) as NodeListOf<HTMLTextAreaElement>;
-    areas.forEach((el) => {
-      el.style.height = "auto";
-      el.style.height = `${el.scrollHeight}px`;
-    });
-  }, [block, isEditing]);
-
-  const handleAddTodo = () => {
-    if (newTodoText.trim()) {
-      handleUpdateBlock(block.id, (b) => ({
-        ...b,
-        items: [
-          ...(b.items ?? []),
-          {
-            id: `todo_item_${Date.now()}`,
-            text: newTodoText.trim(),
-            done: false,
-            description: newTodoDescription.trim() || undefined,
-          },
-        ],
-      }));
-      setNewTodoText("");
-      setNewTodoDescription("");
-      setShowAddTodoModal(false);
-    }
-  };
-
-  const itemIds = useMemo(
-    () => (block.items ?? []).map((i) => i.id),
-    [block.items]
-  );
-  const itemSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
-
-  const handleTodoDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-      const items = block.items ?? [];
-      const oldIndex = items.findIndex((i) => i.id === active.id);
-      const newIndex = items.findIndex((i) => i.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const newItems = arrayMove(items, oldIndex, newIndex);
-      handleUpdateBlock(block.id, (b) => ({
-        ...b,
-        items: newItems,
-      }));
-    },
-    [block.id, block.items, handleUpdateBlock]
-  );
-
-  return (
-    <div
-      ref={handleSetNodeRef}
-      style={style}
-      className={`group rounded relative pl-4 pr-4 mb-1.5 ${
-        isActive ? "invisible" : ""
-      }`}
-    >
-      <div
-        className={`absolute left-0 top-0 transition-opacity z-10 ${
-          openBlockMenuId === block.id
-            ? "opacity-100"
-            : isEditing
-            ? "opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <button
-          ref={setActivatorNodeRef}
-          className="w-5 h-5 p-0 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-0 focus:ring-offset-0 cursor-grab active:cursor-grabbing z-20"
-          onClick={() =>
-            setOpenBlockMenuId((prev) => (prev === block.id ? null : block.id))
-          }
-          aria-label="Block actions"
-          disabled={!isEditing}
-          {...attributes}
-          {...listeners}
-        >
-          <DragDotsIcon className="w-4 h-4" />
-        </button>
-        {openBlockMenuId === block.id && (
-          <div className="absolute left-3 top-4 mt-2 bg-white border border-gray-200 rounded shadow-md z-10 p-1">
-            <Button
-              variant="icon"
-              size="sm"
-              className="text-gray-700 hover:text-red-600 focus:outline-none focus:ring-0 focus:ring-offset-0"
-              onClick={() => {
-                setOpenBlockMenuId(null);
-                handleDeleteBlock(block.id);
-              }}
-              aria-label="Delete block"
-            >
-              <TrashIcon className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-      </div>
-      {block.type === "todo" ? (
-        <div
-          className={`w-full rounded-md border border-gray-200 bg-gray-50 p-3 ${
-            isDraggingAnyBlock ? "pointer-events-none" : ""
-          }`}
-          ref={contentContainerRef}
-        >
-          <div className="flex items-start gap-2">
-            <textarea
-              className="flex-1 w-full resize-none overflow-hidden bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-base font-semibold text-gray-900 placeholder-gray-500 whitespace-pre-wrap break-words"
-              placeholder="To-do list title"
-              rows={1}
-              value={block.todoTitle ?? ""}
-              onChange={(e) => {
-                handleUpdateBlock(block.id, (b) => ({
-                  ...b,
-                  todoTitle: e.target.value,
-                }));
-                e.currentTarget.style.height = "auto";
-                e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
-              }}
-              disabled={!isEditing}
-            />
-            <button
-              type="button"
-              onClick={() =>
-                updateUIOnly(block.id, (b) => ({
-                  ...b,
-                  collapsed: !b.collapsed,
-                }))
-              }
-              className="mt-0.5 text-gray-400 hover:text-gray-600 p-1"
-              aria-label={block.collapsed ? "Expand list" : "Collapse list"}
-            >
-              <ChevronDownIcon
-                className={`w-5 h-5 transition-transform ${
-                  block.collapsed ? "rotate-180" : "rotate-0"
-                }`}
-              />
-            </button>
-          </div>
-          <div className="mt-2">
-            {(() => {
-              const items = block.items ?? [];
-              const totalItems = items.length;
-              const completedItems = items.filter((item) => item.done).length;
-              const progressPercentage =
-                totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-
-              return (
-                <div className="w-full bg-gray-200 rounded-full h-1 overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ease-in-out ${
-                      progressPercentage === 100
-                        ? "bg-green-500"
-                        : progressPercentage > 0
-                        ? "bg-blue-500"
-                        : "bg-gray-300"
-                    }`}
-                    style={{ width: `${Math.max(progressPercentage, 2)}%` }}
-                  />
-                </div>
-              );
-            })()}
-          </div>
-          {!block.collapsed && (
-            <div className="mt-2 space-y-2">
-              <DndContext
-                sensors={itemSensors}
-                collisionDetection={closestCorners}
-                onDragEnd={handleTodoDragEnd}
-                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-              >
-                <SortableContext
-                  items={itemIds}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {(block.items ?? []).map((it) => (
-                    <SortableTodoRow
-                      key={it.id}
-                      item={it}
-                      isEditing={isEditing}
-                      onUpdateItem={(updater) =>
-                        handleUpdateBlock(block.id, (b) => ({
-                          ...b,
-                          items: (b.items ?? []).map((x) =>
-                            x.id === it.id ? updater(x) : x
-                          ),
-                        }))
-                      }
-                      onDeleteItem={() =>
-                        handleUpdateBlock(block.id, (b) => ({
-                          ...b,
-                          items: (b.items ?? []).filter((x) => x.id !== it.id),
-                        }))
-                      }
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-            </div>
-          )}
-          {!block.collapsed && (
-            <div className="relative">
-              <Button
-                variant="text"
-                size="sm"
-                className="inline-flex items-center gap-2 text-gray-700 hover:bg-gray-50 px-2 py-1 rounded"
-                onClick={() => setShowAddTodoModal(!showAddTodoModal)}
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add to-do item
-              </Button>
-              {showAddTodoModal && (
-                <div className="mt-2 w-full">
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Type your first to-do here"
-                      value={newTodoText}
-                      onChange={(e) => setNewTodoText(e.target.value)}
-                      className="w-full bg-transparent outline-none focus:outline-none px-1 py-1 text-sm text-gray-900 placeholder:text-gray-400"
-                      autoFocus
-                    />
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      value={newTodoDescription}
-                      onChange={(e) => setNewTodoDescription(e.target.value)}
-                      className="w-full bg-transparent outline-none focus:outline-none px-1 py-1 text-sm text-gray-900 placeholder:text-gray-400"
-                    />
-                    <div className="flex justify-end items-center gap-2">
-                      <Button
-                        variant="text"
-                        size="sm"
-                        onClick={() => {
-                          setNewTodoText("");
-                          setNewTodoDescription("");
-                          setShowAddTodoModal(false);
-                        }}
-                        className="px-2 py-1 text-gray-500 hover:bg-gray-50"
-                      >
-                        Cancel
-                      </Button>
-                      <div className="w-px h-4 bg-gray-300"></div>
-                      <Button
-                        variant="text"
-                        size="sm"
-                        onClick={handleAddTodo}
-                        disabled={!newTodoText.trim()}
-                        className="px-2 py-1 text-gray-700 hover:bg-gray-50"
-                      >
-                        Add to the list
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <textarea
-          ref={(el) => {
-            blockRefs.current[block.id] = el;
-          }}
-          className={`w-full resize-none outline-none placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70 ${
-            block.type === "heading"
-              ? "text-base font-semibold text-gray-900"
-              : "text-sm text-gray-900"
-          }`}
-          rows={1}
-          value={block.content}
-          onChange={(e) => handleChangeBlock(block.id, e)}
-          placeholder={isEditing ? "Type here..." : ""}
-          disabled={!isEditing}
-        />
-      )}
-    </div>
-  );
-};
-
-const Kebab: React.FC<{
-  onDelete: () => void;
-  onEdit: () => void;
-  isEditing: boolean;
-}> = ({ onDelete, onEdit, isEditing }) => {
-  const [open, setOpen] = React.useState(false);
-  return (
-    <div className="relative">
-      <Button
-        variant="icon"
-        size="sm"
-        className="text-gray-500 hover:text-gray-700"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="More actions"
-      >
-        <KebabIcon className="w-5 h-5" />
-      </Button>
-      {open && (
-        <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-10 p-1">
-          {!isEditing && (
-            <Button
-              variant="text"
-              size="sm"
-              className="w-full flex items-center gap-2 justify-start text-gray-700 hover:bg-gray-50 px-2 py-2"
-              onClick={() => {
-                setOpen(false);
-                onEdit();
-              }}
-            >
-              <PencilIcon />
-              Edit note
-            </Button>
-          )}
-          <Button
-            variant="text"
-            size="sm"
-            className="w-full flex items-center gap-2 justify-start text-gray-700 hover:bg-gray-50 px-2 py-2"
-            onClick={() => {
-              setOpen(false);
-              onDelete();
-            }}
-          >
-            <TrashIcon />
-            Delete note
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const SortableTodoRow: React.FC<{
-  item: NoteBlockItem;
-  isEditing: boolean;
-  onUpdateItem: (updater: (i: NoteBlockItem) => NoteBlockItem) => void;
-  onDeleteItem: () => void;
-}> = ({ item, isEditing, onUpdateItem, onDeleteItem }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.9 : 1,
-    zIndex: isDragging ? 60 : undefined,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} className="flex items-start gap-2">
-      <button
-        ref={setActivatorNodeRef}
-        className="w-5 h-5 p-0 text-gray-400 hover:text-gray-600 focus:outline-none cursor-grab active:cursor-grabbing"
-        aria-label="Drag item"
-        disabled={!isEditing}
-        {...attributes}
-        {...listeners}
-      >
-        <DragDotsIcon className="w-4 h-4" />
-      </button>
-      <input
-        type="checkbox"
-        className="mt-1 h-4 w-4 rounded border-gray-300 text-gray-900"
-        checked={item.done}
-        onChange={(e) =>
-          onUpdateItem((i) => ({ ...i, done: e.target.checked }))
-        }
-      />
-      <div className="flex-1 min-w-0">
-        <textarea
-          className="w-full resize-none overflow-hidden bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-sm text-gray-900 placeholder-gray-500 whitespace-pre-wrap break-words"
-          placeholder="To-do item"
-          rows={1}
-          value={item.text}
-          onChange={(e) => {
-            onUpdateItem((i) => ({ ...i, text: e.target.value }));
-            e.currentTarget.style.height = "auto";
-            e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
-          }}
-          disabled={!isEditing}
-        />
-        {item.description ? (
-          <div className="text-xs text-gray-500 whitespace-pre-wrap break-words mt-0.5">
-            {item.description}
-          </div>
-        ) : null}
-      </div>
-      {isEditing && (
-        <Button
-          variant="icon"
-          size="sm"
-          className="text-gray-400 hover:text-red-600"
-          aria-label="Delete to-do item"
-          onClick={onDeleteItem}
-        >
-          <TrashIcon className="w-4 h-4" />
-        </Button>
-      )}
-    </div>
   );
 };
