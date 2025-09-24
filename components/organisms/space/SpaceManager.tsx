@@ -7,13 +7,13 @@ import { ProfileDetail } from "../../molecules/profile/ProfileDetail";
 import { SpaceListHeader } from "../../molecules/space/SpaceListHeader";
 import { SearchInput } from "../../molecules/SearchInput";
 import { useProfileStore } from "@/stores/profileStore";
-import type { Space } from "@/types";
+import type { Space, SpaceWithNotes } from "@/types";
 
 interface SpaceManagerProps {
   spaces: Space[];
   activeSpaceId?: string;
   className?: string;
-  onSpaceCreated?: (spaceName: string) => void;
+  onSpaceCreated?: (space: SpaceWithNotes) => void;
   onSelectSpace?: (spaceId: string) => void;
 }
 
@@ -45,9 +45,9 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
   }, []);
 
   const handleSpaceCreated = useCallback(
-    (spaceName: string) => {
+    (space: SpaceWithNotes) => {
       if (onSpaceCreated) {
-        onSpaceCreated(spaceName);
+        onSpaceCreated(space);
       }
       setIsCreatingSpace(false);
     },
@@ -102,7 +102,7 @@ export const SpaceManager: React.FC<SpaceManagerProps> = ({
         ) : isCreatingSpace ? (
           <SpaceForm
             onCancel={handleCancelCreate}
-            onSubmit={handleSpaceCreated}
+            onCreated={handleSpaceCreated}
           />
         ) : (
           <SpaceList

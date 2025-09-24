@@ -3,7 +3,14 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { SpaceManager, ChatArea } from "@/components";
 import { useProfileStore } from "@/stores/profileStore";
-import type { Message, User, SpaceWithNotes, Note, NoteBlock } from "@/types";
+import type {
+  Message,
+  User,
+  SpaceWithNotes,
+  Note,
+  NoteBlock,
+  Space,
+} from "@/types";
 import type { AppActions, NoteBlockPayload } from "@/types/app";
 
 export const AppWrapper: React.FC<{
@@ -68,10 +75,9 @@ export const AppWrapper: React.FC<{
     });
   }, [sortedSpaces]);
 
-  const handleSpaceCreated = async (spaceName: string) => {
-    const created = await actions.createSpace(spaceName);
-    setSpaces((prev) => [created, ...prev]);
-    setActiveSpaceId(created.id);
+  const handleSpaceCreated = async (space: SpaceWithNotes) => {
+    setSpaces((prev) => [space, ...prev]);
+    setActiveSpaceId(space.id);
   };
 
   const handleSendMessage = async (content: string) => {
@@ -223,7 +229,9 @@ export const AppWrapper: React.FC<{
           )}
           activeSpaceId={activeSpaceId ?? undefined}
           onSelectSpace={handleSelectSpace}
-          onSpaceCreated={handleSpaceCreated}
+          onSpaceCreated={
+            handleSpaceCreated as unknown as (space: Space) => void
+          }
         />
       </div>
       <div className="flex-1">

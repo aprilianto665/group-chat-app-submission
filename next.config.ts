@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [],
+    domains: ["groupchatapp.blob.core.windows.net"],
     formats: ["image/webp", "image/avif"],
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",

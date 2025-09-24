@@ -5,6 +5,21 @@ import { requireAuth } from "@/utils/actionsAuth";
 import type { Prisma } from "@prisma/client";
 import { isActivityContent, stripActivityPrefix } from "@/utils/activity";
 import { createSpaceSchema, spaceIdSchema } from "@/utils/validation/actions";
+import { BlobServiceClient } from "@azure/storage-blob";
+import crypto from "crypto";
+import type { SpaceWithNotes } from "@/types";
+
+interface BlockBlobClientLike {
+  uploadData: (data: Buffer, options?: unknown) => Promise<void>;
+  url: string;
+}
+interface ContainerClientLike {
+  createIfNotExists: () => Promise<void>;
+  getBlockBlobClient: (blobName: string) => BlockBlobClientLike;
+}
+interface BlobServiceLike {
+  getContainerClient: (name: string) => ContainerClientLike;
+}
 
 type MemberWithUser = Prisma.SpaceMemberGetPayload<{ include: { user: true } }>;
 type SpaceForList = Prisma.SpaceGetPayload<{
@@ -110,7 +125,11 @@ export async function listUserSpaces() {
   }));
 }
 
-export async function createSpace(name: string, description?: string) {
+export async function createSpace(
+  name: string,
+  description?: string,
+  iconUrl?: string
+) {
   const parsed = createSpaceSchema.safeParse({ name, description });
   if (!parsed.success) throw new Error("Invalid space payload");
   const { id: userId } = await requireAuth();
@@ -126,6 +145,7 @@ export async function createSpace(name: string, description?: string) {
     data: {
       name,
       description,
+      icon: iconUrl ?? undefined,
       members: {
         create: {
           userId,
@@ -161,6 +181,92 @@ export async function createSpace(name: string, description?: string) {
     messages: [],
     notes: [],
   };
+}
+
+export type CreateSpaceFormState = {
+  error?: string;
+  success?: string;
+  created?: SpaceWithNotes;
+};
+
+export async function createSpaceFromForm(
+  _prevState: CreateSpaceFormState,
+  formData: FormData
+): Promise<CreateSpaceFormState> {
+  try {
+    const name = ((formData.get("name") as string | null) ?? "").trim();
+    const description =
+      ((formData.get("description") as string | null) ?? "").trim() ||
+      undefined;
+    const file = formData.get("icon");
+
+    const parsed = createSpaceSchema.safeParse({ name, description });
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      return { error: firstError };
+    }
+
+    let iconUrl: string | undefined;
+    if (file && typeof file !== "string") {
+      const blobFile = file as File;
+      if (blobFile.size > 5 * 1024 * 1024) {
+        return { error: "Max file size is 5MB" };
+      }
+      const contentType = blobFile.type || "application/octet-stream";
+      if (!/^image\//.test(contentType)) {
+        return { error: "Only image files are allowed" };
+      }
+
+      const conn = process.env.AZURE_STORAGE_CONNECTION_STRING;
+      const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+      const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
+      const containerName = process.env.AZURE_STORAGE_CONTAINER;
+      if (!containerName) {
+        return { error: "Missing AZURE_STORAGE_CONTAINER env" };
+      }
+
+      let blobService: BlobServiceLike | null = null;
+      if (conn && conn.length > 0) {
+        blobService = BlobServiceClient.fromConnectionString(
+          conn
+        ) as unknown as BlobServiceLike;
+      } else if (accountName && accountKey) {
+        const { StorageSharedKeyCredential } = await import(
+          "@azure/storage-blob"
+        );
+        const sharedKey = new StorageSharedKeyCredential(
+          accountName,
+          accountKey
+        );
+        blobService = new BlobServiceClient(
+          `https://${accountName}.blob.core.windows.net`,
+          sharedKey
+        ) as unknown as BlobServiceLike;
+      } else {
+        return { error: "Missing Azure Storage credentials" };
+      }
+
+      const container = blobService.getContainerClient(containerName);
+      await container.createIfNotExists();
+
+      const ext = (blobFile.name.split(".").pop() || "png").toLowerCase();
+      const uniqueName = `${crypto.randomUUID()}.${ext}`;
+      const blockBlob = container.getBlockBlobClient(uniqueName);
+
+      const arrayBuffer = await blobFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      await blockBlob.uploadData(buffer, {
+        blobHTTPHeaders: { blobContentType: contentType },
+      });
+      iconUrl = blockBlob.url;
+    }
+
+    const created = await createSpace(name, description, iconUrl);
+    return { success: "Space created", created };
+  } catch (err) {
+    console.error("createSpaceFromForm error:", err);
+    return { error: "Internal server error" };
+  }
 }
 
 export async function joinSpace(spaceId: string) {

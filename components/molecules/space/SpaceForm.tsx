@@ -1,21 +1,33 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useActionState } from "react";
 import Image from "next/image";
 import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
 import { FormLabel } from "../../atoms/FormLabel";
 import { BackArrowIcon, ImageIcon } from "../../atoms/Icons";
+import {
+  createSpaceFromForm,
+  type CreateSpaceFormState,
+} from "@/app/actions/spaces";
+import type { SpaceWithNotes } from "@/types";
 
 interface SpaceFormProps {
   onCancel?: () => void;
-  onSubmit?: (spaceName: string) => void;
+  onCreated?: (space: SpaceWithNotes) => void;
 }
 
-export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
+export const SpaceForm: React.FC<SpaceFormProps> = ({
+  onCancel,
+  onCreated,
+}) => {
   const [spaceName, setSpaceName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [state, formAction] = useActionState<CreateSpaceFormState, FormData>(
+    createSpaceFromForm,
+    {} as CreateSpaceFormState
+  );
 
   useEffect(() => {
     return () => {
@@ -25,10 +37,9 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
     };
   }, [previewUrl]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (spaceName.trim() && onSubmit) {
-      onSubmit(spaceName.trim());
+  useEffect(() => {
+    if (state?.success && state.created && onCreated) {
+      onCreated(state.created as unknown as SpaceWithNotes);
       setSpaceName("");
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -36,7 +47,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
       setPreviewUrl(null);
       setSelectedFile(null);
     }
-  };
+  }, [state, onCreated, previewUrl]);
 
   const handleCancel = () => {
     setSpaceName("");
@@ -66,7 +77,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
 
   return (
     <div className="p-4">
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form action={formAction} className="space-y-8">
         <div className="mb-4">
           <Button
             type="button"
@@ -90,6 +101,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
             onChange={(e) => setSpaceName(e.target.value)}
             className="w-full"
             autoFocus
+            name="name"
           />
         </div>
 
@@ -117,6 +129,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
                   accept="image/*"
                   className="hidden"
                   onChange={handleFileChange}
+                  name="icon"
                 />
                 <div className="px-4 py-2 bg-gray-50 text-gray-700 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors">
                   Choose File
@@ -129,6 +142,9 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({ onCancel, onSubmit }) => {
                 <p className="text-[11px] text-gray-500 truncate max-w-[200px]">
                   {selectedFile.name}
                 </p>
+              )}
+              {state?.error && (
+                <p className="text-[11px] text-red-600">{state.error}</p>
               )}
             </div>
           </div>
