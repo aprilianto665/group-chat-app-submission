@@ -23,7 +23,6 @@ export async function listMessages(spaceId: string) {
     timestamp: m.createdAt.toISOString(),
     senderName: m.user?.name,
     username: m.user?.username,
-    isRead: true,
     type: "text" as const,
   }));
 }
@@ -45,7 +44,6 @@ export async function sendMessage(spaceId: string, content: string) {
     timestamp: created.createdAt.toISOString(),
     senderName: created.user?.name,
     username: created.user?.username,
-    isRead: true,
     type: "text" as const,
   };
 }
@@ -70,7 +68,6 @@ export async function sendActivityMessage(
     timestamp: created.createdAt.toISOString(),
     senderName: created.user?.name,
     username: created.user?.username,
-    isRead: true,
     type: "activity" as const,
   };
 }

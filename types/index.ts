@@ -15,7 +15,6 @@ export interface Space {
   description?: string;
   lastMessage?: string;
   lastMessageSender?: string;
-  unreadCount?: number;
   createdAt?: string;
   members?: SpaceMember[];
 }
@@ -27,7 +26,6 @@ export interface Message {
   isSent?: boolean;
   senderName?: string;
   username?: string;
-  isRead?: boolean;
   type?: "text" | "activity";
 }
 

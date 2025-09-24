@@ -3,6 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcrypt-ts";
 import { registerSchema } from "@/utils/validation/auth";
+import {
+  handleActionError,
+  getFirstValidationError,
+  getFormDataValue,
+} from "@/utils/actionUtils";
 
 export type RegisterActionState = {
   error?: string;
@@ -15,16 +20,15 @@ export async function registerAction(
 ): Promise<RegisterActionState> {
   try {
     const parsed = registerSchema.safeParse({
-      name: (formData.get("name") as string | null) ?? "",
-      username: (formData.get("username") as string | null) ?? "",
-      email: (formData.get("email") as string | null) ?? "",
-      password: (formData.get("password") as string | null) ?? "",
-      confirmPassword: (formData.get("confirmPassword") as string | null) ?? "",
+      name: getFormDataValue(formData, "name"),
+      username: getFormDataValue(formData, "username"),
+      email: getFormDataValue(formData, "email"),
+      password: getFormDataValue(formData, "password"),
+      confirmPassword: getFormDataValue(formData, "confirmPassword"),
     });
 
     if (!parsed.success) {
-      const firstError = parsed.error.errors[0]?.message || "Invalid input";
-      return { error: firstError };
+      return { error: getFirstValidationError(parsed.error) };
     }
 
     const { name, username, email, password } = parsed.data;
@@ -55,8 +59,7 @@ export async function registerAction(
       },
     });
   } catch (error) {
-    console.error("Registration action error:", error);
-    return { error: "Internal server error" };
+    return handleActionError(error, "Registration action");
   }
 
   return { success: "Registration successful! Redirecting to sign in..." };

@@ -3,6 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { compare } from "bcrypt-ts";
 import { loginSchema } from "@/utils/validation/auth";
+import {
+  handleActionError,
+  getFirstValidationError,
+  getFormDataValue,
+} from "@/utils/actionUtils";
 
 export type LoginActionState = {
   error?: string;
@@ -17,12 +22,12 @@ export async function loginAction(
 ): Promise<LoginActionState> {
   try {
     const parsed = loginSchema.safeParse({
-      email: (formData.get("email") as string | null) ?? "",
-      password: (formData.get("password") as string | null) ?? "",
+      email: getFormDataValue(formData, "email"),
+      password: getFormDataValue(formData, "password"),
     });
 
     if (!parsed.success) {
-      return { error: parsed.error.errors[0]?.message || "Invalid input" };
+      return { error: getFirstValidationError(parsed.error) };
     }
 
     const { email, password } = parsed.data;
@@ -39,7 +44,6 @@ export async function loginAction(
 
     return { ok: true, email, password };
   } catch (error) {
-    console.error("Login action error:", error);
-    return { error: "Internal server error" };
+    return handleActionError(error, "Login action");
   }
 }

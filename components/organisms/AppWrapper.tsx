@@ -3,8 +3,11 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { SpaceManager, ChatArea } from "@/components";
 import { useProfileStore } from "@/stores/profileStore";
+import {
+  createActivityMessage,
+  createGenericActivityMessage,
+} from "@/utils/messageUtils";
 import type {
-  Message,
   User,
   SpaceWithNotes,
   Note,
@@ -68,15 +71,7 @@ export const AppWrapper: React.FC<{
                 messages: detail.activityContent
                   ? [
                       ...s.messages,
-                      {
-                        id: String(Date.now()),
-                        content: detail.activityContent,
-                        timestamp: new Date().toISOString(),
-                        senderName: undefined,
-                        username: undefined,
-                        isRead: true,
-                        type: "activity" as const,
-                      },
+                      createGenericActivityMessage(detail.activityContent),
                     ]
                   : s.messages,
               }
@@ -126,17 +121,15 @@ export const AppWrapper: React.FC<{
     return copy;
   }, [spaces]);
 
-  const spacesWithUnreadCount: SpaceWithNotes[] = useMemo(() => {
+  const spacesWithLastMessage: SpaceWithNotes[] = useMemo(() => {
     return sortedSpaces.map((space) => {
       const derivedLast = [...space.messages]
         .reverse()
         .find((m) => m.type !== "activity");
-      const unreadCount = space.messages.filter((msg) => !msg.isRead).length;
       return {
         ...space,
         lastMessage: space.lastMessage ?? derivedLast?.content,
         lastMessageSender: space.lastMessageSender ?? derivedLast?.senderName,
-        unreadCount,
       };
     });
   }, [sortedSpaces]);
@@ -207,18 +200,11 @@ export const AppWrapper: React.FC<{
         draft.blocks as unknown as NoteBlockPayload[]
       );
       const { user } = useProfileStore.getState();
-      const now = new Date().toISOString();
-      const safeTitle = draft.title || "Untitled";
-      const safeSender = user?.name ?? "Someone";
-      const activityMessage: Message = {
-        id: String(Date.now()),
-        content: `<strong>${safeSender}</strong> just edited a note: <strong>${safeTitle}</strong>`,
-        timestamp: now,
-        senderName: user?.name,
-        username: user?.username,
-        isRead: true,
-        type: "activity",
-      };
+      const activityMessage = createActivityMessage(
+        "edited",
+        draft.title,
+        user?.name
+      );
       actions
         .sendActivityMessage?.(activeSpaceId, activityMessage.content)
         .catch(() => {});
@@ -241,20 +227,13 @@ export const AppWrapper: React.FC<{
     if (!activeSpaceId || !activeNoteId) return;
     await actions.deleteNote(activeNoteId);
     const { user } = useProfileStore.getState();
-    const now = new Date().toISOString();
     const targetSpace = spaces.find((s) => s.id === activeSpaceId);
     const deletedNote = targetSpace?.notes.find((n) => n.id === activeNoteId);
-    const safeTitle = deletedNote?.title || "Untitled";
-    const safeSender = user?.name ?? "Someone";
-    const activityMessage: Message = {
-      id: String(Date.now()),
-      content: `<strong>${safeSender}</strong> deleted a note: <strong>${safeTitle}</strong>`,
-      timestamp: now,
-      senderName: user?.name,
-      username: user?.username,
-      isRead: true,
-      type: "activity",
-    };
+    const activityMessage = createActivityMessage(
+      "deleted",
+      deletedNote?.title || "",
+      user?.name
+    );
     actions
       .sendActivityMessage?.(activeSpaceId, activityMessage.content)
       .catch(() => {});
@@ -276,21 +255,13 @@ export const AppWrapper: React.FC<{
     <div className="flex h-full">
       <div className="w-80 flex-shrink-0">
         <SpaceManager
-          spaces={spacesWithUnreadCount.map(
-            ({
+          spaces={spacesWithLastMessage.map(
+            ({ id, name, icon, lastMessage, lastMessageSender }) => ({
               id,
               name,
               icon,
               lastMessage,
               lastMessageSender,
-              unreadCount,
-            }) => ({
-              id,
-              name,
-              icon,
-              lastMessage,
-              lastMessageSender,
-              unreadCount,
             })
           )}
           activeSpaceId={activeSpaceId ?? undefined}
@@ -349,18 +320,11 @@ export const AppWrapper: React.FC<{
                 )
                 .then((newNote) => {
                   const { user } = useProfileStore.getState();
-                  const now = new Date().toISOString();
-                  const safeTitle = draft.title || "Untitled";
-                  const safeSender = user?.name ?? "Someone";
-                  const activityMessage: Message = {
-                    id: String(Date.now()),
-                    content: `<strong>${safeSender}</strong> just added a new note: <strong>${safeTitle}</strong>`,
-                    timestamp: now,
-                    senderName: user?.name,
-                    username: user?.username,
-                    isRead: true,
-                    type: "activity",
-                  };
+                  const activityMessage = createActivityMessage(
+                    "added",
+                    draft.title,
+                    user?.name
+                  );
                   actions
                     .sendActivityMessage?.(
                       activeSpace.id,

@@ -14,6 +14,13 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import crypto from "crypto";
 import type { SpaceWithNotes } from "@/types";
 import { sendActivityMessage } from "./messages";
+import {
+  mapMemberData,
+  getUserDisplayName,
+  checkAdminPermission,
+  sendActivityMessageSafe,
+  createMemberActivityMessage,
+} from "@/utils/spaceUtils";
 
 interface BlockBlobClientLike {
   uploadData: (data: Buffer, options?: unknown) => Promise<void>;
@@ -27,7 +34,6 @@ interface BlobServiceLike {
   getContainerClient: (name: string) => ContainerClientLike;
 }
 
-type MemberWithUser = Prisma.SpaceMemberGetPayload<{ include: { user: true } }>;
 type SpaceForList = Prisma.SpaceGetPayload<{
   include: {
     members: { include: { user: true } };
@@ -100,7 +106,6 @@ export async function listUserSpaces() {
         timestamp: msg.createdAt.toISOString(),
         senderName: msg.user?.name,
         username: msg.user?.username,
-        isRead: true,
         type: isAct ? ("activity" as const) : ("text" as const),
       };
     });
@@ -115,18 +120,7 @@ export async function listUserSpaces() {
       icon: s.icon ?? undefined,
       description: s.description ?? undefined,
       createdAt: s.createdAt.toISOString(),
-      members: s.members.map((m: MemberWithUser) => ({
-        id: m.id,
-        role: m.role,
-        joinedAt: m.createdAt.toISOString(),
-        user: {
-          id: m.user.id,
-          name: m.user.name,
-          username: m.user.username,
-          email: m.user.email,
-          avatar: m.user.avatar ?? undefined,
-        },
-      })),
+      members: s.members.map(mapMemberData),
       lastMessage: lastNonActivity?.content,
       lastMessageSender: lastNonActivity?.senderName,
       messages: allMessages,
@@ -190,18 +184,7 @@ export async function createSpace(
     icon: space.icon ?? undefined,
     description: space.description ?? undefined,
     createdAt: space.createdAt.toISOString(),
-    members: space.members.map((m: MemberWithUser) => ({
-      id: m.id,
-      role: m.role,
-      joinedAt: m.createdAt.toISOString(),
-      user: {
-        id: m.user.id,
-        name: m.user.name,
-        username: m.user.username,
-        email: m.user.email,
-        avatar: m.user.avatar ?? undefined,
-      },
-    })),
+    members: space.members.map(mapMemberData),
     messages: [],
     notes: [],
   };
@@ -389,18 +372,7 @@ export async function getSpaceDetail(spaceId: string) {
     icon: spaceBase.icon ?? undefined,
     description: spaceBase.description ?? undefined,
     createdAt: spaceBase.createdAt.toISOString(),
-    members: spaceBase.members.map((m: MemberWithUser) => ({
-      id: m.id,
-      role: m.role,
-      joinedAt: m.createdAt.toISOString(),
-      user: {
-        id: m.user.id,
-        name: m.user.name,
-        username: m.user.username,
-        email: m.user.email,
-        avatar: m.user.avatar ?? undefined,
-      },
-    })),
+    members: spaceBase.members.map(mapMemberData),
     messages: messages.map((msg) => {
       const isAct = isActivityContent(msg.content);
       const mapped = {
@@ -553,12 +525,8 @@ export async function setMemberRole(
   if (!parsedId.success) throw new Error("Invalid space id");
   const { id: actorId } = await requireAuth();
 
-  const membership = await prisma.spaceMember.findUnique({
-    where: { spaceId_userId: { spaceId, userId: actorId } },
-    select: { role: true },
-  });
-  if (!membership || membership.role !== "ADMIN")
-    throw new Error("Forbidden: only admin can change roles");
+  const isAdmin = await checkAdminPermission(spaceId, actorId);
+  if (!isAdmin) throw new Error("Forbidden: only admin can change roles");
 
   await prisma.spaceMember.update({
     where: { spaceId_userId: { spaceId, userId: targetUserId } },
@@ -571,37 +539,25 @@ export async function setMemberRole(
     orderBy: { createdAt: "asc" },
   });
 
-  try {
-    const actor = await prisma.user.findUnique({
-      where: { id: actorId },
-      select: { name: true, email: true },
-    });
-    const target = await prisma.user.findUnique({
-      where: { id: targetUserId },
-      select: { name: true, email: true },
-    });
-    const actorName = actor?.name || actor?.email || "Someone";
-    const targetName = target?.name || target?.email || "this member";
-    await sendActivityMessage(
-      spaceId,
-      role === "ADMIN"
-        ? `<strong>${actorName}</strong> made <strong>${targetName}</strong> an admin`
-        : `<strong>${actorName}</strong> changed <strong>${targetName}</strong>'s role`
-    );
-  } catch {}
+  const actor = await prisma.user.findUnique({
+    where: { id: actorId },
+    select: { name: true, email: true },
+  });
+  const target = await prisma.user.findUnique({
+    where: { id: targetUserId },
+    select: { name: true, email: true },
+  });
+  const actorName = getUserDisplayName(actor);
+  const targetName = getUserDisplayName(target);
 
-  return updatedMembers.map((m) => ({
-    id: m.id,
-    role: m.role,
-    joinedAt: m.createdAt.toISOString(),
-    user: {
-      id: m.user.id,
-      name: m.user.name,
-      username: m.user.username,
-      email: m.user.email,
-      avatar: m.user.avatar ?? undefined,
-    },
-  }));
+  const message =
+    role === "ADMIN"
+      ? createMemberActivityMessage("made_admin", actorName, targetName)
+      : createMemberActivityMessage("role_changed", actorName, targetName);
+
+  await sendActivityMessageSafe(spaceId, message);
+
+  return updatedMembers.map(mapMemberData);
 }
 
 export async function removeMember(spaceId: string, targetUserId: string) {
@@ -609,12 +565,8 @@ export async function removeMember(spaceId: string, targetUserId: string) {
   if (!parsedId.success) throw new Error("Invalid space id");
   const { id: actorId } = await requireAuth();
 
-  const membership = await prisma.spaceMember.findUnique({
-    where: { spaceId_userId: { spaceId, userId: actorId } },
-    select: { role: true },
-  });
-  if (!membership || membership.role !== "ADMIN")
-    throw new Error("Forbidden: only admin can remove members");
+  const isAdmin = await checkAdminPermission(spaceId, actorId);
+  if (!isAdmin) throw new Error("Forbidden: only admin can remove members");
 
   await prisma.spaceMember.delete({
     where: { spaceId_userId: { spaceId, userId: targetUserId } },
@@ -626,35 +578,21 @@ export async function removeMember(spaceId: string, targetUserId: string) {
     orderBy: { createdAt: "asc" },
   });
 
-  try {
-    const actor = await prisma.user.findUnique({
-      where: { id: actorId },
-      select: { name: true, email: true },
-    });
-    const target = await prisma.user.findUnique({
-      where: { id: targetUserId },
-      select: { name: true, email: true },
-    });
-    const actorName = actor?.name || actor?.email || "Someone";
-    const targetName = target?.name || target?.email || "this member";
-    await sendActivityMessage(
-      spaceId,
-      `<strong>${actorName}</strong> removed <strong>${targetName}</strong> from the space`
-    );
-  } catch {}
+  const actor = await prisma.user.findUnique({
+    where: { id: actorId },
+    select: { name: true, email: true },
+  });
+  const target = await prisma.user.findUnique({
+    where: { id: targetUserId },
+    select: { name: true, email: true },
+  });
+  const actorName = getUserDisplayName(actor);
+  const targetName = getUserDisplayName(target);
 
-  return updatedMembers.map((m) => ({
-    id: m.id,
-    role: m.role,
-    joinedAt: m.createdAt.toISOString(),
-    user: {
-      id: m.user.id,
-      name: m.user.name,
-      username: m.user.username,
-      email: m.user.email,
-      avatar: m.user.avatar ?? undefined,
-    },
-  }));
+  const message = createMemberActivityMessage("removed", actorName, targetName);
+  await sendActivityMessageSafe(spaceId, message);
+
+  return updatedMembers.map(mapMemberData);
 }
 
 export async function updateSpaceInfo(
