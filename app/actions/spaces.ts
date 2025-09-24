@@ -78,51 +78,69 @@ export async function listUserSpaces() {
         orderBy: { createdAt: "asc" },
       },
       messages: {
-        take: 1,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "asc" },
         include: { user: true },
       },
     },
     orderBy: { updatedAt: "desc" },
   })) as SpaceForList[];
 
-  return spaces.map((s) => ({
-    id: s.id,
-    name: s.name,
-    icon: s.icon ?? undefined,
-    description: s.description ?? undefined,
-    createdAt: s.createdAt.toISOString(),
-    members: s.members.map((m: MemberWithUser) => ({
-      id: m.id,
-      role: m.role,
-      joinedAt: m.createdAt.toISOString(),
-      user: {
-        id: m.user.id,
-        name: m.user.name,
-        username: m.user.username,
-        email: m.user.email,
-        avatar: m.user.avatar ?? undefined,
-      },
-    })),
-    lastMessage: (() => {
-      const m = (s.messages[0] as MessageWithUser) || undefined;
-      if (!m) return undefined;
-      const raw = m.content ?? "";
-      const content = isActivityContent(raw)
-        ? stripActivityPrefix(raw).replace(/<[^>]*>/g, "")
-        : raw;
-      const sender = m.user?.name ?? "";
-      const dupPrefix = `${sender}: `;
-      return content.startsWith(dupPrefix)
-        ? content.slice(dupPrefix.length)
-        : content;
-    })(),
-    lastMessageSender: ((m) => m?.user?.name ?? undefined)(
-      s.messages[0] as MessageWithUser | undefined
-    ),
-    messages: [],
-    notes: [],
-  }));
+  const mapped = spaces.map((s) => {
+    const allMessages = (s.messages as MessageWithUser[]).map((msg) => {
+      const isAct = isActivityContent(msg.content);
+      return {
+        id: msg.id,
+        content: isAct ? stripActivityPrefix(msg.content) : msg.content,
+        timestamp: msg.createdAt.toISOString(),
+        senderName: msg.user?.name,
+        username: msg.user?.username,
+        isRead: true,
+        type: isAct ? ("activity" as const) : ("text" as const),
+      };
+    });
+
+    const lastNonActivity = [...allMessages]
+      .reverse()
+      .find((m) => m.type !== "activity");
+
+    return {
+      id: s.id,
+      name: s.name,
+      icon: s.icon ?? undefined,
+      description: s.description ?? undefined,
+      createdAt: s.createdAt.toISOString(),
+      members: s.members.map((m: MemberWithUser) => ({
+        id: m.id,
+        role: m.role,
+        joinedAt: m.createdAt.toISOString(),
+        user: {
+          id: m.user.id,
+          name: m.user.name,
+          username: m.user.username,
+          email: m.user.email,
+          avatar: m.user.avatar ?? undefined,
+        },
+      })),
+      lastMessage: lastNonActivity?.content,
+      lastMessageSender: lastNonActivity?.senderName,
+      messages: allMessages,
+      notes: [],
+    } as unknown as ReturnType<typeof Object.assign> & { createdAt: string } & {
+      messages: { timestamp: string }[];
+    };
+  });
+
+  mapped.sort((a, b) => {
+    const aLast = a.messages[a.messages.length - 1]?.timestamp;
+    const bLast = b.messages[b.messages.length - 1]?.timestamp;
+    const aCreated = new Date(a.createdAt).getTime();
+    const bCreated = new Date(b.createdAt).getTime();
+    const aTs = Math.max(aLast ? new Date(aLast).getTime() : 0, aCreated);
+    const bTs = Math.max(bLast ? new Date(bLast).getTime() : 0, bCreated);
+    return bTs - aTs;
+  });
+
+  return mapped;
 }
 
 export async function createSpace(
