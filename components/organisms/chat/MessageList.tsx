@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useMemo } from "react";
+import React, { memo, useEffect, useMemo, useRef } from "react";
 import { NoteIcon } from "../../atoms/Icons";
 import { MessageItem } from "../../molecules/chat/MessageItem";
 import { EmptyState } from "../../atoms/EmptyState";
@@ -18,6 +18,7 @@ const MessageListComponent: React.FC<MessageListProps> = ({
   className = "",
 }) => {
   const { user } = useProfileStore();
+  const listRef = useRef<HTMLDivElement | null>(null);
   const groupedMessages = useMemo(
     () => groupMessagesByDate(messages),
     [messages]
@@ -30,8 +31,19 @@ const MessageListComponent: React.FC<MessageListProps> = ({
     [groupedMessages]
   );
 
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+  }, [messages]);
+
   return (
-    <div className={`flex-1 overflow-y-auto p-4 px-5 space-y-1 ${className}`}>
+    <div
+      ref={listRef}
+      className={`flex-1 overflow-y-auto p-4 px-5 space-y-1 ${className}`}
+    >
       {messages.length === 0 ? (
         <EmptyState
           title="No messages yet"
