@@ -227,56 +227,58 @@ export async function createSpaceFromForm(
     let iconUrl: string | undefined;
     if (file && typeof file !== "string") {
       const blobFile = file as File;
-      if (blobFile.size > 5 * 1024 * 1024) {
-        return { error: "Max file size is 5MB" };
+      if (blobFile.size > 0) {
+        if (blobFile.size > 5 * 1024 * 1024) {
+          return { error: "Max file size is 5MB" };
+        }
+        const contentType = blobFile.type || "application/octet-stream";
+        if (!/^image\//.test(contentType)) {
+          return { error: "Only image files are allowed" };
+        }
+
+        const conn = process.env.AZURE_STORAGE_CONNECTION_STRING;
+        const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+        const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
+        const containerName = process.env.AZURE_STORAGE_CONTAINER;
+        if (!containerName) {
+          return { error: "Missing AZURE_STORAGE_CONTAINER env" };
+        }
+
+        let blobService: BlobServiceLike | null = null;
+        if (conn && conn.length > 0) {
+          blobService = BlobServiceClient.fromConnectionString(
+            conn
+          ) as unknown as BlobServiceLike;
+        } else if (accountName && accountKey) {
+          const { StorageSharedKeyCredential } = await import(
+            "@azure/storage-blob"
+          );
+          const sharedKey = new StorageSharedKeyCredential(
+            accountName,
+            accountKey
+          );
+          blobService = new BlobServiceClient(
+            `https://${accountName}.blob.core.windows.net`,
+            sharedKey
+          ) as unknown as BlobServiceLike;
+        } else {
+          return { error: "Missing Azure Storage credentials" };
+        }
+
+        const container = blobService.getContainerClient(containerName);
+        await container.createIfNotExists();
+
+        const ext = (blobFile.name.split(".").pop() || "png").toLowerCase();
+        const uniqueName = `${crypto.randomUUID()}.${ext}`;
+        const blockBlob = container.getBlockBlobClient(uniqueName);
+
+        const arrayBuffer = await blobFile.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        await blockBlob.uploadData(buffer, {
+          blobHTTPHeaders: { blobContentType: contentType },
+        });
+        iconUrl = blockBlob.url;
       }
-      const contentType = blobFile.type || "application/octet-stream";
-      if (!/^image\//.test(contentType)) {
-        return { error: "Only image files are allowed" };
-      }
-
-      const conn = process.env.AZURE_STORAGE_CONNECTION_STRING;
-      const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-      const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
-      const containerName = process.env.AZURE_STORAGE_CONTAINER;
-      if (!containerName) {
-        return { error: "Missing AZURE_STORAGE_CONTAINER env" };
-      }
-
-      let blobService: BlobServiceLike | null = null;
-      if (conn && conn.length > 0) {
-        blobService = BlobServiceClient.fromConnectionString(
-          conn
-        ) as unknown as BlobServiceLike;
-      } else if (accountName && accountKey) {
-        const { StorageSharedKeyCredential } = await import(
-          "@azure/storage-blob"
-        );
-        const sharedKey = new StorageSharedKeyCredential(
-          accountName,
-          accountKey
-        );
-        blobService = new BlobServiceClient(
-          `https://${accountName}.blob.core.windows.net`,
-          sharedKey
-        ) as unknown as BlobServiceLike;
-      } else {
-        return { error: "Missing Azure Storage credentials" };
-      }
-
-      const container = blobService.getContainerClient(containerName);
-      await container.createIfNotExists();
-
-      const ext = (blobFile.name.split(".").pop() || "png").toLowerCase();
-      const uniqueName = `${crypto.randomUUID()}.${ext}`;
-      const blockBlob = container.getBlockBlobClient(uniqueName);
-
-      const arrayBuffer = await blobFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      await blockBlob.uploadData(buffer, {
-        blobHTTPHeaders: { blobContentType: contentType },
-      });
-      iconUrl = blockBlob.url;
     }
 
     const created = await createSpace(name, description, iconUrl);
