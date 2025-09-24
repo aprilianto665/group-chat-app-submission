@@ -28,6 +28,7 @@ interface ChatAreaProps {
   draftNote?: { title: string; blocks: NoteBlock[] };
   onCommitDraft?: (draft: { title: string; blocks: NoteBlock[] }) => void;
   onCancelDraft?: () => void;
+  onLeaveSpace?: () => void;
 }
 
 const ChatAreaComponent: React.FC<ChatAreaProps> = ({
@@ -48,6 +49,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
   draftNote,
   onCommitDraft,
   onCancelDraft,
+  onLeaveSpace,
 }) => {
   const [draft, setDraft] = useState("");
   const [showNotes, setShowNotes] = useState(false);
@@ -99,6 +101,10 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
               description={spaceDescription}
               members={spaceMembers}
               onClose={() => setShowSpaceInfo(false)}
+              onLeaveSpace={() => {
+                onLeaveSpace?.();
+                setShowSpaceInfo(false);
+              }}
             />
           ) : (
             <NotesPanel

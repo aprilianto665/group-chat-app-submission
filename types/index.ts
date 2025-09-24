@@ -40,7 +40,7 @@ export interface ProfileState {
   hideProfile: () => void;
 }
 
-export type SpaceWithMessages = Omit<Space, "lastMessage"> & {
+export type SpaceWithMessages = Space & {
   messages: Message[];
 };
 

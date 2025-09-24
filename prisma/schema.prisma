@@ -21,6 +21,7 @@ model User {
   updatedAt DateTime  @updatedAt
   messages  Message[]
   memberships SpaceMember[]
+  notes      Note[]
 
   @@map("users")
 }
@@ -34,6 +35,7 @@ model Space {
   updatedAt   DateTime  @updatedAt
   messages    Message[]
   members     SpaceMember[]
+  notes       Note[]
 
   @@map("spaces")
 }
@@ -62,6 +64,7 @@ model SpaceMember {
   spaceId   String
   userId    String
   role      Role     @default(MEMBER)
+  joinedAt  DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -70,4 +73,56 @@ model SpaceMember {
 
   @@unique([spaceId, userId])
   @@map("space_members")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  spaceId   String
+  authorId  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id])
+  author User? @relation(fields: [authorId], references: [id])
+  blocks NoteBlock[]
+
+  @@map("notes")
+}
+
+enum BlockType {
+  TEXT
+  HEADING
+  TODO
+}
+
+model NoteBlock {
+  id         String    @id @default(cuid())
+  noteId     String
+  type       BlockType
+  content    String    @default("")
+  todoTitle  String?
+  collapsed  Boolean   @default(false)
+  sortOrder  Int       @default(0)
+
+  note Note @relation(fields: [noteId], references: [id])
+  items NoteTodoItem[]
+
+  @@index([noteId, sortOrder])
+  @@map("note_blocks")
+}
+
+model NoteTodoItem {
+  id          String   @id @default(cuid())
+  blockId     String
+  text        String
+  done        Boolean  @default(false)
+  description String?
+  sortOrder   Int      @default(0)
+
+  block NoteBlock @relation(fields: [blockId], references: [id])
+
+  @@index([blockId, sortOrder])
+  @@map("note_todo_items")
 }

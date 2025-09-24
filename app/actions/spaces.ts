@@ -1,0 +1,369 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/utils/actionsAuth";
+import type { Prisma } from "@prisma/client";
+import { isActivityContent, stripActivityPrefix } from "@/utils/activity";
+import { createSpaceSchema, spaceIdSchema } from "@/utils/validation/actions";
+
+type MemberWithUser = Prisma.SpaceMemberGetPayload<{ include: { user: true } }>;
+type SpaceForList = Prisma.SpaceGetPayload<{
+  include: {
+    members: { include: { user: true } };
+    messages: true;
+  };
+}>;
+
+type MessageWithUser = Prisma.MessageGetPayload<{ include: { user: true } }>;
+
+type SpaceDetail = Prisma.SpaceGetPayload<{
+  include: {
+    members: { include: { user: true } };
+  };
+}> & { messages: MessageWithUser[] };
+
+type NoteItemDB = {
+  id: string;
+  text: string;
+  done: boolean;
+  description: string | null;
+};
+type NoteBlockDB = {
+  id: string;
+  type: "TEXT" | "HEADING" | "TODO";
+  content: string;
+  todoTitle: string | null;
+  collapsed: boolean;
+  items: NoteItemDB[];
+};
+type NoteFull = {
+  id: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  blocks: NoteBlockDB[];
+};
+
+export async function listUserSpaces() {
+  const { id: userId } = await requireAuth();
+
+  await prisma.spaceMember.findMany({
+    where: { userId },
+    include: {
+      space: true,
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const spaces = (await prisma.space.findMany({
+    where: { members: { some: { userId } } },
+    include: {
+      members: {
+        include: { user: true },
+        orderBy: { createdAt: "asc" },
+      },
+      messages: {
+        take: 1,
+        orderBy: { createdAt: "desc" },
+        include: { user: true },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+  })) as SpaceForList[];
+
+  return spaces.map((s) => ({
+    id: s.id,
+    name: s.name,
+    icon: s.icon ?? undefined,
+    description: s.description ?? undefined,
+    createdAt: s.createdAt.toISOString(),
+    members: s.members.map((m: MemberWithUser) => ({
+      id: m.id,
+      role: m.role,
+      joinedAt: m.createdAt.toISOString(),
+      user: {
+        id: m.user.id,
+        name: m.user.name,
+        username: m.user.username,
+        email: m.user.email,
+        avatar: m.user.avatar ?? undefined,
+      },
+    })),
+    lastMessage: (() => {
+      const m = (s.messages[0] as MessageWithUser) || undefined;
+      if (!m) return undefined;
+      const raw = m.content ?? "";
+      const content = isActivityContent(raw)
+        ? stripActivityPrefix(raw).replace(/<[^>]*>/g, "")
+        : raw;
+      const sender = m.user?.name ?? "";
+      const dupPrefix = `${sender}: `;
+      return content.startsWith(dupPrefix)
+        ? content.slice(dupPrefix.length)
+        : content;
+    })(),
+    lastMessageSender: ((m) => m?.user?.name ?? undefined)(
+      s.messages[0] as MessageWithUser | undefined
+    ),
+    messages: [],
+    notes: [],
+  }));
+}
+
+export async function createSpace(name: string, description?: string) {
+  const parsed = createSpaceSchema.safeParse({ name, description });
+  if (!parsed.success) throw new Error("Invalid space payload");
+  const { id: userId } = await requireAuth();
+
+  const userExists = await prisma.user.findUnique({ where: { id: userId } });
+  if (!userExists) {
+    throw new Error(
+      "User not found in database. Please log out and register/login again."
+    );
+  }
+
+  const space = (await prisma.space.create({
+    data: {
+      name,
+      description,
+      members: {
+        create: {
+          userId,
+          role: "ADMIN",
+        },
+      },
+    },
+    include: {
+      members: { include: { user: true } },
+    },
+  })) as Prisma.SpaceGetPayload<{
+    include: { members: { include: { user: true } } };
+  }>;
+
+  return {
+    id: space.id,
+    name: space.name,
+    icon: space.icon ?? undefined,
+    description: space.description ?? undefined,
+    createdAt: space.createdAt.toISOString(),
+    members: space.members.map((m: MemberWithUser) => ({
+      id: m.id,
+      role: m.role,
+      joinedAt: m.createdAt.toISOString(),
+      user: {
+        id: m.user.id,
+        name: m.user.name,
+        username: m.user.username,
+        email: m.user.email,
+        avatar: m.user.avatar ?? undefined,
+      },
+    })),
+    messages: [],
+    notes: [],
+  };
+}
+
+export async function joinSpace(spaceId: string) {
+  const parsed = spaceIdSchema.safeParse(spaceId);
+  if (!parsed.success) throw new Error("Invalid space id");
+  const { id: userId } = await requireAuth();
+
+  const userExists = await prisma.user.findUnique({ where: { id: userId } });
+  if (!userExists) {
+    throw new Error(
+      "User not found in database. Please log out and register/login again."
+    );
+  }
+
+  const existing = await prisma.spaceMember.findUnique({
+    where: { spaceId_userId: { spaceId, userId } },
+  });
+  if (existing) return existing.id;
+
+  const member = await prisma.spaceMember.create({
+    data: { spaceId, userId, role: "MEMBER" },
+  });
+  return member.id;
+}
+
+export async function getSpaceDetail(spaceId: string) {
+  const parsed = spaceIdSchema.safeParse(spaceId);
+  if (!parsed.success) throw new Error("Invalid space id");
+  await requireAuth();
+
+  const spaceBase = (await prisma.space.findUnique({
+    where: { id: spaceId },
+    include: {
+      members: { include: { user: true } },
+    },
+  })) as SpaceDetail | null;
+  if (!spaceBase) throw new Error("Space not found");
+
+  const messages = (await prisma.message.findMany({
+    where: { spaceId },
+    orderBy: { createdAt: "asc" },
+    include: { user: true },
+  })) as MessageWithUser[];
+
+  let notes: NoteFull[] = [];
+  try {
+    notes = await (
+      prisma as unknown as {
+        note: { findMany: (args: unknown) => Promise<NoteFull[]> };
+      }
+    ).note.findMany({
+      where: { spaceId },
+      orderBy: [{ sortOrder: "asc" }, { updatedAt: "desc" }],
+      include: {
+        blocks: {
+          orderBy: { sortOrder: "asc" },
+          include: { items: { orderBy: { sortOrder: "asc" } } },
+        },
+      },
+    });
+  } catch {
+    notes = await (
+      prisma as unknown as {
+        note: { findMany: (args: unknown) => Promise<NoteFull[]> };
+      }
+    ).note.findMany({
+      where: { spaceId },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        blocks: {
+          orderBy: { sortOrder: "asc" },
+          include: { items: { orderBy: { sortOrder: "asc" } } },
+        },
+      },
+    });
+    notes.sort((a: NoteFull, b: NoteFull) => {
+      const sa =
+        (a as unknown as { sortOrder?: number }).sortOrder ??
+        Number.MAX_SAFE_INTEGER;
+      const sb =
+        (b as unknown as { sortOrder?: number }).sortOrder ??
+        Number.MAX_SAFE_INTEGER;
+      if (sa !== sb) return sa - sb;
+      return (
+        new Date(b.updatedAt as unknown as string).getTime() -
+        new Date(a.updatedAt as unknown as string).getTime()
+      );
+    });
+  }
+
+  return {
+    id: spaceBase.id,
+    name: spaceBase.name,
+    icon: spaceBase.icon ?? undefined,
+    description: spaceBase.description ?? undefined,
+    createdAt: spaceBase.createdAt.toISOString(),
+    members: spaceBase.members.map((m: MemberWithUser) => ({
+      id: m.id,
+      role: m.role,
+      joinedAt: m.createdAt.toISOString(),
+      user: {
+        id: m.user.id,
+        name: m.user.name,
+        username: m.user.username,
+        email: m.user.email,
+        avatar: m.user.avatar ?? undefined,
+      },
+    })),
+    messages: messages.map((msg) => {
+      const isAct = isActivityContent(msg.content);
+      const mapped = {
+        id: msg.id,
+        content: isAct ? stripActivityPrefix(msg.content) : msg.content,
+        timestamp: msg.createdAt.toISOString(),
+        senderName: msg.user?.name,
+        username: msg.user?.username,
+        isRead: true,
+        type: isAct ? ("activity" as const) : ("text" as const),
+      };
+      return mapped;
+    }),
+    notes: (notes as NoteFull[]).map((n) => ({
+      id: n.id,
+      title: n.title,
+      createdAt: n.createdAt.toISOString(),
+      updatedAt: n.updatedAt.toISOString(),
+      blocks: (n.blocks as NoteBlockDB[]).map((b) => ({
+        id: b.id,
+        type:
+          b.type === "TEXT"
+            ? "text"
+            : b.type === "HEADING"
+            ? "heading"
+            : "todo",
+        content: b.content,
+        todoTitle: b.todoTitle ?? undefined,
+        collapsed: b.collapsed,
+        items: (b.items as NoteItemDB[]).map((it) => ({
+          id: it.id,
+          text: it.text,
+          done: it.done,
+          description: it.description ?? undefined,
+        })),
+      })),
+    })),
+  };
+}
+
+export async function leaveSpace(spaceId: string) {
+  const parsed = spaceIdSchema.safeParse(spaceId);
+  if (!parsed.success) throw new Error("Invalid space id");
+  const { id: userId } = await requireAuth();
+
+  await prisma.$transaction(async (tx) => {
+    await tx.spaceMember.deleteMany({ where: { spaceId, userId } });
+
+    const remaining = await tx.spaceMember.count({ where: { spaceId } });
+
+    if (remaining === 0) {
+      await tx.message.deleteMany({ where: { spaceId } });
+
+      const noteIds = (
+        await (
+          tx as unknown as {
+            note: { findMany: (args: unknown) => Promise<{ id: string }[]> };
+          }
+        ).note.findMany({ where: { spaceId }, select: { id: true } })
+      ).map((n) => n.id);
+
+      if (noteIds.length > 0) {
+        const blocks = await (
+          tx as unknown as {
+            noteBlock: {
+              findMany: (args: unknown) => Promise<{ id: string }[]>;
+            };
+          }
+        ).noteBlock.findMany({
+          where: { noteId: { in: noteIds } },
+          select: { id: true },
+        });
+        const blockIds = blocks.map((b) => b.id);
+        if (blockIds.length > 0) {
+          await (
+            tx as unknown as {
+              noteTodoItem: { deleteMany: (args: unknown) => Promise<void> };
+            }
+          ).noteTodoItem.deleteMany({ where: { blockId: { in: blockIds } } });
+          await (
+            tx as unknown as {
+              noteBlock: { deleteMany: (args: unknown) => Promise<void> };
+            }
+          ).noteBlock.deleteMany({ where: { id: { in: blockIds } } });
+        }
+        await (
+          tx as unknown as {
+            note: { deleteMany: (args: unknown) => Promise<void> };
+          }
+        ).note.deleteMany({ where: { id: { in: noteIds } } });
+      }
+
+      await tx.space.delete({ where: { id: spaceId } });
+    }
+  });
+
+  return { success: true } as const;
+}

@@ -4,243 +4,13 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { SpaceManager, ChatArea } from "@/components";
 import { useProfileStore } from "@/stores/profileStore";
 import type { Message, User, SpaceWithNotes, Note, NoteBlock } from "@/types";
+import type { AppActions, NoteBlockPayload } from "@/types/app";
 
-const initialSpaces: SpaceWithNotes[] = [
-  {
-    id: "1",
-    name: "General Discussion",
-    icon: "",
-    description: "Tempat ngobrol umum seputar tim dan update harian.",
-    createdAt: "2024-01-15T10:00:00",
-    members: [
-      {
-        id: "m1",
-        role: "ADMIN",
-        user: {
-          id: "u1",
-          name: "John Doe",
-          username: "johndoe",
-          email: "john@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-01-10T10:00:00",
-      },
-      {
-        id: "m2",
-        role: "MEMBER",
-        user: {
-          id: "u2",
-          name: "Jane Smith",
-          username: "janesmith",
-          email: "jane@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-01-12T10:00:00",
-      },
-      {
-        id: "m7",
-        role: "MEMBER",
-        user: {
-          id: "u7",
-          name: "amb4tron",
-          username: "ambatucode",
-          email: "ambatucode@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-01-13T10:00:00",
-      },
-    ],
-    messages: [
-      {
-        id: "1",
-        content: "Hey everyone! How's it going?",
-        timestamp: "2024-01-15T10:30:00",
-        senderName: "John Doe",
-        username: "johndoe",
-        isRead: false,
-      },
-      {
-        id: "2",
-        content: "Great! Working on the new project",
-        timestamp: "2024-01-15T10:32:00",
-        senderName: "amb4tron",
-        username: "ambatucode",
-        isRead: false,
-      },
-      {
-        id: "3",
-        content: "Same here, just finished the design mockups",
-        timestamp: "2024-01-15T10:35:00",
-        senderName: "Jane Smith",
-        username: "janesmith",
-        isRead: false,
-      },
-    ],
-    notes: [],
-  },
-  {
-    id: "2",
-    name: "Project Alpha",
-    icon: "",
-    description: "Diskusi dan koordinasi untuk Project Alpha.",
-    createdAt: "2024-02-10T08:50:00",
-    members: [
-      {
-        id: "m3",
-        role: "ADMIN",
-        user: {
-          id: "u3",
-          name: "Project Lead",
-          username: "lead",
-          email: "lead@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-02-01T08:50:00",
-      },
-      {
-        id: "m4",
-        role: "MEMBER",
-        user: {
-          id: "u4",
-          name: "Product Manager",
-          username: "pm",
-          email: "pm@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-02-02T08:50:00",
-      },
-      {
-        id: "m8",
-        role: "ADMIN",
-        user: {
-          id: "u7",
-          name: "amb4tron",
-          username: "ambatucode",
-          email: "ambatucode@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-02-03T08:50:00",
-      },
-    ],
-    messages: [
-      {
-        id: "1",
-        content: "Kickoff notes updated in the doc.",
-        timestamp: "2024-02-10T09:00:00",
-        senderName: "PM",
-        username: "pm",
-        isRead: true,
-      },
-      {
-        id: "2",
-        content: "The deadline is next week",
-        timestamp: "2024-02-11T12:00:00",
-        senderName: "Lead",
-        username: "lead",
-        isRead: true,
-      },
-    ],
-    notes: [],
-  },
-  {
-    id: "3",
-    name: "Random Chat",
-    icon: "",
-    description: "Obrolan santai dan hal-hal random.",
-    createdAt: "2024-03-01T19:50:00",
-    members: [
-      {
-        id: "m5",
-        role: "MEMBER",
-        user: {
-          id: "u5",
-          name: "Friend",
-          username: "friend",
-          email: "friend@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-03-01T19:00:00",
-      },
-      {
-        id: "m9",
-        role: "ADMIN",
-        user: {
-          id: "u7",
-          name: "amb4tron",
-          username: "ambatucode",
-          email: "ambatucode@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-03-01T19:10:00",
-      },
-    ],
-    messages: [
-      {
-        id: "1",
-        content: "Did you see that movie?",
-        timestamp: "2024-03-01T20:00:00",
-        senderName: "Friend",
-        username: "friend",
-        isRead: false,
-      },
-      {
-        id: "2",
-        content: "Not yet, is it good?",
-        timestamp: "2024-03-01T20:05:00",
-        senderName: "amb4tron",
-        username: "amb4tron",
-        isRead: true,
-      },
-    ],
-    notes: [],
-  },
-  {
-    id: "4",
-    name: "Tech Updates",
-    icon: "",
-    description: "Berita dan update teknologi terbaru.",
-    createdAt: "2024-04-05T07:50:00",
-    members: [
-      {
-        id: "m6",
-        role: "ADMIN",
-        user: {
-          id: "u6",
-          name: "Bot",
-          username: "bot",
-          email: "bot@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-04-01T07:50:00",
-      },
-      {
-        id: "m10",
-        role: "MEMBER",
-        user: {
-          id: "u7",
-          name: "amb4tron",
-          username: "ambatucode",
-          email: "ambatucode@example.com",
-          avatar: "/avatar_default.jpg",
-        },
-        joinedAt: "2024-04-02T07:50:00",
-      },
-    ],
-    messages: [
-      {
-        id: "1",
-        content: "New framework released!",
-        timestamp: "2024-04-05T08:00:00",
-        senderName: "Bot",
-        username: "bot",
-        isRead: true,
-      },
-    ],
-    notes: [],
-  },
-];
-
-export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
+export const AppWrapper: React.FC<{
+  user: User;
+  initialSpaces: SpaceWithNotes[];
+  actions: AppActions;
+}> = ({ user, initialSpaces, actions }) => {
   const { setUser } = useProfileStore();
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [spaces, setSpaces] = useState<SpaceWithNotes[]>(() => initialSpaces);
@@ -281,65 +51,49 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
     return copy;
   }, [spaces]);
 
-  const spacesWithUnreadCount = useMemo(() => {
+  const spacesWithUnreadCount: SpaceWithNotes[] = useMemo(() => {
     return sortedSpaces.map((space) => {
+      // If space already has preloaded lastMessage/lastMessageSender from server, keep it.
+      // Otherwise derive it from local messages.
+      const derivedLast = [...space.messages]
+        .reverse()
+        .find((m) => m.type !== "activity");
       const unreadCount = space.messages.filter((msg) => !msg.isRead).length;
       return {
         ...space,
+        lastMessage: space.lastMessage ?? derivedLast?.content,
+        lastMessageSender: space.lastMessageSender ?? derivedLast?.senderName,
         unreadCount,
       };
     });
   }, [sortedSpaces]);
 
-  const handleSpaceCreated = (spaceName: string) => {
-    const newId = String(Date.now());
-    setSpaces((prev) => [
-      ...prev,
-      {
-        id: newId,
-        name: spaceName,
-        createdAt: new Date().toISOString(),
-        messages: [],
-        notes: [],
-      },
-    ]);
-    setActiveSpaceId(newId);
+  const handleSpaceCreated = async (spaceName: string) => {
+    const created = await actions.createSpace(spaceName);
+    setSpaces((prev) => [created, ...prev]);
+    setActiveSpaceId(created.id);
   };
 
-  const handleSendMessage = (content: string) => {
-    const { user } = useProfileStore.getState();
-    const newMessage: Message = {
-      id: String(Date.now()),
-      content,
-      timestamp: new Date().toISOString(),
-      senderName: user?.name,
-      username: user?.username,
-      isRead: true,
-    };
+  const handleSendMessage = async (content: string) => {
+    if (!activeSpaceId) return;
+    const newMessage = await actions.sendMessage(activeSpaceId, content);
     setSpaces((prev) =>
       prev.map((s) =>
         s.id === activeSpaceId
-          ? {
-              ...s,
-              messages: [...s.messages, newMessage],
-            }
+          ? { ...s, messages: [...s.messages, newMessage] }
           : s
       )
     );
   };
 
-  const handleSelectSpace = (spaceId: string) => {
+  const handleSelectSpace = async (spaceId: string) => {
     setActiveSpaceId(spaceId);
-    setSpaces((prev) =>
-      prev.map((s) =>
-        s.id === spaceId
-          ? {
-              ...s,
-              messages: s.messages.map((msg) => ({ ...msg, isRead: true })),
-            }
-          : s
-      )
-    );
+    const detail = await actions.getSpaceDetail(spaceId);
+    setSpaces((prev) => {
+      const exists = prev.find((s) => s.id === spaceId);
+      if (exists) return prev.map((s) => (s.id === spaceId ? detail : s));
+      return [detail, ...prev];
+    });
   };
 
   const activeNoteId = activeSpaceId
@@ -373,10 +127,15 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
   );
 
   const handleSaveNote = useCallback(
-    (draft: { title: string; blocks: NoteBlock[] }) => {
+    async (draft: { title: string; blocks: NoteBlock[] }) => {
       if (!activeSpaceId || !activeNoteId) return;
-      const now = new Date().toISOString();
+      const updated = await actions.updateNote(
+        activeNoteId,
+        draft.title,
+        draft.blocks as unknown as NoteBlockPayload[]
+      );
       const { user } = useProfileStore.getState();
+      const now = new Date().toISOString();
       const safeTitle = draft.title || "Untitled";
       const safeSender = user?.name ?? "Someone";
       const activityMessage: Message = {
@@ -388,49 +147,47 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
         isRead: true,
         type: "activity",
       };
+      actions
+        .sendActivityMessage?.(activeSpaceId, activityMessage.content)
+        .catch(() => {});
       setSpaces((prev) =>
         prev.map((s) =>
           s.id === activeSpaceId
             ? {
                 ...s,
-                notes: s.notes.map((n) =>
-                  n.id === activeNoteId
-                    ? {
-                        ...n,
-                        title: draft.title,
-                        blocks: draft.blocks,
-                        updatedAt: now,
-                      }
-                    : n
-                ),
+                notes: s.notes.map((n) => (n.id === updated.id ? updated : n)),
                 messages: [...s.messages, activityMessage],
               }
             : s
         )
       );
     },
-    [activeSpaceId, activeNoteId]
+    [activeSpaceId, activeNoteId, actions]
   );
 
-  const handleDeleteNote = useCallback(() => {
+  const handleDeleteNote = useCallback(async () => {
     if (!activeSpaceId || !activeNoteId) return;
+    await actions.deleteNote(activeNoteId);
     const { user } = useProfileStore.getState();
     const now = new Date().toISOString();
-    setSpaces((prev) => {
-      const targetSpace = prev.find((s) => s.id === activeSpaceId);
-      const deletedNote = targetSpace?.notes.find((n) => n.id === activeNoteId);
-      const safeTitle = deletedNote?.title || "Untitled";
-      const safeSender = user?.name ?? "Someone";
-      const activityMessage: Message = {
-        id: String(Date.now()),
-        content: `<strong>${safeSender}</strong> deleted a note: <strong>${safeTitle}</strong>`,
-        timestamp: now,
-        senderName: user?.name,
-        username: user?.username,
-        isRead: true,
-        type: "activity",
-      };
-      return prev.map((s) =>
+    const targetSpace = spaces.find((s) => s.id === activeSpaceId);
+    const deletedNote = targetSpace?.notes.find((n) => n.id === activeNoteId);
+    const safeTitle = deletedNote?.title || "Untitled";
+    const safeSender = user?.name ?? "Someone";
+    const activityMessage: Message = {
+      id: String(Date.now()),
+      content: `<strong>${safeSender}</strong> deleted a note: <strong>${safeTitle}</strong>`,
+      timestamp: now,
+      senderName: user?.name,
+      username: user?.username,
+      isRead: true,
+      type: "activity",
+    };
+    actions
+      .sendActivityMessage?.(activeSpaceId, activityMessage.content)
+      .catch(() => {});
+    setSpaces((prev) =>
+      prev.map((s) =>
         s.id === activeSpaceId
           ? {
               ...s,
@@ -438,26 +195,29 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
               messages: [...s.messages, activityMessage],
             }
           : s
-      );
-    });
+      )
+    );
     setActiveNoteForSpace(activeSpaceId, undefined);
-  }, [activeSpaceId, activeNoteId, setActiveNoteForSpace]);
+  }, [activeSpaceId, activeNoteId, setActiveNoteForSpace, actions, spaces]);
 
   return (
     <div className="flex h-full">
       <div className="w-80 flex-shrink-0">
         <SpaceManager
           spaces={spacesWithUnreadCount.map(
-            ({ id, name, icon, messages, unreadCount }) => ({
+            ({
               id,
               name,
               icon,
-              lastMessage: [...messages]
-                .reverse()
-                .find((m) => m.type !== "activity")?.content,
-              lastMessageSender: [...messages]
-                .reverse()
-                .find((m) => m.type !== "activity")?.senderName,
+              lastMessage,
+              lastMessageSender,
+              unreadCount,
+            }) => ({
+              id,
+              name,
+              icon,
+              lastMessage,
+              lastMessageSender,
               unreadCount,
             })
           )}
@@ -482,58 +242,73 @@ export const AppWrapper: React.FC<{ user: User }> = ({ user }) => {
             onSaveNote={handleSaveNote}
             onDeleteNote={handleDeleteNote}
             onReorderNotes={(orderedIds) => {
-              setSpaces((prev) =>
-                prev.map((s) =>
-                  s.id === activeSpace.id
-                    ? {
-                        ...s,
-                        notes: orderedIds
-                          .map((id) => s.notes.find((n) => n.id === id))
-                          .filter((n): n is Note => Boolean(n)),
-                      }
-                    : s
-                )
-              );
+              actions.reorderNotes(activeSpace.id, orderedIds).then(() => {
+                setSpaces((prev) =>
+                  prev.map((s) =>
+                    s.id === activeSpace.id
+                      ? {
+                          ...s,
+                          notes: orderedIds
+                            .map((id) => s.notes.find((n) => n.id === id))
+                            .filter((n): n is Note => Boolean(n)),
+                        }
+                      : s
+                  )
+                );
+              });
+            }}
+            onLeaveSpace={async () => {
+              if (!actions.leaveSpace) return;
+              const currId = activeSpace.id;
+              await actions.leaveSpace(currId);
+              setSpaces((prev) => prev.filter((s) => s.id !== currId));
+              setActiveSpaceId((prev) => (prev === currId ? null : prev));
             }}
             draftNote={creatingDraftBySpace[activeSpace.id]}
             onCommitDraft={(draft) => {
-              const newNoteId = `note_${Date.now()}`;
-              const now = new Date().toISOString();
-              const newNote: Note = {
-                id: newNoteId,
-                title: draft.title,
-                blocks: draft.blocks,
-                createdAt: now,
-                updatedAt: now,
-              };
-              const { user } = useProfileStore.getState();
-              const safeTitle = draft.title || "Untitled";
-              const safeSender = user?.name ?? "Someone";
-              const activityMessage: Message = {
-                id: String(Date.now()),
-                content: `<strong>${safeSender}</strong> just added a new note: <strong>${safeTitle}</strong>`,
-                timestamp: now,
-                senderName: user?.name,
-                username: user?.username,
-                isRead: true,
-                type: "activity",
-              };
-              setSpaces((prev) =>
-                prev.map((s) =>
-                  s.id === activeSpace.id
-                    ? {
-                        ...s,
-                        notes: [newNote, ...s.notes],
-                        messages: [...s.messages, activityMessage],
-                      }
-                    : s
+              actions
+                .createNote(
+                  activeSpace.id,
+                  draft.title,
+                  draft.blocks as unknown as NoteBlockPayload[]
                 )
-              );
-              setActiveNoteForSpace(activeSpace.id, newNoteId);
-              setCreatingDraftBySpace((prev) => ({
-                ...prev,
-                [activeSpace.id]: undefined,
-              }));
+                .then((newNote) => {
+                  const { user } = useProfileStore.getState();
+                  const now = new Date().toISOString();
+                  const safeTitle = draft.title || "Untitled";
+                  const safeSender = user?.name ?? "Someone";
+                  const activityMessage: Message = {
+                    id: String(Date.now()),
+                    content: `<strong>${safeSender}</strong> just added a new note: <strong>${safeTitle}</strong>`,
+                    timestamp: now,
+                    senderName: user?.name,
+                    username: user?.username,
+                    isRead: true,
+                    type: "activity",
+                  };
+                  actions
+                    .sendActivityMessage?.(
+                      activeSpace.id,
+                      activityMessage.content
+                    )
+                    .catch(() => {});
+                  setSpaces((prev) =>
+                    prev.map((s) =>
+                      s.id === activeSpace.id
+                        ? {
+                            ...s,
+                            notes: [newNote, ...s.notes],
+                            messages: [...s.messages, activityMessage],
+                          }
+                        : s
+                    )
+                  );
+                  setActiveNoteForSpace(activeSpace.id, newNote.id);
+                  setCreatingDraftBySpace((prev) => ({
+                    ...prev,
+                    [activeSpace.id]: undefined,
+                  }));
+                });
             }}
             onCancelDraft={() => {
               setCreatingDraftBySpace((prev) => ({
