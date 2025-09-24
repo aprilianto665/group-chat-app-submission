@@ -194,15 +194,18 @@ export const AppWrapper: React.FC<{
   const handleSaveNote = useCallback(
     async (draft: { title: string; blocks: NoteBlock[] }) => {
       if (!activeSpaceId || !activeNoteId) return;
+
+      const finalTitle = draft.title.trim() || "Untitled";
+
       const updated = await actions.updateNote(
         activeNoteId,
-        draft.title,
+        finalTitle,
         draft.blocks as unknown as NoteBlockPayload[]
       );
       const { user } = useProfileStore.getState();
       const activityMessage = createActivityMessage(
         "edited",
-        draft.title,
+        finalTitle,
         user?.name
       );
       actions
@@ -231,7 +234,7 @@ export const AppWrapper: React.FC<{
     const deletedNote = targetSpace?.notes.find((n) => n.id === activeNoteId);
     const activityMessage = createActivityMessage(
       "deleted",
-      deletedNote?.title || "",
+      deletedNote?.title || "Untitled",
       user?.name
     );
     actions
@@ -312,17 +315,19 @@ export const AppWrapper: React.FC<{
             }}
             draftNote={creatingDraftBySpace[activeSpace.id]}
             onCommitDraft={(draft) => {
+              const finalTitle = draft.title.trim() || "Untitled";
+
               actions
                 .createNote(
                   activeSpace.id,
-                  draft.title,
+                  finalTitle,
                   draft.blocks as unknown as NoteBlockPayload[]
                 )
                 .then((newNote) => {
                   const { user } = useProfileStore.getState();
                   const activityMessage = createActivityMessage(
                     "added",
-                    draft.title,
+                    finalTitle,
                     user?.name
                   );
                   actions

@@ -77,7 +77,8 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     setBlocks(note?.blocks ?? []);
     setIsEditing(note?.id === "draft");
     setOpenBlockMenuId(null);
-    setHasChanges(false);
+    // Set hasChanges to true for draft notes (new notes)
+    setHasChanges(note?.id === "draft");
   }, [note?.id, note?.title, note?.blocks]);
 
   useEffect(() => {
@@ -145,14 +146,20 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   );
 
   const handleSave = useCallback(() => {
-    if (!hasChanges) {
+    // Allow saving if it's a draft note (new note) or if there are changes
+    const isDraft = note?.id === "draft";
+    if (!hasChanges && !isDraft) {
       setIsEditing(false);
       return;
     }
-    onSave({ title, blocks });
+
+    // Ensure title is not empty for draft notes
+    const finalTitle = title.trim() || "Untitled";
+
+    onSave({ title: finalTitle, blocks });
     setHasChanges(false);
     setIsEditing(false);
-  }, [onSave, title, blocks, hasChanges]);
+  }, [onSave, title, blocks, hasChanges, note?.id]);
 
   const blockIds = useMemo(() => blocks.map((b) => b.id), [blocks]);
 
@@ -511,7 +518,10 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
         )}
       </div>
       {isEditing && <AddBlockMenu onAdd={handleAddBlock} />}
-      <SaveButton isVisible={isEditing || hasChanges} onClick={handleSave} />
+      <SaveButton
+        isVisible={isEditing || hasChanges || note?.id === "draft"}
+        onClick={handleSave}
+      />
     </div>
   );
 };
