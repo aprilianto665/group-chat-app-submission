@@ -544,6 +544,119 @@ export async function createInviteLink(spaceId: string, expiresInMinutes = 60) {
   return { url } as const;
 }
 
+export async function setMemberRole(
+  spaceId: string,
+  targetUserId: string,
+  role: "ADMIN" | "MEMBER"
+) {
+  const parsedId = spaceIdSchema.safeParse(spaceId);
+  if (!parsedId.success) throw new Error("Invalid space id");
+  const { id: actorId } = await requireAuth();
+
+  const membership = await prisma.spaceMember.findUnique({
+    where: { spaceId_userId: { spaceId, userId: actorId } },
+    select: { role: true },
+  });
+  if (!membership || membership.role !== "ADMIN")
+    throw new Error("Forbidden: only admin can change roles");
+
+  await prisma.spaceMember.update({
+    where: { spaceId_userId: { spaceId, userId: targetUserId } },
+    data: { role },
+  });
+
+  const updatedMembers = await prisma.spaceMember.findMany({
+    where: { spaceId },
+    include: { user: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  try {
+    const actor = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { name: true, email: true },
+    });
+    const target = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { name: true, email: true },
+    });
+    const actorName = actor?.name || actor?.email || "Someone";
+    const targetName = target?.name || target?.email || "this member";
+    await sendActivityMessage(
+      spaceId,
+      role === "ADMIN"
+        ? `<strong>${actorName}</strong> made <strong>${targetName}</strong> an admin`
+        : `<strong>${actorName}</strong> changed <strong>${targetName}</strong>'s role`
+    );
+  } catch {}
+
+  return updatedMembers.map((m) => ({
+    id: m.id,
+    role: m.role,
+    joinedAt: m.createdAt.toISOString(),
+    user: {
+      id: m.user.id,
+      name: m.user.name,
+      username: m.user.username,
+      email: m.user.email,
+      avatar: m.user.avatar ?? undefined,
+    },
+  }));
+}
+
+export async function removeMember(spaceId: string, targetUserId: string) {
+  const parsedId = spaceIdSchema.safeParse(spaceId);
+  if (!parsedId.success) throw new Error("Invalid space id");
+  const { id: actorId } = await requireAuth();
+
+  const membership = await prisma.spaceMember.findUnique({
+    where: { spaceId_userId: { spaceId, userId: actorId } },
+    select: { role: true },
+  });
+  if (!membership || membership.role !== "ADMIN")
+    throw new Error("Forbidden: only admin can remove members");
+
+  await prisma.spaceMember.delete({
+    where: { spaceId_userId: { spaceId, userId: targetUserId } },
+  });
+
+  const updatedMembers = await prisma.spaceMember.findMany({
+    where: { spaceId },
+    include: { user: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  try {
+    const actor = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { name: true, email: true },
+    });
+    const target = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { name: true, email: true },
+    });
+    const actorName = actor?.name || actor?.email || "Someone";
+    const targetName = target?.name || target?.email || "this member";
+    await sendActivityMessage(
+      spaceId,
+      `<strong>${actorName}</strong> removed <strong>${targetName}</strong> from the space`
+    );
+  } catch {}
+
+  return updatedMembers.map((m) => ({
+    id: m.id,
+    role: m.role,
+    joinedAt: m.createdAt.toISOString(),
+    user: {
+      id: m.user.id,
+      name: m.user.name,
+      username: m.user.username,
+      email: m.user.email,
+      avatar: m.user.avatar ?? undefined,
+    },
+  }));
+}
+
 export async function updateSpaceInfo(
   spaceId: string,
   payload: { name: string; description?: string }

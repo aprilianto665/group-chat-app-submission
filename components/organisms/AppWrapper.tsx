@@ -10,6 +10,7 @@ import type {
   Note,
   NoteBlock,
   Space,
+  SpaceMember,
 } from "@/types";
 import type { AppActions, NoteBlockPayload } from "@/types/app";
 
@@ -87,6 +88,26 @@ export const AppWrapper: React.FC<{
       window.addEventListener("space-updated", handler as EventListener);
       return () =>
         window.removeEventListener("space-updated", handler as EventListener);
+    }
+    return () => {};
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { spaceId: string; members: SpaceMember[] }
+        | undefined;
+      if (!detail) return;
+      setSpaces((prev) =>
+        prev.map((s) =>
+          s.id === detail.spaceId ? { ...s, members: detail.members } : s
+        )
+      );
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("members-updated", handler as EventListener);
+      return () =>
+        window.removeEventListener("members-updated", handler as EventListener);
     }
     return () => {};
   }, []);

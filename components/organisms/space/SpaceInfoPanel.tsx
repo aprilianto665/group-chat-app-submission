@@ -9,6 +9,9 @@ import {
   LinkIcon,
   PencilIcon,
   CheckIcon,
+  ChevronDownIcon,
+  UserIcon,
+  TrashIcon,
 } from "../../atoms/Icons";
 import { Button } from "../../atoms/Button";
 import { LogoutIcon } from "../../atoms/Icons";
@@ -17,6 +20,8 @@ import {
   createInviteLink,
   updateSpaceInfo,
   updateSpaceFromForm,
+  setMemberRole,
+  removeMember,
 } from "@/app/actions/spaces";
 import { useProfileStore } from "@/stores/profileStore";
 import { Input } from "../../atoms/Input";
@@ -53,6 +58,10 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
   const [draftIconFile, setDraftIconFile] = useState<File | null>(null);
   const [draftIconPreview, setDraftIconPreview] = useState<string | null>(null);
   const { user } = useProfileStore();
+  const [openDropdownFor, setOpenDropdownFor] = useState<string | null>(null);
+  const [isActingOnMemberId, setIsActingOnMemberId] = useState<string | null>(
+    null
+  );
 
   const isAdmin = useMemo(() => {
     if (!user?.id) return false;
@@ -96,6 +105,104 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     if (!absoluteInviteUrl) return;
     navigator.clipboard.writeText(absoluteInviteUrl).catch(() => {});
   }, [absoluteInviteUrl]);
+
+  const handleMembersUpdatedEvent = useCallback(
+    (updatedMembers: SpaceMember[]) => {
+      if (!spaceId) return;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("members-updated", {
+            detail: { spaceId, members: updatedMembers },
+          })
+        );
+      }
+    },
+    [spaceId]
+  );
+
+  const handleMakeAdmin = useCallback(
+    async (targetUserId: string) => {
+      if (!spaceId) return;
+      setIsActingOnMemberId(targetUserId);
+      try {
+        const updated = await setMemberRole(spaceId, targetUserId, "ADMIN");
+        handleMembersUpdatedEvent(updated as unknown as SpaceMember[]);
+        if (typeof window !== "undefined") {
+          const actorName = user?.name || user?.email || "Someone";
+          const target = members.find(
+            (mm) => mm.user.id === targetUserId
+          )?.user;
+          const targetName = target?.name || target?.email || "this member";
+          const activityContent = `<strong>${actorName}</strong> made <strong>${targetName}</strong> an admin`;
+          window.dispatchEvent(
+            new CustomEvent("space-updated", {
+              detail: { spaceId, activityContent },
+            })
+          );
+        }
+      } finally {
+        setIsActingOnMemberId(null);
+        setOpenDropdownFor(null);
+      }
+    },
+    [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
+  );
+
+  const handleRemoveMember = useCallback(
+    async (targetUserId: string) => {
+      if (!spaceId) return;
+      setIsActingOnMemberId(targetUserId);
+      try {
+        const updated = await removeMember(spaceId, targetUserId);
+        handleMembersUpdatedEvent(updated as unknown as SpaceMember[]);
+        if (typeof window !== "undefined") {
+          const actorName = user?.name || user?.email || "Someone";
+          const target = members.find(
+            (mm) => mm.user.id === targetUserId
+          )?.user;
+          const targetName = target?.name || target?.email || "this member";
+          const activityContent = `<strong>${actorName}</strong> removed <strong>${targetName}</strong> from the space`;
+          window.dispatchEvent(
+            new CustomEvent("space-updated", {
+              detail: { spaceId, activityContent },
+            })
+          );
+        }
+      } finally {
+        setIsActingOnMemberId(null);
+        setOpenDropdownFor(null);
+      }
+    },
+    [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
+  );
+
+  const handleMakeMember = useCallback(
+    async (targetUserId: string) => {
+      if (!spaceId) return;
+      setIsActingOnMemberId(targetUserId);
+      try {
+        const updated = await setMemberRole(spaceId, targetUserId, "MEMBER");
+        handleMembersUpdatedEvent(updated as unknown as SpaceMember[]);
+        if (typeof window !== "undefined") {
+          const actorName = user?.name || user?.email || "Someone";
+          const target = members.find(
+            (mm) => mm.user.id === targetUserId
+          )?.user;
+          const targetName = target?.name || target?.email || "this member";
+          const activityContent = `<strong>${actorName}</strong> removed admin role from <strong>${targetName}</strong>`;
+          window.dispatchEvent(
+            new CustomEvent("space-updated", {
+              detail: { spaceId, activityContent },
+            })
+          );
+        }
+      } finally {
+        setIsActingOnMemberId(null);
+        setOpenDropdownFor(null);
+      }
+    },
+    [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
+  );
 
   const handleToggleEdit = useCallback(async () => {
     if (!isAdmin) return;
@@ -327,7 +434,13 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
             </li>
           )}
           {members.map((m) => (
-            <li key={m.id} className="flex items-center py-3">
+            <li
+              key={m.id}
+              className="flex items-center py-3 group relative"
+              onMouseLeave={() =>
+                setOpenDropdownFor((prev) => (prev === m.user.id ? null : prev))
+              }
+            >
               <Avatar
                 size="md"
                 className="mr-3 shrink-0"
@@ -346,9 +459,61 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
                   {m.user.name}
                 </div>
               </div>
-              <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
-                {mapRole(m.role)}
-              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
+                  {mapRole(m.role)}
+                </span>
+                {isAdmin && user?.id !== m.user.id && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="hidden group-hover:inline-flex text-gray-600 hover:text-gray-800 p-1"
+                      onClick={() =>
+                        setOpenDropdownFor((prev) =>
+                          prev === m.user.id ? null : m.user.id
+                        )
+                      }
+                      aria-label="Member actions"
+                    >
+                      <ChevronDownIcon className="w-4 h-4" />
+                    </button>
+                    {openDropdownFor === m.user.id && (
+                      <div className="absolute right-0 top-full mt-0.5 w-44 bg-white border border-gray-200 rounded shadow-lg z-10">
+                        {m.role !== "ADMIN" ? (
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 text-gray-700 disabled:opacity-60"
+                            onClick={() => handleMakeAdmin(m.user.id)}
+                            disabled={isActingOnMemberId === m.user.id}
+                          >
+                            <UserIcon className="w-4 h-4" />
+                            Make admin
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 text-gray-700 disabled:opacity-60"
+                            onClick={() => handleMakeMember(m.user.id)}
+                            disabled={isActingOnMemberId === m.user.id}
+                          >
+                            <UserIcon className="w-4 h-4" />
+                            Remove admin
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
+                          onClick={() => handleRemoveMember(m.user.id)}
+                          disabled={isActingOnMemberId === m.user.id}
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </li>
           ))}
           {members.length === 0 && (
