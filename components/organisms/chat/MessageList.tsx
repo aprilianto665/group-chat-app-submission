@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useEffect, useMemo, useRef } from "react";
-import { NoteIcon } from "../../atoms/Icons";
+import { NoteIcon, UserIcon } from "../../atoms/Icons";
 import { MessageItem } from "../../molecules/chat/MessageItem";
 import { EmptyState } from "../../atoms/EmptyState";
 import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
@@ -65,7 +65,13 @@ const MessageListComponent: React.FC<MessageListProps> = ({
                   className="flex items-center justify-center my-2"
                 >
                   <div className="flex items-center gap-1.5 bg-[#efeaff] text-[#6b61c4] text-xs px-2.5 py-1 rounded-full shadow-sm">
-                    <NoteIcon className="w-4 h-4" />
+                    {/(joined the space|joined\s+the\s+space|left the space|left\s+the\s+space)/i.test(
+                      message.content || ""
+                    ) ? (
+                      <UserIcon className="w-4 h-4" />
+                    ) : (
+                      <NoteIcon className="w-4 h-4" />
+                    )}
                     <span
                       dangerouslySetInnerHTML={{ __html: message.content }}
                     />

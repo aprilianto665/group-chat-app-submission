@@ -11,6 +11,7 @@ import {
 import type { Message, Note, NoteBlock } from "@/types";
 
 interface ChatAreaProps {
+  spaceId?: string;
   spaceName?: string;
   spaceIcon?: string;
   spaceDescription?: string;
@@ -32,6 +33,7 @@ interface ChatAreaProps {
 }
 
 const ChatAreaComponent: React.FC<ChatAreaProps> = ({
+  spaceId,
   spaceName,
   spaceIcon,
   spaceDescription,
@@ -96,6 +98,7 @@ const ChatAreaComponent: React.FC<ChatAreaProps> = ({
         >
           {showSpaceInfo ? (
             <SpaceInfoPanel
+              spaceId={spaceId}
               name={spaceName || ""}
               icon={spaceIcon}
               description={spaceDescription}

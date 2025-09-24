@@ -237,6 +237,7 @@ export const AppWrapper: React.FC<{
       <div className="flex-1">
         {activeSpace ? (
           <ChatArea
+            spaceId={activeSpace.id}
             spaceName={activeSpace.name}
             spaceIcon={activeSpace.icon}
             spaceMembers={activeSpace.members}

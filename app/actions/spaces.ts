@@ -8,6 +8,7 @@ import { createSpaceSchema, spaceIdSchema } from "@/utils/validation/actions";
 import { BlobServiceClient } from "@azure/storage-blob";
 import crypto from "crypto";
 import type { SpaceWithNotes } from "@/types";
+import { sendActivityMessage } from "./messages";
 
 interface BlockBlobClientLike {
   uploadData: (data: Buffer, options?: unknown) => Promise<void>;
@@ -440,10 +441,12 @@ export async function leaveSpace(spaceId: string) {
   if (!parsed.success) throw new Error("Invalid space id");
   const { id: userId } = await requireAuth();
 
+  let remainingAfter = 0;
   await prisma.$transaction(async (tx) => {
     await tx.spaceMember.deleteMany({ where: { spaceId, userId } });
 
     const remaining = await tx.spaceMember.count({ where: { spaceId } });
+    remainingAfter = remaining;
 
     if (remaining === 0) {
       await tx.message.deleteMany({ where: { spaceId } });
@@ -491,5 +494,47 @@ export async function leaveSpace(spaceId: string) {
     }
   });
 
+  try {
+    if (remainingAfter > 0) {
+      const me = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true },
+      });
+      const displayName = me?.name || me?.email || "Someone";
+      await sendActivityMessage(
+        spaceId,
+        `<strong>${displayName}</strong> left the space`
+      );
+    }
+  } catch {}
+
   return { success: true } as const;
+}
+
+export async function createInviteLink(spaceId: string, expiresInMinutes = 60) {
+  const parsed = spaceIdSchema.safeParse(spaceId);
+  if (!parsed.success) throw new Error("Invalid space id");
+  const { id: userId } = await requireAuth();
+
+  const membership = await prisma.spaceMember.findUnique({
+    where: { spaceId_userId: { spaceId, userId } },
+    select: { role: true },
+  });
+  if (!membership || membership.role !== "ADMIN") {
+    throw new Error("Forbidden: only admin can generate invite link");
+  }
+
+  const expSec = Math.floor(Date.now() / 1000) + expiresInMinutes * 60;
+  const payload = `${spaceId}.${expSec}`;
+  const secret = process.env.INVITE_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("Missing INVITE_SECRET/NEXTAUTH_SECRET");
+  const sig = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("base64url");
+
+  const url = `/join?space=${encodeURIComponent(
+    spaceId
+  )}&exp=${expSec}&sig=${encodeURIComponent(sig)}`;
+  return { url } as const;
 }

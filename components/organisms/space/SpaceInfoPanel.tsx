@@ -1,12 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Avatar } from "../../atoms/Avatar";
 import { Heading } from "../../atoms/Heading";
-import { CloseIcon } from "../../atoms/Icons";
+import { CloseIcon, CopyIcon, LinkIcon } from "../../atoms/Icons";
 import { Button } from "../../atoms/Button";
 import { LogoutIcon } from "../../atoms/Icons";
 import type { SpaceMember } from "@/types";
+import { createInviteLink } from "@/app/actions/spaces";
+import { useProfileStore } from "@/stores/profileStore";
 
 interface SpaceInfoPanelProps {
   name: string;
@@ -16,6 +18,7 @@ interface SpaceInfoPanelProps {
   onClose?: () => void;
   members?: SpaceMember[];
   onLeaveSpace?: () => void;
+  spaceId?: string;
 }
 
 const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
@@ -26,7 +29,19 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
   onClose,
   members = [],
   onLeaveSpace,
+  spaceId,
 }) => {
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { user } = useProfileStore();
+
+  const isAdmin = useMemo(() => {
+    if (!user?.id) return false;
+    const me = members.find((m) => m.user.id === user.id);
+    return me?.role === "ADMIN";
+  }, [members, user?.id]);
+
   const mapRole = (role: string) => {
     switch (role) {
       case "ADMIN":
@@ -35,6 +50,34 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
         return "Member";
     }
   };
+
+  const absoluteInviteUrl = useMemo(() => {
+    if (!inviteUrl) return null;
+    if (typeof window === "undefined") return inviteUrl;
+    try {
+      const u = new URL(inviteUrl, window.location.origin);
+      return u.toString();
+    } catch {
+      return inviteUrl;
+    }
+  }, [inviteUrl]);
+
+  const handleGenerateInvite = useCallback(async () => {
+    if (!spaceId) return;
+    setIsGenerating(true);
+    try {
+      const { url } = await createInviteLink(spaceId, 60);
+      setInviteUrl(url);
+      setInviteOpen(true);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [spaceId]);
+
+  const handleCopy = useCallback(() => {
+    if (!absoluteInviteUrl) return;
+    navigator.clipboard.writeText(absoluteInviteUrl).catch(() => {});
+  }, [absoluteInviteUrl]);
   return (
     <div className={`p-4 ${className}`}>
       <div className="flex items-center mb-6 gap-2">
@@ -83,6 +126,44 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
           </Heading>
         </div>
         <ul className="space-y-1">
+          {isAdmin && (
+            <li>
+              <button
+                type="button"
+                onClick={handleGenerateInvite}
+                disabled={!spaceId || isGenerating}
+                className="w-full flex items-center py-3 text-left disabled:opacity-60"
+              >
+                <div className="w-10 h-10 mr-3 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                  <LinkIcon className="w-5 h-5 text-gray-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900">
+                    {isGenerating ? "Generating link..." : "Invite via link"}
+                  </div>
+                </div>
+              </button>
+              {inviteOpen && absoluteInviteUrl && (
+                <div className="mt-2 p-2 border rounded bg-gray-50 flex items-center gap-2">
+                  <input
+                    className="flex-1 bg-transparent text-sm text-gray-700 outline-none"
+                    readOnly
+                    value={absoluteInviteUrl}
+                    onFocus={(e) => e.currentTarget.select()}
+                  />
+                  <button
+                    type="button"
+                    className="text-gray-600 hover:text-gray-800"
+                    onClick={handleCopy}
+                    aria-label="Copy invite link"
+                    title="Copy"
+                  >
+                    <CopyIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </li>
+          )}
           {members.map((m) => (
             <li key={m.id} className="flex items-center py-3">
               <Avatar
