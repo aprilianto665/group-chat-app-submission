@@ -4,7 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/utils/actionsAuth";
 import type { Prisma } from "@prisma/client";
 import { isActivityContent, stripActivityPrefix } from "@/utils/activity";
-import { createSpaceSchema, spaceIdSchema } from "@/utils/validation/actions";
+import {
+  createSpaceSchema,
+  spaceIdSchema,
+  spaceNameSchema,
+  spaceDescriptionSchema,
+} from "@/utils/validation/actions";
 import { BlobServiceClient } from "@azure/storage-blob";
 import crypto from "crypto";
 import type { SpaceWithNotes } from "@/types";
@@ -537,4 +542,164 @@ export async function createInviteLink(spaceId: string, expiresInMinutes = 60) {
     spaceId
   )}&exp=${expSec}&sig=${encodeURIComponent(sig)}`;
   return { url } as const;
+}
+
+export async function updateSpaceInfo(
+  spaceId: string,
+  payload: { name: string; description?: string }
+) {
+  const parsedId = spaceIdSchema.safeParse(spaceId);
+  if (!parsedId.success) throw new Error("Invalid space id");
+  const nameParsed = spaceNameSchema.safeParse(payload.name);
+  if (!nameParsed.success) throw new Error("Invalid space name");
+  const descParsed = spaceDescriptionSchema.safeParse(payload.description);
+  if (!descParsed.success) throw new Error("Invalid description");
+
+  const { id: userId } = await requireAuth();
+
+  const membership = await prisma.spaceMember.findUnique({
+    where: { spaceId_userId: { spaceId, userId } },
+    select: { role: true },
+  });
+  if (!membership || membership.role !== "ADMIN") {
+    throw new Error("Forbidden: only admin can update space");
+  }
+
+  const updated = await prisma.space.update({
+    where: { id: spaceId },
+    data: {
+      name: nameParsed.data,
+      description: descParsed.data,
+    },
+    select: { id: true, name: true, description: true },
+  });
+
+  try {
+    const me = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
+    const displayName = me?.name || me?.email || "Someone";
+    await sendActivityMessage(
+      spaceId,
+      `<strong>${displayName}</strong> just updated the space info`
+    );
+  } catch {}
+
+  return updated;
+}
+
+async function uploadIconToAzureIfAny(file: FormDataEntryValue | null) {
+  if (!file || typeof file === "string") return undefined as string | undefined;
+  const blobFile = file as File;
+  if (blobFile.size <= 0) return undefined;
+  if (blobFile.size > 5 * 1024 * 1024) throw new Error("Max file size is 5MB");
+  const contentType = blobFile.type || "application/octet-stream";
+  if (!/^image\//.test(contentType))
+    throw new Error("Only image files are allowed");
+
+  const conn = process.env.AZURE_STORAGE_CONNECTION_STRING;
+  const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+  const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
+  const containerName = process.env.AZURE_STORAGE_CONTAINER;
+  if (!containerName) throw new Error("Missing AZURE_STORAGE_CONTAINER env");
+
+  let blobService: BlobServiceLike | null = null;
+  if (conn && conn.length > 0) {
+    blobService = BlobServiceClient.fromConnectionString(
+      conn
+    ) as unknown as BlobServiceLike;
+  } else if (accountName && accountKey) {
+    const { StorageSharedKeyCredential } = await import("@azure/storage-blob");
+    const sharedKey = new StorageSharedKeyCredential(accountName, accountKey);
+    blobService = new BlobServiceClient(
+      `https://${accountName}.blob.core.windows.net`,
+      sharedKey
+    ) as unknown as BlobServiceLike;
+  } else {
+    throw new Error("Missing Azure Storage credentials");
+  }
+
+  const container = blobService.getContainerClient(containerName);
+  await container.createIfNotExists();
+
+  const ext = (blobFile.name.split(".").pop() || "png").toLowerCase();
+  const uniqueName = `${crypto.randomUUID()}.${ext}`;
+  const blockBlob = container.getBlockBlobClient(uniqueName);
+
+  const arrayBuffer = await blobFile.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  await blockBlob.uploadData(buffer, {
+    blobHTTPHeaders: { blobContentType: contentType },
+  });
+  return blockBlob.url as string;
+}
+
+export type UpdateSpaceFormState = {
+  error?: string;
+  success?: string;
+  updated?: { name: string; description?: string; icon?: string };
+};
+
+export async function updateSpaceFromForm(
+  _prev: UpdateSpaceFormState,
+  formData: FormData
+): Promise<UpdateSpaceFormState> {
+  try {
+    const rawSpaceId = (formData.get("spaceId") as string | null) ?? "";
+    const parsedId = spaceIdSchema.safeParse(rawSpaceId);
+    if (!parsedId.success) return { error: "Invalid space id" };
+    const name = ((formData.get("name") as string | null) ?? "").trim();
+    const description = (
+      (formData.get("description") as string | null) ?? ""
+    ).trim();
+    const nameOk = spaceNameSchema.safeParse(name);
+    if (!nameOk.success) return { error: "Invalid name" };
+    const descOk = spaceDescriptionSchema.safeParse(description || undefined);
+    if (!descOk.success) return { error: "Invalid description" };
+
+    const { id: userId } = await requireAuth();
+    const membership = await prisma.spaceMember.findUnique({
+      where: { spaceId_userId: { spaceId: parsedId.data, userId } },
+      select: { role: true },
+    });
+    if (!membership || membership.role !== "ADMIN")
+      return { error: "Forbidden" };
+
+    const iconUrl = await uploadIconToAzureIfAny(formData.get("icon"));
+
+    const updated = await prisma.space.update({
+      where: { id: parsedId.data },
+      data: {
+        name,
+        description: description || undefined,
+        ...(iconUrl ? { icon: iconUrl } : {}),
+      },
+      select: { name: true, description: true, icon: true },
+    });
+
+    try {
+      const me = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true },
+      });
+      const displayName = me?.name || me?.email || "Someone";
+      await sendActivityMessage(
+        parsedId.data,
+        `<strong>${displayName}</strong> just updated the space info`
+      );
+    } catch {}
+
+    return {
+      success: "Space updated",
+      updated: {
+        name: updated.name,
+        description: updated.description ?? undefined,
+        icon: updated.icon ?? undefined,
+      },
+    };
+  } catch (err) {
+    console.error("updateSpaceFromForm error:", err);
+    return { error: "Internal server error" };
+  }
 }

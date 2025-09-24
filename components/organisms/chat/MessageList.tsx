@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useEffect, useMemo, useRef } from "react";
-import { NoteIcon, UserIcon } from "../../atoms/Icons";
+import { NoteIcon, UserIcon, PencilIcon } from "../../atoms/Icons";
 import { MessageItem } from "../../molecules/chat/MessageItem";
 import { EmptyState } from "../../atoms/EmptyState";
 import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
@@ -69,6 +69,10 @@ const MessageListComponent: React.FC<MessageListProps> = ({
                       message.content || ""
                     ) ? (
                       <UserIcon className="w-4 h-4" />
+                    ) : /updated the space info/i.test(
+                        message.content || ""
+                      ) ? (
+                      <PencilIcon className="w-4 h-4" />
                     ) : (
                       <NoteIcon className="w-4 h-4" />
                     )}

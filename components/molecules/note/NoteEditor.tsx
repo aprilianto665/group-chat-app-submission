@@ -92,6 +92,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   const handleTitleAreaChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setTitle(e.target.value);
+      setHasChanges(true);
     },
     []
   );
@@ -102,6 +103,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
       setBlocks((prev) =>
         prev.map((b) => (b.id === blockId ? { ...b, content } : b))
       );
+      setHasChanges(true);
     },
     []
   );
@@ -119,10 +121,12 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
           }
         : { id: `block_${Date.now()}`, type, content: "" },
     ]);
+    setHasChanges(true);
   }, []);
 
   const handleDeleteBlock = useCallback((blockId: string) => {
     setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+    setHasChanges(true);
   }, []);
 
   const handleUpdateBlock = useCallback(
@@ -141,9 +145,14 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   );
 
   const handleSave = useCallback(() => {
+    if (!hasChanges) {
+      setIsEditing(false);
+      return;
+    }
     onSave({ title, blocks });
     setHasChanges(false);
-  }, [onSave, title, blocks]);
+    setIsEditing(false);
+  }, [onSave, title, blocks, hasChanges]);
 
   const blockIds = useMemo(() => blocks.map((b) => b.id), [blocks]);
 
@@ -161,10 +170,14 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
       if (oldIndex === -1 || newIndex === -1) return prev;
 
       if (newIndex === 0 && oldIndex > 0) {
-        return arrayMove(prev, oldIndex, 0);
+        const next = arrayMove(prev, oldIndex, 0);
+        setHasChanges(true);
+        return next;
       }
 
-      return arrayMove(prev, oldIndex, newIndex);
+      const next = arrayMove(prev, oldIndex, newIndex);
+      setHasChanges(true);
+      return next;
     });
   }, []);
 

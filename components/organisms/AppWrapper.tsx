@@ -44,6 +44,53 @@ export const AppWrapper: React.FC<{
     [activeSpaceId, spaces]
   );
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | {
+            spaceId: string;
+            name?: string;
+            description?: string;
+            icon?: string;
+            activityContent?: string;
+          }
+        | undefined;
+      if (!detail) return;
+      setSpaces((prev) =>
+        prev.map((s) =>
+          s.id === detail.spaceId
+            ? {
+                ...s,
+                name: detail.name ?? s.name,
+                description: detail.description ?? s.description,
+                icon: detail.icon ?? s.icon,
+                messages: detail.activityContent
+                  ? [
+                      ...s.messages,
+                      {
+                        id: String(Date.now()),
+                        content: detail.activityContent,
+                        timestamp: new Date().toISOString(),
+                        senderName: undefined,
+                        username: undefined,
+                        isRead: true,
+                        type: "activity" as const,
+                      },
+                    ]
+                  : s.messages,
+              }
+            : s
+        )
+      );
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("space-updated", handler as EventListener);
+      return () =>
+        window.removeEventListener("space-updated", handler as EventListener);
+    }
+    return () => {};
+  }, []);
+
   const sortedSpaces = useMemo(() => {
     const copy = [...spaces];
     copy.sort((a, b) => {
@@ -60,8 +107,6 @@ export const AppWrapper: React.FC<{
 
   const spacesWithUnreadCount: SpaceWithNotes[] = useMemo(() => {
     return sortedSpaces.map((space) => {
-      // If space already has preloaded lastMessage/lastMessageSender from server, keep it.
-      // Otherwise derive it from local messages.
       const derivedLast = [...space.messages]
         .reverse()
         .find((m) => m.type !== "activity");

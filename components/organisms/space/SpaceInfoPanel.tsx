@@ -3,12 +3,24 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Avatar } from "../../atoms/Avatar";
 import { Heading } from "../../atoms/Heading";
-import { CloseIcon, CopyIcon, LinkIcon } from "../../atoms/Icons";
+import {
+  CloseIcon,
+  CopyIcon,
+  LinkIcon,
+  PencilIcon,
+  CheckIcon,
+} from "../../atoms/Icons";
 import { Button } from "../../atoms/Button";
 import { LogoutIcon } from "../../atoms/Icons";
 import type { SpaceMember } from "@/types";
-import { createInviteLink } from "@/app/actions/spaces";
+import {
+  createInviteLink,
+  updateSpaceInfo,
+  updateSpaceFromForm,
+} from "@/app/actions/spaces";
 import { useProfileStore } from "@/stores/profileStore";
+import { Input } from "../../atoms/Input";
+import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
 
 interface SpaceInfoPanelProps {
   name: string;
@@ -34,6 +46,12 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [draftName, setDraftName] = useState(name);
+  const [draftDescription, setDraftDescription] = useState(description ?? "");
+  const [draftIconFile, setDraftIconFile] = useState<File | null>(null);
+  const [draftIconPreview, setDraftIconPreview] = useState<string | null>(null);
   const { user } = useProfileStore();
 
   const isAdmin = useMemo(() => {
@@ -78,6 +96,103 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     if (!absoluteInviteUrl) return;
     navigator.clipboard.writeText(absoluteInviteUrl).catch(() => {});
   }, [absoluteInviteUrl]);
+
+  const handleToggleEdit = useCallback(async () => {
+    if (!isAdmin) return;
+    if (!isEditing) {
+      setDraftName(name);
+      setDraftDescription(description ?? "");
+      setDraftIconFile(null);
+      setDraftIconPreview(null);
+      setIsEditing(true);
+      return;
+    }
+
+    if (!spaceId) {
+      setIsEditing(false);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const newName = draftName.trim();
+      const newDesc = draftDescription.trim();
+      const originalName = name.trim();
+      const originalDesc = (description ?? "").trim();
+
+      if (
+        !draftIconFile &&
+        newName === originalName &&
+        newDesc === originalDesc
+      ) {
+        setIsEditing(false);
+        return;
+      }
+
+      let updated: {
+        name: string;
+        description?: string;
+        icon?: string;
+      } | null = null;
+      if (draftIconFile) {
+        const fd = new FormData();
+        fd.set("spaceId", spaceId);
+        fd.set("name", newName);
+        fd.set("description", newDesc);
+        fd.set("icon", draftIconFile);
+        const res = await updateSpaceFromForm({}, fd);
+        if (res.updated) updated = res.updated;
+      } else {
+        const res = await updateSpaceInfo(spaceId, {
+          name: newName,
+          description: newDesc || undefined,
+        });
+        updated = { name: res.name, description: res.description ?? undefined };
+      }
+
+      if (updated) {
+        if (typeof window !== "undefined") {
+          const displayName = user?.name || user?.email || "Someone";
+          const activityContent = `<strong>${displayName}</strong> just updated the space info`;
+          window.dispatchEvent(
+            new CustomEvent("space-updated", {
+              detail: {
+                spaceId,
+                name: updated.name,
+                description: updated.description,
+                icon: updated.icon,
+                activityContent,
+              },
+            })
+          );
+        }
+      }
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    isAdmin,
+    isEditing,
+    spaceId,
+    draftName,
+    draftDescription,
+    draftIconFile,
+    user?.name,
+    user?.email,
+    name,
+    description,
+  ]);
+
+  const handlePickIcon = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      setDraftIconFile(file);
+      const url = URL.createObjectURL(file);
+      setDraftIconPreview(url);
+    },
+    []
+  );
   return (
     <div className={`p-4 ${className}`}>
       <div className="flex items-center mb-6 gap-2">
@@ -100,23 +215,70 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
         <Heading level={6} className="text-gray-900">
           Space info
         </Heading>
+        {isAdmin && (
+          <Button
+            variant="icon"
+            size="sm"
+            className="text-gray-500 hover:text-gray-700"
+            onClick={handleToggleEdit}
+            aria-label={isEditing ? "Save space info" : "Edit space info"}
+            disabled={isSaving}
+          >
+            {isEditing ? (
+              <CheckIcon className="w-5 h-5" />
+            ) : (
+              <PencilIcon className="w-5 h-5" />
+            )}
+          </Button>
+        )}
       </div>
       <div className="flex flex-col items-center mb-4">
-        <Avatar
-          size="xxl"
-          className="mb-3 shrink-0"
-          src={icon && icon.length > 0 ? icon : undefined}
-        >
-          {(!icon || icon.length === 0) && name.charAt(0).toUpperCase()}
-        </Avatar>
-        <h2 className="text-xl font-semibold text-gray-900 text-center">
-          {name}
-        </h2>
-        <p className="text-gray-600 mt-1 max-w-prose whitespace-pre-line text-center">
-          {description && description.trim().length > 0
-            ? description
-            : "No description"}
-        </p>
+        <div className="relative mb-3">
+          <Avatar
+            size="xxl"
+            className="shrink-0"
+            src={
+              (draftIconPreview || icon) &&
+              (draftIconPreview || (icon && icon.length > 0 ? icon : undefined))
+            }
+          >
+            {!draftIconPreview &&
+              (!icon || icon.length === 0) &&
+              name.charAt(0).toUpperCase()}
+          </Avatar>
+          {isEditing && (
+            <label className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer bg-black/0 hover:bg-black/30 transition-colors group">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePickIcon}
+              />
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white">
+                <PencilIcon className="w-6 h-6" />
+              </div>
+            </label>
+          )}
+        </div>
+        <div className="w-full max-w-md">
+          <Input
+            value={isEditing ? draftName : name}
+            onChange={(e) => setDraftName(e.target.value)}
+            disabled={!isEditing}
+            className="text-center text-xl font-semibold disabled:opacity-70 border-b-0 border-transparent focus:border-transparent disabled:border-transparent py-0"
+            placeholder="Space name"
+          />
+          <div className="mt-0">
+            <AutoResizeTextarea
+              value={isEditing ? draftDescription : description ?? ""}
+              onChange={(e) => setDraftDescription(e.target.value)}
+              disabled={!isEditing}
+              rows={2}
+              className="w-full text-center text-gray-600 bg-transparent border-none outline-none focus:outline-none focus:ring-0 placeholder-gray-400 disabled:opacity-70"
+              placeholder="No description"
+            />
+          </div>
+        </div>
       </div>
       <div className="my-6 border-t border-gray-200" />
       <div>

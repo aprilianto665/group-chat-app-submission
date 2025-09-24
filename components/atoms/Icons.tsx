@@ -66,6 +66,21 @@ export const PencilIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
+export const CheckIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
 export const TrashIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
   <svg
     className={className}
