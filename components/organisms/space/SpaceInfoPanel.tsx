@@ -435,7 +435,7 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
           )}
           {members.map((m) => (
             <li
-              key={m.id}
+              key={`${m.spaceId}:${m.userId}`}
               className="flex items-center py-3 group relative"
               onMouseLeave={() =>
                 setOpenDropdownFor((prev) => (prev === m.user.id ? null : prev))

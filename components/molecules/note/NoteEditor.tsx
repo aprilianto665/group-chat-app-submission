@@ -140,14 +140,6 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     []
   );
 
-  const handleUpdateBlockUI = useCallback(
-    (blockId: string, updater: (b: NoteBlock) => NoteBlock) => {
-      // UI-only updater retained for other UI tweaks, but collapse is handled locally
-      setBlocks((prev) => prev.map((b) => (b.id === blockId ? updater(b) : b)));
-    },
-    []
-  );
-
   const isCollapsed = useCallback(
     (blockId: string) => collapsedIds.has(blockId),
     [collapsedIds]
@@ -270,20 +262,19 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
             >
               {blocks.map((block) => (
                 <NoteBlockRow
-                  key={block.id}
+                  key={String(block.id)}
                   block={block}
                   isEditing={isEditing}
                   isDraggingAnyBlock={isDraggingAnyBlock}
-                  isActive={activeBlockId === block.id}
+                  isActive={activeBlockId === String(block.id)}
                   setBlockRowRef={(el: HTMLDivElement | null) => {
-                    blockRowRefs.current[block.id] = el;
+                    blockRowRefs.current[String(block.id)] = el;
                   }}
                   openBlockMenuId={openBlockMenuId}
                   setOpenBlockMenuId={setOpenBlockMenuId}
                   handleChangeBlock={handleChangeBlock}
                   handleDeleteBlock={handleDeleteBlock}
                   handleUpdateBlock={handleUpdateBlock}
-                  handleUpdateBlockUI={handleUpdateBlockUI}
                   blockRefs={blockRefs}
                 />
               ))}
@@ -412,7 +403,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
         ) : (
           blocks.map((block) => (
             <div
-              key={block.id}
+              key={String(block.id)}
               className="group rounded relative pl-4 pr-4 mb-1.5"
             >
               <div className="absolute -left-3 -top-1.5 opacity-0 pointer-events-none" />
@@ -424,15 +415,19 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                     </div>
                     <button
                       type="button"
-                      onClick={() => toggleCollapsed(block.id)}
+                      onClick={() => toggleCollapsed(String(block.id))}
                       className="mt-0.5 text-gray-400 hover:text-gray-600 p-1"
                       aria-label={
-                        isCollapsed(block.id) ? "Expand list" : "Collapse list"
+                        isCollapsed(String(block.id))
+                          ? "Expand list"
+                          : "Collapse list"
                       }
                     >
                       <ChevronDownIcon
                         className={`w-5 h-5 transition-transform ${
-                          isCollapsed(block.id) ? "rotate-180" : "rotate-0"
+                          isCollapsed(String(block.id))
+                            ? "rotate-180"
+                            : "rotate-0"
                         }`}
                       />
                     </button>
@@ -467,7 +462,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                       );
                     })()}
                   </div>
-                  {!isCollapsed(block.id) && (
+                  {!isCollapsed(String(block.id)) && (
                     <div className="space-y-1">
                       {(block.items ?? []).map((it) => (
                         <div key={it.id} className="flex items-start gap-2">
@@ -475,7 +470,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                             type="checkbox"
                             checked={it.done}
                             onChange={(e) =>
-                              handleUpdateBlock(block.id, (b) => ({
+                              handleUpdateBlock(String(block.id), (b) => ({
                                 ...b,
                                 items: (b.items ?? []).map((x) =>
                                   x.id === it.id
@@ -510,7 +505,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
               ) : (
                 <textarea
                   ref={(el) => {
-                    blockRefs.current[block.id] = el;
+                    blockRefs.current[String(block.id)] = el;
                   }}
                   className={`w-full resize-none outline-none placeholder-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 disabled:opacity-70 ${
                     block.type === "heading"
@@ -519,7 +514,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                   }`}
                   rows={1}
                   value={block.content}
-                  onChange={(e) => handleChangeBlock(block.id, e)}
+                  onChange={(e) => handleChangeBlock(String(block.id), e)}
                   placeholder={""}
                   disabled={!isEditing}
                 />

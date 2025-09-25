@@ -127,7 +127,7 @@ const SortableNoteRow: React.FC<{
       className={`w-full text-left px-2 py-2 text-sm hover:bg-gray-50 rounded cursor-grab active:cursor-grabbing ${
         isActive ? "bg-blue-50" : ""
       }`}
-      onClick={() => onSelect(note.id)}
+      onClick={() => onSelect(String(note.id))}
       title={note.title || "Untitled"}
       {...attributes}
       {...listeners}

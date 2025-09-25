@@ -83,7 +83,7 @@ model SpaceMember {
 }
 
 model Note {
-  id        String   @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
   title     String   @db.VarChar(200)
   spaceId   String   @db.Uuid
   authorId  String?  @db.Uuid
@@ -100,8 +100,8 @@ model Note {
 }
 
 model NoteBlock {
-  id         String    @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
-  noteId     String    @db.Uuid
+  id         BigInt    @id @default(autoincrement()) @db.BigInt
+  noteId     BigInt    @db.BigInt
   type       BlockType
   content    String    @db.Text @default("")
   todoTitle  String?   @db.VarChar(200)
@@ -116,7 +116,7 @@ model NoteBlock {
 
 model NoteTodoItem {
   id          BigInt   @id @default(autoincrement()) @db.BigInt
-  blockId     String   @db.Uuid
+  blockId     BigInt   @db.BigInt
   text        String   @db.VarChar(500)
   done        Boolean  @default(false)
   description String?  @db.Text

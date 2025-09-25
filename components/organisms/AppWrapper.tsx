@@ -197,10 +197,23 @@ export const AppWrapper: React.FC<{
 
       const finalTitle = draft.title.trim() || "Untitled";
 
+      const blocksPayload: NoteBlockPayload[] = draft.blocks.map((block) => ({
+        id: String(block.id),
+        type: block.type,
+        content: block.content,
+        todoTitle: block.todoTitle,
+        items: block.items?.map((item) => ({
+          id: String(item.id),
+          text: item.text,
+          done: item.done,
+          description: item.description,
+        })),
+      }));
+
       const updated = await actions.updateNote(
         activeNoteId,
         finalTitle,
-        draft.blocks as unknown as NoteBlockPayload[]
+        blocksPayload
       );
       const { user } = useProfileStore.getState();
       const activityMessage = createActivityMessage(
@@ -347,7 +360,7 @@ export const AppWrapper: React.FC<{
                         : s
                     )
                   );
-                  setActiveNoteForSpace(activeSpace.id, newNote.id);
+                  setActiveNoteForSpace(activeSpace.id, String(newNote.id));
                   setCreatingDraftBySpace((prev) => ({
                     ...prev,
                     [activeSpace.id]: undefined,

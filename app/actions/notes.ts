@@ -33,17 +33,17 @@ export async function createNote(
     prisma as unknown as {
       note: {
         create: (args: unknown) => Promise<{
-          id: string;
+          id: string | number;
           title: string;
           createdAt: Date;
           updatedAt: Date;
           blocks: {
-            id: string;
+            id: string | number;
             type: "TEXT" | "HEADING" | "TODO";
             content: string;
             todoTitle: string | null;
             items: {
-              id: string;
+              id: string | number;
               text: string;
               done: boolean;
               description: string | null;
@@ -107,24 +107,24 @@ export async function createNote(
   });
 
   return {
-    id: created.id,
+    id: String(created.id),
     title: created.title,
     createdAt: created.createdAt.toISOString(),
     updatedAt: created.updatedAt.toISOString(),
     blocks: created.blocks.map(
       (b: {
-        id: string;
+        id: string | number;
         type: "TEXT" | "HEADING" | "TODO";
         content: string;
         todoTitle?: string | null;
         items: {
-          id: string;
+          id: string | number;
           text: string;
           done: boolean;
           description: string | null;
         }[];
       }) => ({
-        id: b.id,
+        id: String(b.id),
         type:
           b.type === "TEXT"
             ? "text"
@@ -135,12 +135,12 @@ export async function createNote(
         todoTitle: b.todoTitle ?? undefined,
         items: b.items.map(
           (it: {
-            id: string;
+            id: string | number;
             text: string;
             done: boolean;
             description: string | null;
           }) => ({
-            id: it.id,
+            id: String(it.id),
             text: it.text,
             done: it.done,
             description: it.description ?? undefined,
@@ -168,7 +168,11 @@ export async function updateNote(
   }>
 ) {
   const parsed = updateNoteSchema.safeParse({ noteId, title, blocks });
-  if (!parsed.success) throw new Error("Invalid note payload");
+  if (!parsed.success) {
+    console.error("Validation failed:", parsed.error.errors);
+    console.error("Data:", { noteId, title, blocks });
+    throw new Error("Invalid note payload");
+  }
   await requireAuth();
 
   const blockIds = await (
@@ -204,7 +208,7 @@ export async function updateNote(
             content: string;
             todoTitle: string | null;
             items: {
-              id: string;
+              id: string | number;
               text: string;
               done: boolean;
               description: string | null;
@@ -267,24 +271,24 @@ export async function updateNote(
   });
 
   return {
-    id: updated.id,
+    id: String(updated.id),
     title: updated.title,
     createdAt: updated.createdAt.toISOString(),
     updatedAt: updated.updatedAt.toISOString(),
     blocks: updated.blocks.map(
       (b: {
-        id: string;
+        id: string | number;
         type: "TEXT" | "HEADING" | "TODO";
         content: string;
         todoTitle?: string | null;
         items: {
-          id: string;
+          id: string | number;
           text: string;
           done: boolean;
           description: string | null;
         }[];
       }) => ({
-        id: b.id,
+        id: String(b.id),
         type:
           b.type === "TEXT"
             ? "text"
@@ -295,12 +299,12 @@ export async function updateNote(
         todoTitle: b.todoTitle ?? undefined,
         items: b.items.map(
           (it: {
-            id: string;
+            id: string | number;
             text: string;
             done: boolean;
             description: string | null;
           }) => ({
-            id: it.id,
+            id: String(it.id),
             text: it.text,
             done: it.done,
             description: it.description ?? undefined,

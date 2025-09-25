@@ -48,17 +48,22 @@ export default async function Home() {
           name: string,
           description?: string
         ) => Promise<SpaceWithNotes>,
-        getSpaceDetail: getSpaceDetail as (
+        getSpaceDetail: getSpaceDetail as unknown as (
           spaceId: string
         ) => Promise<SpaceWithNotes>,
         joinSpace,
         leaveSpace: (await import("./actions/spaces")).leaveSpace,
-        sendMessage: sendMessage as (
+        sendMessage: sendMessage as unknown as (
           spaceId: string,
           content: string
         ) => Promise<Message>,
-        listMessages: listMessages as (spaceId: string) => Promise<Message[]>,
-        sendActivityMessage,
+        listMessages: listMessages as unknown as (
+          spaceId: string
+        ) => Promise<Message[]>,
+        sendActivityMessage: sendActivityMessage as unknown as (
+          spaceId: string,
+          htmlContent: string
+        ) => Promise<Message>,
         createNote: createNote as (
           spaceId: string,
           title: string,

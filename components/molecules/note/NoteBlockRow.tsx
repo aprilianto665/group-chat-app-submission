@@ -26,10 +26,6 @@ interface NoteBlockRowProps {
     blockId: string,
     updater: (b: NoteBlock) => NoteBlock
   ) => void;
-  handleUpdateBlockUI?: (
-    blockId: string,
-    updater: (b: NoteBlock) => NoteBlock
-  ) => void;
   blockRefs: React.MutableRefObject<Record<string, HTMLTextAreaElement | null>>;
 }
 
@@ -44,7 +40,6 @@ const NoteBlockRowComponent: React.FC<NoteBlockRowProps> = ({
   handleChangeBlock,
   handleDeleteBlock,
   handleUpdateBlock,
-  handleUpdateBlockUI,
   blockRefs,
 }) => {
   const {
@@ -103,7 +98,9 @@ const NoteBlockRowComponent: React.FC<NoteBlockRowProps> = ({
           ref={setActivatorNodeRef}
           className="w-5 h-5 p-0 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-0 focus:ring-offset-0 cursor-grab active:cursor-grabbing z-20"
           onClick={() =>
-            setOpenBlockMenuId((prev) => (prev === block.id ? null : block.id))
+            setOpenBlockMenuId((prev) =>
+              prev === String(block.id) ? null : String(block.id)
+            )
           }
           aria-label="Block actions"
           disabled={!isEditing}
@@ -113,9 +110,9 @@ const NoteBlockRowComponent: React.FC<NoteBlockRowProps> = ({
           <DragDotsIcon className="w-4 h-4" />
         </button>
         <BlockMenu
-          isOpen={openBlockMenuId === block.id}
+          isOpen={openBlockMenuId === String(block.id)}
           onClose={() => setOpenBlockMenuId(null)}
-          onDelete={() => handleDeleteBlock(block.id)}
+          onDelete={() => handleDeleteBlock(String(block.id))}
         />
       </div>
 
@@ -129,11 +126,8 @@ const NoteBlockRowComponent: React.FC<NoteBlockRowProps> = ({
           <TodoBlock
             block={block}
             isEditing={isEditing}
-            onUpdateBlock={(updater) => handleUpdateBlock(block.id, updater)}
-            onUpdateBlockUI={
-              handleUpdateBlockUI
-                ? (updater) => handleUpdateBlockUI(block.id, updater)
-                : undefined
+            onUpdateBlock={(updater) =>
+              handleUpdateBlock(String(block.id), updater)
             }
           />
         </div>
@@ -141,7 +135,7 @@ const NoteBlockRowComponent: React.FC<NoteBlockRowProps> = ({
         <TextBlock
           block={block}
           isEditing={isEditing}
-          onChange={(e) => handleChangeBlock(block.id, e)}
+          onChange={(e) => handleChangeBlock(String(block.id), e)}
           blockRefs={blockRefs}
         />
       )}

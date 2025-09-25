@@ -18,7 +18,7 @@ export async function listMessages(spaceId: string) {
   });
 
   return msgs.map((m) => ({
-    id: m.id,
+    id: Number(m.id),
     content: m.content,
     timestamp: m.createdAt.toISOString(),
     senderName: m.user?.name,
@@ -39,7 +39,7 @@ export async function sendMessage(spaceId: string, content: string) {
   });
 
   return {
-    id: created.id,
+    id: Number(created.id),
     content: created.content,
     timestamp: created.createdAt.toISOString(),
     senderName: created.user?.name,
@@ -63,7 +63,7 @@ export async function sendActivityMessage(
   });
 
   return {
-    id: created.id,
+    id: Number(created.id),
     content: htmlContent,
     timestamp: created.createdAt.toISOString(),
     senderName: created.user?.name,

@@ -29,20 +29,17 @@ interface TodoBlockProps {
   block: NoteBlock;
   isEditing: boolean;
   onUpdateBlock: (updater: (b: NoteBlock) => NoteBlock) => void;
-  onUpdateBlockUI?: (updater: (b: NoteBlock) => NoteBlock) => void;
 }
 
 const TodoBlockComponent: React.FC<TodoBlockProps> = ({
   block,
   isEditing,
   onUpdateBlock,
-  onUpdateBlockUI,
 }) => {
   const [showAddTodoModal, setShowAddTodoModal] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [newTodoDescription, setNewTodoDescription] = useState("");
 
-  const updateUIOnly = onUpdateBlockUI ?? onUpdateBlock;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const items = useMemo(() => block.items ?? [], [block.items]);
   const completedItems = useMemo(

@@ -4,7 +4,6 @@ import { sendActivityMessage } from "@/app/actions/messages";
 type MemberLike = {
   spaceId: string;
   userId: string;
-  id: string;
   role: "ADMIN" | "MEMBER";
   joinedAt?: Date;
   createdAt?: Date;
@@ -20,7 +19,6 @@ type MemberLike = {
 export const mapMemberData = (member: MemberLike) => ({
   spaceId: member.spaceId,
   userId: member.userId,
-  id: member.id,
   role: member.role,
   joinedAt: (member.joinedAt ?? member.createdAt)?.toISOString(),
   user: {

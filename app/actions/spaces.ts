@@ -36,7 +36,16 @@ interface BlobServiceLike {
 
 type SpaceForList = Prisma.SpaceGetPayload<{
   include: {
-    members: { include: { user: true } };
+    members: {
+      select: {
+        spaceId: true;
+        userId: true;
+        role: true;
+        joinedAt: true;
+        updatedAt: true;
+        user: true;
+      };
+    };
     messages: true;
   };
 }>;
@@ -45,7 +54,16 @@ type MessageWithUser = Prisma.MessageGetPayload<{ include: { user: true } }>;
 
 type SpaceDetail = Prisma.SpaceGetPayload<{
   include: {
-    members: { include: { user: true } };
+    members: {
+      select: {
+        spaceId: true;
+        userId: true;
+        role: true;
+        joinedAt: true;
+        updatedAt: true;
+        user: true;
+      };
+    };
   };
 }> & { messages: MessageWithUser[] };
 
@@ -73,20 +91,21 @@ type NoteFull = {
 export async function listUserSpaces() {
   const { id: userId } = await requireAuth();
 
-  await prisma.spaceMember.findMany({
-    where: { userId },
-    include: {
-      space: true,
-    },
-    orderBy: { joinedAt: "asc" },
-  });
+  // removed extra membership read (no-op)
 
   const spaces = (await prisma.space.findMany({
     where: { members: { some: { userId } } },
     include: {
       members: {
-        include: { user: true },
         orderBy: { joinedAt: "asc" },
+        select: {
+          spaceId: true,
+          userId: true,
+          role: true,
+          joinedAt: true,
+          updatedAt: true,
+          user: true,
+        },
       },
       messages: {
         orderBy: { createdAt: "asc" },
@@ -100,7 +119,7 @@ export async function listUserSpaces() {
     const allMessages = (s.messages as MessageWithUser[]).map((msg) => {
       const isAct = isActivityContent(msg.content);
       return {
-        id: msg.id,
+        id: Number(msg.id),
         content: isAct ? stripActivityPrefix(msg.content) : msg.content,
         timestamp: msg.createdAt.toISOString(),
         senderName: msg.user?.name,
@@ -171,10 +190,30 @@ export async function createSpace(
       },
     },
     include: {
-      members: { include: { user: true } },
+      members: {
+        select: {
+          spaceId: true,
+          userId: true,
+          role: true,
+          joinedAt: true,
+          updatedAt: true,
+          user: true,
+        },
+      },
     },
   })) as Prisma.SpaceGetPayload<{
-    include: { members: { include: { user: true } } };
+    include: {
+      members: {
+        select: {
+          spaceId: true;
+          userId: true;
+          role: true;
+          joinedAt: true;
+          updatedAt: true;
+          user: true;
+        };
+      };
+    };
   }>;
 
   return {
@@ -313,7 +352,16 @@ export async function getSpaceDetail(spaceId: string) {
   const spaceBase = (await prisma.space.findUnique({
     where: { id: spaceId },
     include: {
-      members: { include: { user: true } },
+      members: {
+        select: {
+          spaceId: true,
+          userId: true,
+          role: true,
+          joinedAt: true,
+          updatedAt: true,
+          user: true,
+        },
+      },
     },
   })) as SpaceDetail | null;
   if (!spaceBase) throw new Error("Space not found");
@@ -376,11 +424,11 @@ export async function getSpaceDetail(spaceId: string) {
     icon: spaceBase.icon ?? undefined,
     description: spaceBase.description ?? undefined,
     createdAt: spaceBase.createdAt.toISOString(),
-    members: spaceBase.members.map(mapMemberData),
+    members: spaceBase.members.map((m) => mapMemberData(m)),
     messages: messages.map((msg) => {
       const isAct = isActivityContent(msg.content);
       const mapped = {
-        id: msg.id,
+        id: Number(msg.id),
         content: isAct ? stripActivityPrefix(msg.content) : msg.content,
         timestamp: msg.createdAt.toISOString(),
         senderName: msg.user?.name,
@@ -538,7 +586,14 @@ export async function setMemberRole(
 
   const updatedMembers = await prisma.spaceMember.findMany({
     where: { spaceId },
-    include: { user: true },
+    select: {
+      spaceId: true,
+      userId: true,
+      role: true,
+      joinedAt: true,
+      updatedAt: true,
+      user: true,
+    },
     orderBy: { joinedAt: "asc" },
   });
 
@@ -577,7 +632,14 @@ export async function removeMember(spaceId: string, targetUserId: string) {
 
   const updatedMembers = await prisma.spaceMember.findMany({
     where: { spaceId },
-    include: { user: true },
+    select: {
+      spaceId: true,
+      userId: true,
+      role: true,
+      joinedAt: true,
+      updatedAt: true,
+      user: true,
+    },
     orderBy: { joinedAt: "asc" },
   });
 
