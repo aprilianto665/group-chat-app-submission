@@ -47,9 +47,9 @@ const SpaceListComponent: React.FC<SpaceListProps> = ({
   );
   return (
     <>
-      {spaces.map((space) => (
+      {spaces.map((space, index) => (
         <SpaceItem
-          key={space.id}
+          key={`${space.id}-${index}`}
           name={space.name}
           icon={space.icon}
           lastMessage={space.lastMessage}

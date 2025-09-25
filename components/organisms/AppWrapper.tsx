@@ -170,11 +170,15 @@ export const AppWrapper: React.FC<{
 
     /**
      * Handles space creation events from global channel
-     * Adds new spaces to the spaces list
+     * Adds new spaces to the spaces list, avoiding duplicates
      * @param data - Object containing the new space data
      */
     const onSpaceCreated = (data: { space: SpaceWithNotes }) => {
-      setSpaces((prev) => [data.space, ...prev]);
+      setSpaces((prev) => {
+        const exists = prev.find((s) => s.id === data.space.id);
+        if (exists) return prev;
+        return [data.space, ...prev];
+      });
     };
 
     /**
@@ -504,7 +508,12 @@ export const AppWrapper: React.FC<{
    * @param space - The newly created space with notes and messages
    */
   const handleSpaceCreated = async (space: SpaceWithNotes) => {
-    setSpaces((prev) => [space, ...prev]);
+    setSpaces((prev) => {
+      // Check if space already exists to avoid duplicates
+      const exists = prev.find((s) => s.id === space.id);
+      if (exists) return prev;
+      return [space, ...prev];
+    });
     setActiveSpaceId(space.id);
   };
 
