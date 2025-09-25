@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * AutoResizeTextarea Component
+ *
+ * A textarea component that automatically adjusts its height based on content.
+ * Features:
+ * - Automatic height adjustment on content change
+ * - Prevents manual resizing (resize-none)
+ * - Maintains scroll behavior for overflow
+ * - Forward ref support for form libraries
+ */
+
 import React, { forwardRef, useCallback } from "react";
 
 interface AutoResizeTextareaProps

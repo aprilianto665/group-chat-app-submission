@@ -1,3 +1,14 @@
+/**
+ * Home Page Component
+ *
+ * Main application page that serves as the entry point for authenticated users.
+ * This page:
+ * - Retrieves user session and profile information
+ * - Fetches user's spaces and initializes the application
+ * - Provides all necessary server actions to the AppWrapper component
+ * - Handles authentication state and redirects if needed
+ */
+
 import { AppWrapper } from "@/components";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -20,6 +31,14 @@ import {
 } from "./actions/notes";
 import type { SpaceWithNotes, Message, Note } from "@/types";
 
+/**
+ * Main Home Page Component
+ *
+ * Server component that initializes the application with user data and spaces.
+ * This component runs on the server and passes all necessary data to the client-side AppWrapper.
+ *
+ * @returns JSX element containing the AppWrapper with user data and actions
+ */
 export default async function Home() {
   const session = await getServerSession(authOptions);
   const u = (session?.user || {}) as unknown as {

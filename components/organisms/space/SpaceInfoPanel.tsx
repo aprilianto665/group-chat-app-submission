@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * SpaceInfoPanel Component
+ *
+ * Comprehensive space management panel with:
+ * - Space information display and editing
+ * - Member management with role controls
+ * - Invite link generation and sharing
+ * - Space icon upload and preview
+ * - Admin-only functionality for member management
+ * - Real-time updates via custom events
+ * - Leave space functionality
+ * - Responsive design with proper state management
+ */
+
 import React, { useCallback, useMemo, useState } from "react";
 import { Avatar } from "../../atoms/Avatar";
 import { Heading } from "../../atoms/Heading";
@@ -27,6 +41,9 @@ import { useProfileStore } from "@/stores/profileStore";
 import { Input } from "../../atoms/Input";
 import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
 
+/**
+ * Props interface for SpaceInfoPanel component
+ */
 interface SpaceInfoPanelProps {
   name: string;
   icon?: string;
@@ -38,6 +55,21 @@ interface SpaceInfoPanelProps {
   spaceId?: string;
 }
 
+/**
+ * SpaceInfoPanel Component Implementation
+ *
+ * Renders a comprehensive space management interface with editing capabilities.
+ * Handles space information updates, member management, and invite generation.
+ *
+ * @param name - Space display name
+ * @param icon - Optional space icon URL
+ * @param description - Optional space description
+ * @param className - Additional CSS classes
+ * @param onClose - Handler for closing the panel
+ * @param members - Array of space members
+ * @param onLeaveSpace - Handler for leaving the space
+ * @param spaceId - Space identifier for operations
+ */
 const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
   name,
   icon,
@@ -48,27 +80,87 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
   onLeaveSpace,
   spaceId,
 }) => {
+  // ===== STATE MANAGEMENT =====
+
+  /**
+   * Controls visibility of invite link modal
+   */
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  /**
+   * Stores the generated invite URL
+   */
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+
+  /**
+   * Loading state for invite generation
+   */
   const [isGenerating, setIsGenerating] = useState(false);
+
+  /**
+   * Controls editing mode for space information
+   */
   const [isEditing, setIsEditing] = useState(false);
+
+  /**
+   * Loading state for saving space changes
+   */
   const [isSaving, setIsSaving] = useState(false);
+
+  /**
+   * Draft state for space name editing
+   */
   const [draftName, setDraftName] = useState(name);
+
+  /**
+   * Draft state for space description editing
+   */
   const [draftDescription, setDraftDescription] = useState(description ?? "");
+
+  /**
+   * Draft state for space icon file upload
+   */
   const [draftIconFile, setDraftIconFile] = useState<File | null>(null);
+
+  /**
+   * Preview URL for uploaded icon file
+   */
   const [draftIconPreview, setDraftIconPreview] = useState<string | null>(null);
+
+  /**
+   * Current user from profile store
+   */
   const { user } = useProfileStore();
+
+  /**
+   * Controls which member dropdown is open
+   */
   const [openDropdownFor, setOpenDropdownFor] = useState<string | null>(null);
+
+  /**
+   * Tracks which member action is currently in progress
+   */
   const [isActingOnMemberId, setIsActingOnMemberId] = useState<string | null>(
     null
   );
 
+  // ===== COMPUTED VALUES =====
+
+  /**
+   * Determines if current user is admin of the space
+   * Checks user role against space members
+   */
   const isAdmin = useMemo(() => {
     if (!user?.id) return false;
     const me = members.find((m) => m.user.id === user.id);
     return me?.role === "ADMIN";
   }, [members, user?.id]);
 
+  /**
+   * Converts role string to display-friendly format
+   * @param role - Role string (ADMIN, MEMBER, etc.)
+   * @returns Human-readable role name
+   */
   const mapRole = (role: string) => {
     switch (role) {
       case "ADMIN":
@@ -78,6 +170,10 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     }
   };
 
+  /**
+   * Generates absolute URL for invite links
+   * Handles both relative and absolute URLs
+   */
   const absoluteInviteUrl = useMemo(() => {
     if (!inviteUrl) return null;
     if (typeof window === "undefined") return inviteUrl;
@@ -89,6 +185,12 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     }
   }, [inviteUrl]);
 
+  // ===== EVENT HANDLERS =====
+
+  /**
+   * Generates a new invite link for the space
+   * Creates a 60-minute expiring invite link
+   */
   const handleGenerateInvite = useCallback(async () => {
     if (!spaceId) return;
     setIsGenerating(true);
@@ -101,11 +203,20 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     }
   }, [spaceId]);
 
+  /**
+   * Copies invite URL to clipboard
+   * Uses navigator.clipboard API with fallback
+   */
   const handleCopy = useCallback(() => {
     if (!absoluteInviteUrl) return;
     navigator.clipboard.writeText(absoluteInviteUrl).catch(() => {});
   }, [absoluteInviteUrl]);
 
+  /**
+   * Dispatches custom event when members are updated
+   * Notifies other components about member changes
+   * @param updatedMembers - Updated array of space members
+   */
   const handleMembersUpdatedEvent = useCallback(
     (updatedMembers: SpaceMember[]) => {
       if (!spaceId) return;
@@ -120,6 +231,11 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     [spaceId]
   );
 
+  /**
+   * Promotes a member to admin role
+   * Updates member role and dispatches activity message
+   * @param targetUserId - ID of the user to promote to admin
+   */
   const handleMakeAdmin = useCallback(
     async (targetUserId: string) => {
       if (!spaceId) return;
@@ -148,6 +264,11 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
   );
 
+  /**
+   * Removes a member from the space
+   * Updates member list and dispatches activity message
+   * @param targetUserId - ID of the user to remove from space
+   */
   const handleRemoveMember = useCallback(
     async (targetUserId: string) => {
       if (!spaceId) return;
@@ -176,6 +297,11 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
   );
 
+  /**
+   * Demotes an admin to regular member
+   * Updates member role and dispatches activity message
+   * @param targetUserId - ID of the user to demote from admin
+   */
   const handleMakeMember = useCallback(
     async (targetUserId: string) => {
       if (!spaceId) return;
@@ -204,6 +330,11 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
   );
 
+  /**
+   * Toggles editing mode for space information
+   * Handles both entering edit mode and saving changes
+   * Supports both text-only updates and file uploads
+   */
   const handleToggleEdit = useCallback(async () => {
     if (!isAdmin) return;
     if (!isEditing) {
@@ -290,6 +421,11 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     description,
   ]);
 
+  /**
+   * Handles icon file selection and preview
+   * Creates object URL for preview and stores file for upload
+   * @param e - File input change event
+   */
   const handlePickIcon = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files && e.target.files[0];
@@ -536,4 +672,8 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
   );
 };
 
+/**
+ * SpaceInfoPanel component export
+ * Comprehensive space management interface with editing and member management capabilities
+ */
 export const SpaceInfoPanel = SpaceInfoPanelComponent;

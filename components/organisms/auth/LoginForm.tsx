@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * LoginForm Component
+ *
+ * User login form with:
+ * - Email and password input fields
+ * - Form validation and error handling
+ * - NextAuth integration for authentication
+ * - Loading states and user feedback
+ * - Automatic redirect after successful login
+ * - Link to registration page
+ */
+
 import { FormField } from "../../molecules/FormField";
 import { Button } from "../../atoms/Button";
 import Link from "next/link";
@@ -9,10 +21,21 @@ import { signIn } from "next-auth/react";
 import { loginAction, type LoginActionState } from "@/app/actions/login";
 import { useRouter } from "next/navigation";
 
+/**
+ * Props interface for LoginForm component
+ */
 interface LoginFormProps {
   className?: string;
 }
 
+/**
+ * LoginForm Component Implementation
+ *
+ * Handles user login with server action integration and NextAuth.
+ * Manages form state, loading states, and automatic redirects.
+ *
+ * @param className - Additional CSS classes for styling
+ */
 export const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
   const router = useRouter();
   const [state, formAction] = useActionState<LoginActionState, FormData>(
@@ -77,6 +100,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
   );
 };
 
+/**
+ * SubmitButton Component
+ *
+ * Handles the login form submission button with loading states.
+ *
+ * @param isSigningIn - Whether the sign-in process is in progress
+ */
 const SubmitButton: React.FC<{ isSigningIn: boolean }> = ({ isSigningIn }) => {
   const { pending } = useFormStatus();
   const disabled = pending || isSigningIn;

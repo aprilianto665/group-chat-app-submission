@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * TodoBlock Component
+ *
+ * Advanced todo list block component with:
+ * - Editable todo list title
+ * - Drag-and-drop reordering of todo items
+ * - Progress tracking with visual progress bar
+ * - Collapsible/expandable functionality
+ * - Add new todo items with description
+ * - Individual todo item management
+ * - Performance optimization with memoization
+ * - Accessibility features with proper labels
+ * - Real-time updates and state management
+ */
+
 import React, { memo, useState, useCallback, useMemo } from "react";
 import { ChevronDownIcon, PlusIcon } from "../../atoms/Icons";
 import { Button } from "../../atoms/Button";
@@ -25,33 +40,90 @@ import {
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
 
+/**
+ * Props interface for TodoBlock component
+ */
 interface TodoBlockProps {
   block: NoteBlock;
   isEditing: boolean;
   onUpdateBlock: (updater: (b: NoteBlock) => NoteBlock) => void;
 }
 
+/**
+ * TodoBlock Component Implementation
+ *
+ * Renders a comprehensive todo list block with drag-and-drop functionality.
+ * Manages todo items, progress tracking, and provides add/edit capabilities.
+ *
+ * @param block - The note block containing todo data
+ * @param isEditing - Whether the block is in editing mode
+ * @param onUpdateBlock - Handler for updating block data
+ */
 const TodoBlockComponent: React.FC<TodoBlockProps> = ({
   block,
   isEditing,
   onUpdateBlock,
 }) => {
+  // ===== STATE MANAGEMENT =====
+
+  /**
+   * State for controlling the add todo modal visibility
+   */
   const [showAddTodoModal, setShowAddTodoModal] = useState(false);
+
+  /**
+   * State for new todo item text input
+   */
   const [newTodoText, setNewTodoText] = useState("");
+
+  /**
+   * State for new todo item description input
+   */
   const [newTodoDescription, setNewTodoDescription] = useState("");
 
+  /**
+   * State for controlling collapsed/expanded view of todo list
+   */
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // ===== COMPUTED VALUES =====
+
+  /**
+   * Array of todo items from the block
+   * Provides fallback to empty array if items is undefined
+   */
   const items = useMemo(() => block.items ?? [], [block.items]);
+
+  /**
+   * Count of completed todo items for progress tracking
+   */
   const completedItems = useMemo(
     () => items.filter((item) => item.done).length,
     [items]
   );
 
+  /**
+   * Array of todo item IDs for drag-and-drop operations
+   * Used by @dnd-kit SortableContext
+   */
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
+
+  // ===== DRAG AND DROP CONFIGURATION =====
+
+  /**
+   * Drag sensors configuration for todo item reordering
+   * Prevents accidental drags by requiring 5px movement
+   */
   const itemSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  // ===== EVENT HANDLERS =====
+
+  /**
+   * Handles adding a new todo item to the list
+   * Creates a new todo item with unique ID and updates the block
+   */
   const handleAddTodo = useCallback(() => {
     if (newTodoText.trim()) {
       onUpdateBlock((b) => ({
@@ -72,6 +144,11 @@ const TodoBlockComponent: React.FC<TodoBlockProps> = ({
     }
   }, [newTodoText, newTodoDescription, items, onUpdateBlock]);
 
+  /**
+   * Handles the end of a drag operation for todo items
+   * Reorders todo items based on drop position
+   * @param event - Drag end event from @dnd-kit
+   */
   const handleTodoDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
@@ -224,4 +301,8 @@ const TodoBlockComponent: React.FC<TodoBlockProps> = ({
   );
 };
 
+/**
+ * Memoized TodoBlock component for performance optimization
+ * Prevents unnecessary re-renders when props haven't changed
+ */
 export const TodoBlock = memo(TodoBlockComponent);

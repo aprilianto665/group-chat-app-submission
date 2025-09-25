@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * NoteList Component
+ *
+ * List component for displaying and managing notes with:
+ * - Drag-and-drop reordering functionality
+ * - Active note highlighting
+ * - Add note functionality
+ * - Empty state handling
+ * - Performance optimization with memoization
+ * - Accessibility features with proper labels
+ * - Responsive design with scrollable content
+ */
+
 import React, { memo, useMemo } from "react";
 import { Button } from "../../atoms/Button";
 import { PlusIcon } from "../../atoms/Icons";
@@ -25,6 +38,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+/**
+ * Props interface for NoteList component
+ */
 interface NoteListProps {
   notes: Note[];
   activeNoteId?: string;
@@ -33,6 +49,18 @@ interface NoteListProps {
   onReorder?: (orderedIds: string[]) => void;
 }
 
+/**
+ * NoteList Component Implementation
+ *
+ * Renders a list of notes with drag-and-drop reordering functionality.
+ * Provides add note functionality and handles empty states.
+ *
+ * @param notes - Array of notes to display
+ * @param activeNoteId - ID of the currently active note
+ * @param onSelect - Handler for note selection
+ * @param onAdd - Handler for adding new notes
+ * @param onReorder - Optional handler for note reordering
+ */
 const NoteListComponent: React.FC<NoteListProps> = ({
   notes,
   activeNoteId,
@@ -40,9 +68,22 @@ const NoteListComponent: React.FC<NoteListProps> = ({
   onAdd,
   onReorder,
 }) => {
+  // ===== DRAG AND DROP CONFIGURATION =====
+
+  /**
+   * Drag sensors configuration with activation constraint
+   * Prevents accidental drags by requiring 5px movement
+   */
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  // ===== COMPUTED VALUES =====
+
+  /**
+   * Deduplicated notes array to prevent duplicate entries
+   * Filters out notes with duplicate IDs
+   */
   const uniqueNotes = useMemo(() => {
     return notes.reduce((acc, note) => {
       if (!acc.find((n) => n.id === note.id)) {
@@ -52,8 +93,19 @@ const NoteListComponent: React.FC<NoteListProps> = ({
     }, [] as Note[]);
   }, [notes]);
 
+  /**
+   * Array of note IDs for drag-and-drop operations
+   * Used by @dnd-kit SortableContext
+   */
   const noteIds = useMemo(() => uniqueNotes.map((n) => n.id), [uniqueNotes]);
 
+  // ===== EVENT HANDLERS =====
+
+  /**
+   * Handles the end of a drag operation
+   * Reorders notes based on drop position and calls onReorder callback
+   * @param event - Drag end event from @dnd-kit
+   */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -120,13 +172,33 @@ const NoteListComponent: React.FC<NoteListProps> = ({
   );
 };
 
+/**
+ * Memoized NoteList component for performance optimization
+ * Prevents unnecessary re-renders when props haven't changed
+ */
 export const NoteList = memo(NoteListComponent);
 
+/**
+ * SortableNoteRow Component
+ *
+ * Individual sortable note row with:
+ * - Drag-and-drop functionality
+ * - Active state highlighting
+ * - Click to select functionality
+ * - Visual feedback during drag operations
+ * - Accessibility features with proper titles
+ */
 const SortableNoteRow: React.FC<{
   note: Note;
   isActive: boolean;
   onSelect: (id: string) => void;
 }> = ({ note, isActive, onSelect }) => {
+  // ===== DRAG AND DROP CONFIGURATION =====
+
+  /**
+   * @dnd-kit sortable configuration for individual note row
+   * Provides all necessary props for drag operations
+   */
   const {
     attributes,
     listeners,
@@ -135,6 +207,13 @@ const SortableNoteRow: React.FC<{
     transition,
     isDragging,
   } = useSortable({ id: note.id });
+
+  // ===== COMPUTED VALUES =====
+
+  /**
+   * Dynamic styles for drag-and-drop operations
+   * Includes transform, transition, and opacity changes
+   */
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,

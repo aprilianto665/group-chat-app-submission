@@ -1,5 +1,58 @@
 "use client";
 
+/**
+ * NoteEditor Component - Advanced Rich Text Editor
+ *
+ * This is a sophisticated note editing component that provides a rich text editing experience
+ * similar to modern note-taking applications like Notion. It supports multiple content types
+ * and advanced editing features.
+ *
+ * ## Core Features:
+ *
+ * ### 1. Block-Based Architecture
+ * - Multiple block types: text, heading, and todo blocks
+ * - Each block is independently editable and manageable
+ * - Block-specific functionality (todo items, headings, etc.)
+ *
+ * ### 2. Drag-and-Drop Functionality (@dnd-kit)
+ * - Visual drag-and-drop reordering of blocks
+ * - Drag overlay with visual feedback
+ * - Constrained dragging (vertical only)
+ * - Smooth animations and transitions
+ *
+ * ### 3. Advanced Editing Features
+ * - Auto-resizing textareas for all content
+ * - Collapsible blocks for better organization
+ * - Block-level context menus
+ * - Add block menu with quick access
+ * - Real-time content updates
+ *
+ * ### 4. State Management
+ * - Draft mode for new notes
+ * - Change tracking for unsaved modifications
+ * - Optimistic updates with conflict resolution
+ * - Local state synchronization
+ *
+ * ### 5. User Experience
+ * - Keyboard shortcuts and accessibility
+ * - Visual feedback for all interactions
+ * - Responsive design
+ * - Performance optimization with memoization
+ * - Auto-save functionality
+ *
+ * ## Block Types Supported:
+ * - **Text Block**: Plain text content with auto-resize
+ * - **Heading Block**: Styled headings with different levels
+ * - **Todo Block**: Task management with checkboxes and descriptions
+ *
+ * ## Technical Implementation:
+ * - Uses @dnd-kit for drag-and-drop functionality
+ * - Memoized components for performance
+ * - Ref management for DOM manipulation
+ * - Sensor configuration for touch/mouse interactions
+ * - Collision detection and sorting strategies
+ */
+
 import React, {
   memo,
   useCallback,
@@ -39,34 +92,106 @@ import {
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
 
+/**
+ * Props interface for NoteEditor component
+ */
 interface NoteEditorProps {
   note?: Note;
   onSave: (draft: { title: string; blocks: NoteBlock[] }) => void;
   onDeleteNote: () => void;
 }
 
+/**
+ * NoteEditor Component Implementation
+ *
+ * Renders a sophisticated note editor with block-based architecture and drag-and-drop functionality.
+ * Manages complex state including editing mode, block management, and user interactions.
+ *
+ * @param note - Optional note data to edit (undefined for new notes)
+ * @param onSave - Callback function called when note is saved with title and blocks
+ * @param onDeleteNote - Callback function called when note is deleted
+ */
 const NoteEditorComponent: React.FC<NoteEditorProps> = ({
   note,
   onSave,
   onDeleteNote,
 }) => {
+  // ===== STATE MANAGEMENT =====
+
+  /**
+   * Note title state - tracks the current title value
+   */
   const [title, setTitle] = useState<string>(note?.title ?? "");
+
+  /**
+   * Note blocks state - array of all note blocks (text, heading, todo)
+   */
   const [blocks, setBlocks] = useState<NoteBlock[]>(note?.blocks ?? []);
+
+  /**
+   * Editing mode state - whether the note is currently being edited
+   * Automatically true for draft notes (new notes)
+   */
   const [isEditing, setIsEditing] = useState(
     note?.id === "draft" ? true : false
   );
+
+  /**
+   * Open block menu state - tracks which block's context menu is open
+   */
   const [openBlockMenuId, setOpenBlockMenuId] = useState<string | null>(null);
+
+  /**
+   * Changes tracking state - whether there are unsaved changes
+   */
   const [hasChanges, setHasChanges] = useState(false);
+
+  /**
+   * Drag state - whether any block is currently being dragged
+   */
   const [isDraggingAnyBlock, setIsDraggingAnyBlock] = useState(false);
+
+  /**
+   * Active drag block state - ID of the block being dragged
+   */
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+
+  /**
+   * Active block size state - dimensions of the block being dragged
+   */
   const [activeBlockSize, setActiveBlockSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
+
+  /**
+   * Collapsed blocks state - set of block IDs that are collapsed
+   */
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+
+  // ===== REFS =====
+
+  /**
+   * Refs for block row elements - used for drag-and-drop positioning
+   */
   const blockRowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  /**
+   * Refs for block textarea elements - used for auto-resize functionality
+   */
   const blockRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+
+  /**
+   * Ref for title textarea element - used for auto-resize functionality
+   */
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // ===== DRAG AND DROP CONFIGURATION =====
+
+  /**
+   * Drag sensors configuration - handles mouse/touch interactions
+   * Activation constraint prevents accidental drags
+   */
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -92,6 +217,12 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     });
   }, [note?.id]);
 
+  // ===== EVENT HANDLERS =====
+
+  /**
+   * Handles title textarea changes and marks note as modified
+   * @param e - Change event from title textarea
+   */
   const handleTitleAreaChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setTitle(e.target.value);
@@ -100,6 +231,11 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     []
   );
 
+  /**
+   * Handles content changes for individual blocks and marks note as modified
+   * @param blockId - ID of the block being modified
+   * @param e - Change event from block textarea
+   */
   const handleChangeBlock = useCallback(
     (blockId: string, e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const content = e.target.value;
@@ -111,6 +247,11 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     []
   );
 
+  /**
+   * Adds a new block of the specified type to the note
+   * Creates appropriate initial data based on block type
+   * @param type - Type of block to add (text, heading, or todo)
+   */
   const handleAddBlock = useCallback((type: NoteBlock["type"]) => {
     setBlocks((prev) => [
       ...prev,
@@ -127,6 +268,10 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     setHasChanges(true);
   }, []);
 
+  /**
+   * Removes a block from the note by its ID
+   * @param blockId - ID of the block to delete
+   */
   const handleDeleteBlock = useCallback((blockId: string) => {
     setBlocks((prev) => prev.filter((b) => b.id !== blockId));
     setHasChanges(true);
@@ -153,6 +298,11 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     });
   }, []);
 
+  /**
+   * Handles saving the note with current title and blocks
+   * Validates changes and ensures title is not empty
+   * Exits editing mode after successful save
+   */
   const handleSave = useCallback(() => {
     // Allow saving if it's a draft note (new note) or if there are changes
     const isDraft = note?.id === "draft";
@@ -169,8 +319,21 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     setIsEditing(false);
   }, [onSave, title, blocks, hasChanges, note?.id]);
 
+  // ===== COMPUTED VALUES =====
+
+  /**
+   * Array of block IDs for drag-and-drop sorting
+   * Used by @dnd-kit SortableContext
+   */
   const blockIds = useMemo(() => blocks.map((b) => b.id), [blocks]);
 
+  // ===== DRAG AND DROP HANDLERS =====
+
+  /**
+   * Handles the end of a drag operation
+   * Reorders blocks based on drop position and updates state
+   * @param event - Drag end event from @dnd-kit
+   */
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;

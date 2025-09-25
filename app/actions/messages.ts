@@ -1,5 +1,22 @@
 "use server";
 
+/**
+ * Message Management Server Actions
+ *
+ * This module handles all message-related operations including:
+ * - Listing messages for a space
+ * - Sending new messages
+ * - Sending activity messages (for note operations)
+ * - Real-time message broadcasting via Pusher
+ *
+ * All actions include:
+ * - Authentication checks
+ * - Input validation with Zod schemas
+ * - Database operations with Prisma
+ * - Real-time updates via Pusher
+ * - Proper error handling
+ */
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/utils/actionsAuth";
 import { ACTIVITY_PREFIX } from "@/utils/activity";
@@ -9,6 +26,13 @@ import {
 } from "@/utils/validation/actions";
 import { pusherServer } from "@/lib/pusher";
 
+/**
+ * Retrieves all messages for a specific space
+ *
+ * @param spaceId - The ID of the space to retrieve messages for
+ * @returns Array of formatted message objects with user information
+ * @throws Error if user is not authenticated
+ */
 export async function listMessages(spaceId: string) {
   await requireAuth();
 
@@ -28,6 +52,14 @@ export async function listMessages(spaceId: string) {
   }));
 }
 
+/**
+ * Sends a new message to a space and broadcasts it in real-time
+ *
+ * @param spaceId - The ID of the space to send the message to
+ * @param content - The message content to send
+ * @returns Formatted message object that was created
+ * @throws Error if validation fails or user is not authenticated
+ */
 export async function sendMessage(spaceId: string, content: string) {
   const parsed = sendMessageSchema.safeParse({ spaceId, content });
   if (!parsed.success) throw new Error("Invalid message payload");
@@ -55,6 +87,15 @@ export async function sendMessage(spaceId: string, content: string) {
   return payload;
 }
 
+/**
+ * Sends an activity message (for note operations) to a space
+ * Activity messages are prefixed and used to notify users about note changes
+ *
+ * @param spaceId - The ID of the space to send the activity message to
+ * @param htmlContent - The HTML content of the activity message
+ * @returns Formatted activity message object that was created
+ * @throws Error if validation fails or user is not authenticated
+ */
 export async function sendActivityMessage(
   spaceId: string,
   htmlContent: string

@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * SpaceForm Component
+ *
+ * Form component for creating new spaces with:
+ * - Space name input with validation
+ * - Image upload with preview functionality
+ * - File handling with proper cleanup
+ * - Server action integration for space creation
+ * - Form state management with useActionState
+ */
+
 import React, { useEffect, useState, useActionState } from "react";
 import Image from "next/image";
 import { Button } from "../../atoms/Button";
@@ -12,11 +23,23 @@ import {
 } from "@/app/actions/spaces";
 import type { SpaceWithNotes } from "@/types";
 
+/**
+ * Props interface for SpaceForm component
+ */
 interface SpaceFormProps {
   onCancel?: () => void;
   onCreated?: (space: SpaceWithNotes) => void;
 }
 
+/**
+ * SpaceForm Component Implementation
+ *
+ * Handles space creation form with image upload and validation.
+ * Manages form state, file previews, and cleanup of resources.
+ *
+ * @param onCancel - Callback when form is cancelled
+ * @param onCreated - Callback when space is successfully created
+ */
 export const SpaceForm: React.FC<SpaceFormProps> = ({
   onCancel,
   onCreated,

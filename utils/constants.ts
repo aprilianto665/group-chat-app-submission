@@ -1,9 +1,23 @@
-// Common constants used across the application
+/**
+ * Application Constants
+ *
+ * This module contains all application-wide constants including:
+ * - Drag and drop constraints
+ * - UI animation and z-index values
+ * - Color palette for consistent theming
+ * - Spacing values for consistent layout
+ */
 
+/**
+ * Drag and drop constraints for interactive elements
+ */
 export const DRAG_CONSTRAINTS = {
   DISTANCE: 5,
 } as const;
 
+/**
+ * UI constants for animations, z-index, and other UI properties
+ */
 export const UI_CONSTANTS = {
   ANIMATION_DURATION: 300,
   Z_INDEX: {
@@ -14,6 +28,9 @@ export const UI_CONSTANTS = {
   },
 } as const;
 
+/**
+ * Color palette for consistent theming across the application
+ */
 export const COLORS = {
   PRIMARY: "#4F45E4",
   PRIMARY_HOVER: "#4339D1",
@@ -25,6 +42,9 @@ export const COLORS = {
   WARNING_HOVER: "#D97706",
 } as const;
 
+/**
+ * Spacing values for consistent layout and spacing
+ */
 export const SPACING = {
   XS: "0.25rem",
   SM: "0.5rem",

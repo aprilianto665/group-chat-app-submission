@@ -1,11 +1,28 @@
 "use client";
 
+/**
+ * TodoItem Component
+ *
+ * Individual todo item component with:
+ * - Checkbox for completion status
+ * - Editable text content with auto-resize
+ * - Optional description display
+ * - Drag-and-drop functionality integration
+ * - Delete functionality with confirmation
+ * - Performance optimization with memoization
+ * - Accessibility features with proper labels
+ * - Conditional editing mode support
+ */
+
 import React, { memo } from "react";
 import { DragDotsIcon, TrashIcon } from "../../atoms/Icons";
 import { Button } from "../../atoms/Button";
 import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
 import type { NoteBlockItem } from "@/types";
 
+/**
+ * Props interface for TodoItem component
+ */
 interface TodoItemProps {
   item: NoteBlockItem;
   isEditing: boolean;
@@ -20,6 +37,18 @@ interface TodoItemProps {
   };
 }
 
+/**
+ * TodoItem Component Implementation
+ *
+ * Renders an individual todo item with checkbox, editable text, and optional description.
+ * Supports drag-and-drop functionality and provides delete capability.
+ *
+ * @param item - The todo item data to render
+ * @param isEditing - Whether the item is in editing mode
+ * @param onUpdateItem - Handler for updating item data
+ * @param onDeleteItem - Handler for deleting the item
+ * @param dragProps - Optional drag-and-drop properties from @dnd-kit
+ */
 const TodoItemComponent: React.FC<TodoItemProps> = ({
   item,
   isEditing,
@@ -85,4 +114,8 @@ const TodoItemComponent: React.FC<TodoItemProps> = ({
   );
 };
 
+/**
+ * Memoized TodoItem component for performance optimization
+ * Prevents unnecessary re-renders when props haven't changed
+ */
 export const TodoItem = memo(TodoItemComponent);

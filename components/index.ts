@@ -1,3 +1,16 @@
+/**
+ * Components Index - Central Export Hub
+ *
+ * This file serves as the central export hub for all components in the application.
+ * It organizes components by their atomic design hierarchy:
+ * - Atoms: Basic building blocks (buttons, inputs, icons, etc.)
+ * - Molecules: Simple combinations of atoms (forms, headers, etc.)
+ * - Organisms: Complex UI components (navigation, chat areas, etc.)
+ *
+ * This organization follows Atomic Design principles for maintainable and scalable UI architecture.
+ */
+
+// ===== ATOMS =====
 export { Input } from "./atoms/Input";
 export { Button } from "./atoms/Button";
 export { Checkbox } from "./atoms/Checkbox";
@@ -15,6 +28,7 @@ export * from "./atoms/Icons";
 export { AuthIllustration } from "./atoms/auth/AuthIllustration";
 export { MessageBubble } from "./atoms/chat/MessageBubble";
 
+// ===== MOLECULES =====
 export { FormField } from "./molecules/FormField";
 export { PageHeader } from "./molecules/PageHeader";
 export { SearchInput } from "./molecules/SearchInput";
@@ -38,6 +52,7 @@ export { BlockMenu } from "./molecules/note/BlockMenu";
 export { AddBlockMenu } from "./molecules/note/AddBlockMenu";
 export { SaveButton } from "./molecules/note/SaveButton";
 
+// ===== ORGANISMS =====
 export { Nav } from "./organisms/Nav";
 export { AppWrapper } from "./organisms/AppWrapper";
 

@@ -1,5 +1,23 @@
+/**
+ * User Registration Page Component
+ *
+ * Provides the user registration interface with:
+ * - Registration form with validation
+ * - Responsive layout with illustration
+ * - Authentication flow integration
+ * - Error handling and user feedback
+ */
+
 import { PageHeader, RegisterForm, AuthIllustration } from "@/components";
 
+/**
+ * Registration Page Component
+ *
+ * Renders the user registration page with form and illustration.
+ * Uses responsive design to show illustration on larger screens.
+ *
+ * @returns JSX element containing the registration form and layout
+ */
 export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-white flex">

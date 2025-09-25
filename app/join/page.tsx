@@ -1,3 +1,15 @@
+/**
+ * Space Join Page Component
+ *
+ * Handles secure space invitation links with cryptographic signature verification.
+ * This page:
+ * - Validates invitation signatures using HMAC-SHA256
+ * - Checks invitation expiration timestamps
+ * - Allows users to join spaces via secure invitation links
+ * - Sends activity messages when users join spaces
+ * - Handles authentication and redirects appropriately
+ */
+
 import { redirect } from "next/navigation";
 import crypto from "crypto";
 import { joinSpace, getSpaceDetail } from "@/app/actions/spaces";
@@ -8,6 +20,15 @@ import { Avatar, Button, Heading } from "@/components";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * Verifies the cryptographic signature of a space invitation link
+ *
+ * @param spaceId - The ID of the space being joined
+ * @param expSec - Expiration timestamp in seconds
+ * @param sig - The signature to verify
+ * @returns true if the signature is valid, false otherwise
+ * @throws Error if INVITE_SECRET or NEXTAUTH_SECRET is missing
+ */
 function verifySignature(spaceId: string, expSec: number, sig: string) {
   const secret = process.env.INVITE_SECRET || process.env.NEXTAUTH_SECRET;
   if (!secret) throw new Error("Missing INVITE_SECRET/NEXTAUTH_SECRET");
@@ -19,6 +40,15 @@ function verifySignature(spaceId: string, expSec: number, sig: string) {
   return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
 }
 
+/**
+ * Space Join Page Component
+ *
+ * Server component that handles space invitation links with signature verification.
+ * Validates invitation parameters and allows users to join spaces securely.
+ *
+ * @param searchParams - URL search parameters containing space ID, expiration, and signature
+ * @returns JSX element with space join confirmation form
+ */
 export default async function JoinPage({
   searchParams,
 }: {
@@ -53,6 +83,12 @@ export default async function JoinPage({
 
   const space = await getSpaceDetail(spaceId);
 
+  /**
+   * Server action to confirm space joining
+   * Validates the invitation again and adds the user to the space
+   *
+   * @param formData - Form data containing space ID, expiration, and signature
+   */
   async function confirmJoin(formData: FormData) {
     "use server";
     const s = (formData.get("space") as string) || "";
@@ -72,7 +108,7 @@ export default async function JoinPage({
 
     const existing = await prisma.spaceMember.findUnique({
       where: { spaceId_userId: { spaceId: s, userId } },
-    select: { spaceId: true },
+      select: { spaceId: true },
     });
     if (existing) {
       redirect("/");

@@ -1,14 +1,41 @@
 "use client";
 
+/**
+ * MessageItem Component
+ *
+ * Individual message component for chat interface with:
+ * - Message bubble with content and timestamp
+ * - Avatar display for received messages
+ * - Sent vs received message styling
+ * - Sender name display
+ * - Performance optimization with memoization
+ */
+
 import React, { memo } from "react";
 import { MessageBubble } from "../../atoms/chat/MessageBubble";
 import { Avatar } from "../../atoms/Avatar";
 import type { Message } from "@/types";
 
+/**
+ * Props interface for MessageItem component
+ * Extends Message type with additional className prop
+ */
 interface MessageItemProps extends Message {
   className?: string;
 }
 
+/**
+ * MessageItem Component Implementation
+ *
+ * Renders an individual message with appropriate styling and layout.
+ * Handles both sent and received messages with different layouts.
+ *
+ * @param content - Message content text
+ * @param timestamp - Message timestamp
+ * @param isSent - Whether this is a sent message (default: false)
+ * @param senderName - Name of the message sender
+ * @param className - Additional CSS classes for styling
+ */
 const MessageItemComponent: React.FC<MessageItemProps> = ({
   content,
   timestamp,

@@ -1,7 +1,18 @@
+/**
+ * Server Action Utilities
+ *
+ * This module provides common utilities for server actions including:
+ * - Error handling and logging
+ * - Form data extraction and validation
+ * - Standardized action result types
+ * - Zod validation error processing
+ */
+
 import { ZodError } from "zod";
 
 /**
  * Standard action result type for form actions
+ * Provides consistent error/success messaging across all actions
  */
 export type ActionResult<T = Record<string, never>> = {
   error?: string;

@@ -18,21 +18,55 @@ import type {
 import type { AppActions, NoteBlockPayload } from "@/types/app";
 import { pusherClient } from "@/lib/pusher-client";
 
+/**
+ * AppWrapper Component - Main Application State Manager
+ *
+ * Core component orchestrating application state and real-time functionality.
+ * Manages user interactions, data flow, and Pusher WebSocket communication.
+ */
 export const AppWrapper: React.FC<{
   user: User;
   initialSpaces: SpaceWithNotes[];
   actions: AppActions;
 }> = ({ user, initialSpaces, actions }) => {
+  // ===== STATE MANAGEMENT =====
+
+  /**
+   * Profile store for user information management
+   */
   const { setUser } = useProfileStore();
+
+  /**
+   * Currently active space ID - determines which space is being viewed
+   */
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
+
+  /**
+   * All spaces the user has access to with their notes and messages
+   * Updated in real-time through Pusher events
+   */
   const [spaces, setSpaces] = useState<SpaceWithNotes[]>(() => initialSpaces);
+
+  /**
+   * Tracks which note is active for each space
+   * Key: spaceId, Value: noteId or undefined
+   */
   const [activeNoteIdBySpace, setActiveNoteIdBySpace] = useState<
     Record<string, string | undefined>
   >({});
+
+  /**
+   * Draft notes being created for each space
+   * Key: spaceId, Value: draft note data or undefined
+   */
   const [creatingDraftBySpace, setCreatingDraftBySpace] = useState<
     Record<string, { title: string; blocks: NoteBlock[] } | undefined>
   >({});
 
+  /**
+   * Initializes user profile in the global store
+   * Sets user information from props into the Zustand profile store
+   */
   useEffect(() => {
     setUser({
       id: user.id,
@@ -43,12 +77,22 @@ export const AppWrapper: React.FC<{
     });
   }, [user, setUser]);
 
+  // ===== COMPUTED VALUES =====
+
+  /**
+   * Currently active space object derived from activeSpaceId
+   * Returns undefined if no space is selected
+   */
   const activeSpace = useMemo(
     () =>
       activeSpaceId ? spaces.find((s) => s.id === activeSpaceId) : undefined,
     [activeSpaceId, spaces]
   );
 
+  /**
+   * Listens for custom space-updated events from other components
+   * Updates space information and adds activity messages when space is modified
+   */
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as
@@ -88,6 +132,10 @@ export const AppWrapper: React.FC<{
     return () => {};
   }, []);
 
+  /**
+   * Listens for custom members-updated events from other components
+   * Updates member lists when members are added, removed, or roles changed
+   */
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as
@@ -108,6 +156,10 @@ export const AppWrapper: React.FC<{
     return () => {};
   }, []);
 
+  /**
+   * Sets up global Pusher channel for space-level events
+   * Handles space creation and deletion events across the application
+   */
   useEffect(() => {
     if (!pusherClient) {
       console.warn("Pusher client not available. Realtime features disabled.");
@@ -116,10 +168,20 @@ export const AppWrapper: React.FC<{
 
     const globalChannel = pusherClient.subscribe("global");
 
+    /**
+     * Handles space creation events from global channel
+     * Adds new spaces to the spaces list
+     * @param data - Object containing the new space data
+     */
     const onSpaceCreated = (data: { space: SpaceWithNotes }) => {
       setSpaces((prev) => [data.space, ...prev]);
     };
 
+    /**
+     * Handles space deletion events from global channel
+     * Removes deleted spaces and clears active space if needed
+     * @param data - Object containing the space ID to delete
+     */
     const onSpaceDeleted = (data: { spaceId: string }) => {
       setSpaces((prev) => prev.filter((s) => s.id !== data.spaceId));
       if (activeSpaceId === data.spaceId) {
@@ -142,6 +204,11 @@ export const AppWrapper: React.FC<{
 
     const channel = pusherClient.subscribe(`space-${activeSpaceId}`);
 
+    /**
+     * Handles new message events from Pusher
+     * Adds new messages to the active space's message list
+     * @param message - The new message received
+     */
     const onNewMessage = (message: import("@/types").Message) => {
       setSpaces((prev) =>
         prev.map((s) =>
@@ -157,6 +224,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles new activity message events from Pusher
+     * Adds activity messages to the active space's message list
+     * @param message - The new activity message received
+     */
     const onNewActivity = (message: import("@/types").Message) => {
       setSpaces((prev) =>
         prev.map((s) =>
@@ -172,6 +244,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles note creation events from Pusher
+     * Adds new notes to the active space's note list
+     * @param data - Object containing the new note and space ID
+     */
     const onNoteCreated = (data: { note: Note; spaceId: string }) => {
       setSpaces((prev) =>
         prev.map((s) =>
@@ -187,6 +264,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles note update events from Pusher
+     * Updates existing notes in the active space's note list
+     * @param data - Object containing the updated note and space ID
+     */
     const onNoteUpdated = (data: { note: Note; spaceId: string }) => {
       setSpaces((prev) =>
         prev.map((s) =>
@@ -202,6 +284,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles note deletion events from Pusher
+     * Removes deleted notes from the active space's note list
+     * @param data - Object containing the note ID and space ID
+     */
     const onNoteDeleted = (data: { noteId: string; spaceId: string }) => {
       setSpaces((prev) =>
         prev.map((s) =>
@@ -212,6 +299,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles note reordering events from Pusher
+     * Reorders notes in the active space based on the provided order
+     * @param data - Object containing space ID and ordered note IDs
+     */
     const onNotesReordered = (data: {
       spaceId: string;
       orderedIds: string[];
@@ -230,6 +322,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles member join events from Pusher
+     * Adds new members to the active space's member list
+     * @param data - Object containing space ID and new member data
+     */
     const onMemberJoined = (data: { spaceId: string; member: SpaceMember }) => {
       setSpaces((prev) =>
         prev.map((s) =>
@@ -243,6 +340,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles member leave events from Pusher
+     * Removes members from the active space's member list
+     * @param data - Object containing space ID, user ID, and display name
+     */
     const onMemberLeft = (data: {
       spaceId: string;
       userId: string;
@@ -262,6 +364,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles space info update events from Pusher
+     * Updates space information (name, description, icon) in the active space
+     * @param data - Object containing space ID and updated space information
+     */
     const onSpaceInfoUpdated = (data: {
       spaceId: string;
       name: string;
@@ -282,6 +389,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles member role change events from Pusher
+     * Updates member roles in the active space's member list
+     * @param data - Object containing space ID, target user ID, new role, and updated members list
+     */
     const onMemberRoleChanged = (data: {
       spaceId: string;
       targetUserId: string;
@@ -300,6 +412,11 @@ export const AppWrapper: React.FC<{
       );
     };
 
+    /**
+     * Handles member removal events from Pusher
+     * Updates member list after a member is removed from the active space
+     * @param data - Object containing space ID, target user ID, and updated members list
+     */
     const onMemberRemoved = (data: {
       spaceId: string;
       targetUserId: string;
@@ -345,6 +462,10 @@ export const AppWrapper: React.FC<{
     };
   }, [activeSpaceId]);
 
+  /**
+   * Spaces sorted by most recent activity (last message or creation time)
+   * Used for displaying spaces in chronological order in the sidebar
+   */
   const sortedSpaces = useMemo(() => {
     const copy = [...spaces];
     copy.sort((a, b) => {
@@ -359,6 +480,10 @@ export const AppWrapper: React.FC<{
     return copy;
   }, [spaces]);
 
+  /**
+   * Spaces with derived last message information for display
+   * Extracts the most recent non-activity message for each space
+   */
   const spacesWithLastMessage: SpaceWithNotes[] = useMemo(() => {
     return sortedSpaces.map((space) => {
       const derivedLast = [...space.messages]
@@ -372,16 +497,30 @@ export const AppWrapper: React.FC<{
     });
   }, [sortedSpaces]);
 
+  // ===== EVENT HANDLERS =====
+
+  /**
+   * Handles space creation - adds new space to list and sets it as active
+   * @param space - The newly created space with notes and messages
+   */
   const handleSpaceCreated = async (space: SpaceWithNotes) => {
     setSpaces((prev) => [space, ...prev]);
     setActiveSpaceId(space.id);
   };
 
+  /**
+   * Handles sending a new message to the active space
+   * @param content - The message content to send
+   */
   const handleSendMessage = async (content: string) => {
     if (!activeSpaceId) return;
     await actions.sendMessage(activeSpaceId, content);
   };
 
+  /**
+   * Handles space selection - fetches detailed space data and sets as active
+   * @param spaceId - The ID of the space to select
+   */
   const handleSelectSpace = async (spaceId: string) => {
     setActiveSpaceId(spaceId);
     const detail = await actions.getSpaceDetail(spaceId);
@@ -392,10 +531,18 @@ export const AppWrapper: React.FC<{
     });
   };
 
+  /**
+   * Currently active note ID for the active space
+   */
   const activeNoteId = activeSpaceId
     ? activeNoteIdBySpace[activeSpaceId]
     : undefined;
 
+  /**
+   * Sets the active note for a specific space
+   * @param spaceId - The space ID
+   * @param noteId - The note ID to set as active (undefined to clear)
+   */
   const setActiveNoteForSpace = useCallback(
     (spaceId: string, noteId?: string) => {
       setActiveNoteIdBySpace((prev) => ({ ...prev, [spaceId]: noteId }));
@@ -403,6 +550,10 @@ export const AppWrapper: React.FC<{
     []
   );
 
+  /**
+   * Initiates note creation by setting up a draft note
+   * Creates a new draft with default title and empty text block
+   */
   const handleAddNote = useCallback(() => {
     if (!activeSpaceId) return;
     setCreatingDraftBySpace((prev) => ({
@@ -414,6 +565,10 @@ export const AppWrapper: React.FC<{
     }));
   }, [activeSpaceId]);
 
+  /**
+   * Handles note selection - sets the selected note as active
+   * @param noteId - The ID of the note to select
+   */
   const handleSelectNote = useCallback(
     (noteId: string) => {
       if (!activeSpaceId) return;
@@ -422,6 +577,11 @@ export const AppWrapper: React.FC<{
     [activeSpaceId, setActiveNoteForSpace]
   );
 
+  /**
+   * Handles note saving - updates existing note with new content
+   * Sends activity message and lets Pusher handle real-time updates
+   * @param draft - The note draft containing title and blocks
+   */
   const handleSaveNote = useCallback(
     async (draft: { title: string; blocks: NoteBlock[] }) => {
       if (!activeSpaceId || !activeNoteId) return;
@@ -465,6 +625,10 @@ export const AppWrapper: React.FC<{
     [activeSpaceId, activeNoteId, actions]
   );
 
+  /**
+   * Handles note deletion - removes note and sends activity message
+   * Clears active note selection and lets Pusher handle real-time updates
+   */
   const handleDeleteNote = useCallback(async () => {
     if (!activeSpaceId || !activeNoteId) return;
     await actions.deleteNote(activeNoteId);

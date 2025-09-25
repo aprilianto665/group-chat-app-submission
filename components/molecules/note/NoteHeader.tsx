@@ -1,10 +1,25 @@
 "use client";
 
+/**
+ * NoteHeader Component
+ *
+ * Header component for note editing with:
+ * - Editable title with auto-resize functionality
+ * - Context menu with edit and delete actions
+ * - Conditional editing mode support
+ * - Accessibility features with proper labels
+ * - Performance optimization with memoization
+ * - Clean, professional UI design
+ */
+
 import React, { memo } from "react";
 import { KebabIcon, PencilIcon, TrashIcon } from "../../atoms/Icons";
 import { Button } from "../../atoms/Button";
 import { AutoResizeTextarea } from "../../atoms/AutoResizeTextarea";
 
+/**
+ * Props interface for NoteHeader component
+ */
 interface NoteHeaderProps {
   title: string;
   isEditing: boolean;
@@ -14,6 +29,19 @@ interface NoteHeaderProps {
   titleRef: React.RefObject<HTMLTextAreaElement>;
 }
 
+/**
+ * NoteHeader Component Implementation
+ *
+ * Renders the header section of a note with editable title and action menu.
+ * Provides context menu with edit and delete functionality.
+ *
+ * @param title - Current note title
+ * @param isEditing - Whether the note is in editing mode
+ * @param onTitleChange - Handler for title changes
+ * @param onEdit - Handler for edit action
+ * @param onDelete - Handler for delete action
+ * @param titleRef - Ref to the title textarea element
+ */
 const NoteHeaderComponent: React.FC<NoteHeaderProps> = ({
   title,
   isEditing,
@@ -22,6 +50,11 @@ const NoteHeaderComponent: React.FC<NoteHeaderProps> = ({
   onDelete,
   titleRef,
 }) => {
+  // ===== STATE MANAGEMENT =====
+
+  /**
+   * State for controlling the visibility of the context menu
+   */
   const [kebabOpen, setKebabOpen] = React.useState(false);
 
   return (
@@ -82,4 +115,8 @@ const NoteHeaderComponent: React.FC<NoteHeaderProps> = ({
   );
 };
 
+/**
+ * Memoized NoteHeader component for performance optimization
+ * Prevents unnecessary re-renders when props haven't changed
+ */
 export const NoteHeader = memo(NoteHeaderComponent);

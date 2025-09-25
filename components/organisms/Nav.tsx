@@ -1,12 +1,34 @@
 "use client";
 
+/**
+ * Navigation Component
+ *
+ * Main navigation component with responsive design:
+ * - Logo display with consistent branding
+ * - User avatar with profile access
+ * - Responsive layout (horizontal on mobile, vertical on desktop)
+ * - Profile trigger functionality
+ * - Clean, minimal design
+ */
+
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
+/**
+ * Props interface for Nav component
+ */
 interface NavProps {
   className?: string;
 }
 
+/**
+ * Navigation Component Implementation
+ *
+ * Renders the main navigation with logo and user avatar.
+ * Handles responsive design and profile access.
+ *
+ * @param className - Additional CSS classes for styling
+ */
 export const Nav: React.FC<NavProps> = ({ className = "" }) => {
   const pathname = usePathname();
   const isHomePage = pathname === "/";

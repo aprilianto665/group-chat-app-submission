@@ -1,5 +1,23 @@
 "use server";
 
+/**
+ * Note Management Server Actions
+ *
+ * This module handles all note-related operations including:
+ * - Creating new notes with blocks and todo items
+ * - Updating existing notes with new content
+ * - Deleting notes and their associated data
+ * - Reordering notes within a space
+ * - Real-time note broadcasting via Pusher
+ *
+ * All actions include:
+ * - Authentication checks
+ * - Input validation with Zod schemas
+ * - Database operations with Prisma transactions
+ * - Real-time updates via Pusher
+ * - Proper error handling and logging
+ */
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/utils/actionsAuth";
 import {
@@ -9,6 +27,15 @@ import {
 } from "@/utils/validation/actions";
 import { pusherServer } from "@/lib/pusher";
 
+/**
+ * Creates a new note with blocks and todo items in a space
+ *
+ * @param spaceId - The ID of the space to create the note in
+ * @param title - The title of the note
+ * @param blocks - Array of note blocks (text, heading, or todo blocks)
+ * @returns Created note data with formatted blocks and items
+ * @throws Error if validation fails or user is not authenticated
+ */
 export async function createNote(
   spaceId: string,
   title: string,
@@ -161,6 +188,16 @@ export async function createNote(
   return noteData;
 }
 
+/**
+ * Updates an existing note by replacing all blocks and todo items
+ * This function deletes existing blocks and creates new ones to ensure consistency
+ *
+ * @param noteId - The ID of the note to update
+ * @param title - The new title of the note
+ * @param blocks - Array of new note blocks to replace existing ones
+ * @returns Updated note data with formatted blocks and items
+ * @throws Error if validation fails, note not found, or user is not authenticated
+ */
 export async function updateNote(
   noteId: string,
   title: string,
@@ -186,7 +223,7 @@ export async function updateNote(
   await requireAuth();
 
   const note = await prisma.note.findUnique({
-    where: { id: noteId },
+    where: { id: BigInt(noteId) },
     select: { spaceId: true },
   });
 
@@ -235,7 +272,7 @@ export async function updateNote(
       };
     }
   ).note.update({
-    where: { id: noteId },
+    where: { id: BigInt(noteId) },
     data: {
       title,
       blocks: {
@@ -341,11 +378,19 @@ export async function updateNote(
   return noteData;
 }
 
+/**
+ * Deletes a note and all its associated blocks and todo items
+ * Uses database transaction to ensure data consistency
+ *
+ * @param noteId - The ID of the note to delete
+ * @returns true if deletion was successful
+ * @throws Error if note not found or user is not authenticated
+ */
 export async function deleteNote(noteId: string) {
   await requireAuth();
 
   const note = await prisma.note.findUnique({
-    where: { id: noteId },
+    where: { id: BigInt(noteId) },
     select: { spaceId: true },
   });
 
@@ -379,7 +424,7 @@ export async function deleteNote(noteId: string) {
     }
     await (
       tx as unknown as { note: { delete: (args: unknown) => Promise<void> } }
-    ).note.delete({ where: { id: noteId } });
+    ).note.delete({ where: { id: BigInt(noteId) } });
   });
 
   // Broadcast note deletion to all users in the space
@@ -393,6 +438,15 @@ export async function deleteNote(noteId: string) {
   return true;
 }
 
+/**
+ * Reorders notes within a space based on the provided order
+ * Updates the sortOrder field for each note to match the new order
+ *
+ * @param spaceId - The ID of the space containing the notes
+ * @param orderedIds - Array of note IDs in the desired order
+ * @returns Array of note IDs in the new order
+ * @throws Error if validation fails or user is not authenticated
+ */
 export async function reorderNotes(spaceId: string, orderedIds: string[]) {
   const parsed = reorderNotesSchema.safeParse({ spaceId, orderedIds });
   if (!parsed.success) throw new Error("Invalid reorder payload");
@@ -404,7 +458,10 @@ export async function reorderNotes(spaceId: string, orderedIds: string[]) {
     };
     for (let idx = 0; idx < orderedIds.length; idx++) {
       const id = orderedIds[idx];
-      await client.note.update({ where: { id }, data: { sortOrder: idx } });
+      await client.note.update({
+        where: { id: BigInt(id) },
+        data: { sortOrder: idx },
+      });
     }
   });
 

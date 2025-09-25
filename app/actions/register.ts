@@ -1,5 +1,16 @@
 "use server";
 
+/**
+ * User Registration Server Actions
+ *
+ * This module handles user registration operations including:
+ * - Form data validation with Zod schemas
+ * - Duplicate email/username checking
+ * - Password hashing with bcrypt
+ * - User creation in database
+ * - Error handling and user feedback
+ */
+
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcrypt-ts";
 import { registerSchema } from "@/utils/validation/auth";
@@ -9,11 +20,22 @@ import {
   getFormDataValue,
 } from "@/utils/actionUtils";
 
+/**
+ * State type for registration action results
+ */
 export type RegisterActionState = {
   error?: string;
   success?: string;
 };
 
+/**
+ * Handles user registration form submission
+ * Validates input, checks for duplicates, hashes password, and creates user
+ *
+ * @param _prevState - Previous state (unused)
+ * @param formData - Form data containing user registration information
+ * @returns RegisterActionState with success/error information
+ */
 export async function registerAction(
   _prevState: RegisterActionState,
   formData: FormData

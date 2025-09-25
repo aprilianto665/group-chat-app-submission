@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * RegisterForm Component
+ *
+ * User registration form with:
+ * - Name, username, email, and password fields
+ * - Password confirmation with client-side validation
+ * - Form validation and error handling
+ * - Server action integration for registration
+ * - Loading states and user feedback
+ * - Automatic redirect to login after successful registration
+ * - Link to login page
+ */
+
 import { FormField } from "../../molecules/FormField";
 import { Button } from "../../atoms/Button";
 import Link from "next/link";
@@ -10,10 +23,21 @@ import {
   type RegisterActionState,
 } from "@/app/actions/register";
 
+/**
+ * Props interface for RegisterForm component
+ */
 interface RegisterFormProps {
   className?: string;
 }
 
+/**
+ * RegisterForm Component Implementation
+ *
+ * Handles user registration with server action integration.
+ * Includes client-side password confirmation validation.
+ *
+ * @param className - Additional CSS classes for styling
+ */
 export const RegisterForm: React.FC<RegisterFormProps> = ({
   className = "",
 }) => {
@@ -111,6 +135,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   );
 };
 
+/**
+ * SuccessAutoRedirect Component
+ *
+ * Displays success message and automatically redirects to login page.
+ *
+ * @param message - Success message to display
+ */
 const SuccessAutoRedirect: React.FC<{ message: string }> = ({ message }) => {
   const { pending } = useFormStatus();
   if (pending) return null;

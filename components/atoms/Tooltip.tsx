@@ -1,7 +1,23 @@
 "use client";
 
+/**
+ * Tooltip Component
+ *
+ * Interactive tooltip component with:
+ * - Four position options (top, bottom, left, right)
+ * - Configurable delay for show/hide
+ * - Keyboard accessibility support (focus/blur)
+ * - Automatic cleanup of timeouts
+ * - Arrow indicators for better UX
+ * - High z-index for proper layering
+ * - Responsive positioning
+ */
+
 import React, { useState, useRef, useEffect } from "react";
 
+/**
+ * Props interface for Tooltip component
+ */
 interface TooltipProps {
   content: string;
   children: React.ReactNode;
@@ -10,6 +26,18 @@ interface TooltipProps {
   className?: string;
 }
 
+/**
+ * Tooltip Component Implementation
+ *
+ * Renders an interactive tooltip with configurable position and delay.
+ * Handles mouse and keyboard interactions with proper cleanup.
+ *
+ * @param content - Tooltip text content
+ * @param children - Element that triggers the tooltip
+ * @param position - Tooltip position relative to trigger element
+ * @param delay - Delay in milliseconds before showing tooltip
+ * @param className - Additional CSS classes
+ */
 export const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,

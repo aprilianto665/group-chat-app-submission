@@ -1,3 +1,10 @@
+/**
+ * Pusher Server Configuration
+ *
+ * This module configures the Pusher server for real-time WebSocket communication.
+ * Handles environment variable validation and singleton pattern for development.
+ */
+
 import Pusher from "pusher";
 
 declare global {
@@ -15,6 +22,10 @@ if (!pusherAppId || !pusherKey || !pusherSecret) {
   );
 }
 
+/**
+ * Pusher server instance for real-time communication
+ * Returns null if environment variables are not configured
+ */
 export const pusherServer =
   globalThis.__pusherServer ??
   (pusherAppId && pusherKey && pusherSecret

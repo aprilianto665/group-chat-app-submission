@@ -1,8 +1,23 @@
 "use client";
 
+/**
+ * SpaceItem Component
+ *
+ * Individual space item component with:
+ * - Space avatar with fallback to first letter
+ * - Space name and last message display
+ * - Active state highlighting
+ * - Click and keyboard interaction
+ * - Accessibility support with ARIA roles
+ * - Performance optimization with memoization
+ */
+
 import React, { memo, useCallback } from "react";
 import { Avatar } from "../../atoms/Avatar";
 
+/**
+ * Props interface for SpaceItem component
+ */
 interface SpaceItemProps {
   name: string;
   icon?: string;
@@ -13,6 +28,20 @@ interface SpaceItemProps {
   onClick?: () => void;
 }
 
+/**
+ * SpaceItem Component Implementation
+ *
+ * Renders an individual space item with avatar, name, and last message.
+ * Handles click and keyboard interactions with accessibility support.
+ *
+ * @param name - Name of the space
+ * @param icon - Optional icon URL for the space
+ * @param lastMessage - Last message content
+ * @param lastMessageSender - Sender of the last message
+ * @param isActive - Whether this space is currently active
+ * @param className - Additional CSS classes
+ * @param onClick - Click handler for space selection
+ */
 const SpaceItemComponent: React.FC<SpaceItemProps> = ({
   name,
   icon,

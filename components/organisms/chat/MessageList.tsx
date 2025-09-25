@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * MessageList Component
+ *
+ * Displays chat messages with advanced features:
+ * - Message grouping by date with visual separators
+ * - Activity message rendering with icons
+ * - Auto-scroll to latest messages
+ * - Empty state handling
+ * - Performance optimization with memoization
+ * - Message type differentiation (text vs activity)
+ */
+
 import React, { memo, useEffect, useMemo, useRef } from "react";
 import { NoteIcon, UserIcon, PencilIcon } from "../../atoms/Icons";
 import { MessageItem } from "../../molecules/chat/MessageItem";
@@ -8,11 +20,23 @@ import { formatDate, formatTime, groupMessagesByDate } from "@/utils/dateUtils";
 import { useProfileStore } from "@/stores/profileStore";
 import type { Message } from "@/types";
 
+/**
+ * Props interface for MessageList component
+ */
 interface MessageListProps {
   messages: Message[];
   className?: string;
 }
 
+/**
+ * MessageList Component Implementation
+ *
+ * Renders a list of messages with date grouping and auto-scroll.
+ * Handles both regular messages and activity messages with different styling.
+ *
+ * @param messages - Array of messages to display
+ * @param className - Additional CSS classes for styling
+ */
 const MessageListComponent: React.FC<MessageListProps> = ({
   messages,
   className = "",

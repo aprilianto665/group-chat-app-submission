@@ -1,10 +1,26 @@
 "use client";
 
+/**
+ * ChatInput Component
+ *
+ * Input component for sending chat messages with:
+ * - Text input with placeholder
+ * - Send button with icon
+ * - Enter key support for sending messages
+ * - Disabled state handling
+ * - Performance optimization with memoization
+ * - Keyboard accessibility
+ * - Responsive design
+ */
+
 import React, { memo, useCallback, useMemo } from "react";
 import { Input } from "../../atoms/Input";
 import { Button } from "../../atoms/Button";
-import { AttachmentIcon, SendIcon } from "../../atoms/Icons";
+import { SendIcon } from "../../atoms/Icons";
 
+/**
+ * Props interface for ChatInput component
+ */
 interface ChatInputProps {
   className?: string;
   value?: string;
@@ -13,6 +29,18 @@ interface ChatInputProps {
   disabled?: boolean;
 }
 
+/**
+ * ChatInput Component Implementation
+ *
+ * Renders a chat input with send button and keyboard support.
+ * Handles message sending via Enter key or button click.
+ *
+ * @param className - Additional CSS classes for styling
+ * @param value - Controlled input value
+ * @param onChange - Change event handler for input
+ * @param onSend - Callback function when send button is clicked
+ * @param disabled - Whether the input is disabled
+ */
 const ChatInputComponent: React.FC<ChatInputProps> = ({
   className = "",
   value,
@@ -46,9 +74,6 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
           onChange={onChange}
           onKeyDown={handleKeyDown}
         />
-        <Button variant="icon" size="md" disabled>
-          <AttachmentIcon />
-        </Button>
         <Button
           variant="send"
           size="sm"

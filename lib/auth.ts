@@ -3,6 +3,16 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import { compare } from "bcrypt-ts";
 
+/**
+ * NextAuth.js configuration for authentication
+ *
+ * Features:
+ * - Credentials-based authentication (email/password)
+ * - JWT session strategy for stateless authentication
+ * - Secure password comparison using bcrypt
+ * - Custom session callbacks to include user data
+ * - Custom login page redirect
+ */
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

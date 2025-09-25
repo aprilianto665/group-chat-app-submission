@@ -1,5 +1,23 @@
+/**
+ * User Login Page Component
+ *
+ * Provides the user login interface with:
+ * - Login form with validation
+ * - Responsive layout with illustration
+ * - Authentication flow integration
+ * - Error handling and user feedback
+ */
+
 import { PageHeader, LoginForm, AuthIllustration } from "@/components";
 
+/**
+ * Login Page Component
+ *
+ * Renders the user login page with form and illustration.
+ * Uses responsive design to show illustration on larger screens.
+ *
+ * @returns JSX element containing the login form and layout
+ */
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white flex">

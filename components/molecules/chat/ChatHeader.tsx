@@ -1,10 +1,26 @@
 "use client";
 
+/**
+ * ChatHeader Component
+ *
+ * Header component for chat interface with:
+ * - Space information display (name and icon)
+ * - Space avatar with fallback to first letter
+ * - Toggle notes functionality
+ * - Space info access button
+ * - Clean, professional layout
+ * - Accessibility features with titles
+ * - Responsive design
+ */
+
 import { Button } from "../../atoms/Button";
 import { Heading } from "../../atoms/Heading";
 import { Avatar } from "../../atoms/Avatar";
 import { NoteIcon } from "../../atoms/Icons";
 
+/**
+ * Props interface for ChatHeader component
+ */
 interface ChatHeaderProps {
   spaceName: string;
   spaceIcon?: string;
@@ -13,6 +29,18 @@ interface ChatHeaderProps {
   onOpenSpaceInfo?: () => void;
 }
 
+/**
+ * ChatHeader Component Implementation
+ *
+ * Renders the header for chat interface with space information and controls.
+ * Provides access to space info and notes toggle functionality.
+ *
+ * @param spaceName - Name of the current space
+ * @param spaceIcon - Optional icon URL for the space
+ * @param className - Additional CSS classes for styling
+ * @param onToggleNotes - Callback function for toggling notes panel
+ * @param onOpenSpaceInfo - Callback function for opening space information
+ */
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
   spaceName,
   spaceIcon,

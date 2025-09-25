@@ -1,5 +1,23 @@
 "use server";
 
+/**
+ * Space Management Server Actions
+ *
+ * This module contains all server-side actions for space management including:
+ * - Creating and deleting spaces
+ * - Managing space members and roles
+ * - Updating space information
+ * - Handling space icons and file uploads
+ * - Real-time notifications via Pusher
+ *
+ * All actions include:
+ * - Authentication checks
+ * - Input validation with Zod schemas
+ * - Database operations with Prisma
+ * - Real-time updates via Pusher
+ * - Error handling and logging
+ */
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/utils/actionsAuth";
 import type { Prisma } from "@prisma/client";
@@ -89,10 +107,13 @@ type NoteFull = {
   blocks: NoteBlockDB[];
 };
 
+/**
+ * Retrieves all spaces that the authenticated user is a member of
+ *
+ * @returns Array of spaces with messages, members, and last message info
+ */
 export async function listUserSpaces() {
   const { id: userId } = await requireAuth();
-
-  // removed extra membership read (no-op)
 
   const spaces = (await prisma.space.findMany({
     where: { members: { some: { userId } } },
@@ -162,6 +183,14 @@ export async function listUserSpaces() {
   return mapped;
 }
 
+/**
+ * Creates a new space with the authenticated user as admin
+ *
+ * @param name - Space name
+ * @param description - Optional space description
+ * @param iconUrl - Optional space icon URL
+ * @returns Created space data
+ */
 export async function createSpace(
   name: string,
   description?: string,
@@ -243,6 +272,13 @@ export type CreateSpaceFormState = {
   created?: SpaceWithNotes;
 };
 
+/**
+ * Creates a space from form data with file upload support
+ *
+ * @param _prevState - Previous form state (unused)
+ * @param formData - Form data containing name, description, and optional icon file
+ * @returns Form state with success/error information
+ */
 export async function createSpaceFromForm(
   _prevState: CreateSpaceFormState,
   formData: FormData
@@ -374,6 +410,12 @@ export async function joinSpace(spaceId: string) {
   return `${member.spaceId}:${member.userId}`;
 }
 
+/**
+ * Gets detailed information about a specific space including messages and notes
+ *
+ * @param spaceId - The ID of the space to retrieve
+ * @returns Complete space data with messages, notes, and members
+ */
 export async function getSpaceDetail(spaceId: string) {
   const parsed = spaceIdSchema.safeParse(spaceId);
   if (!parsed.success) throw new Error("Invalid space id");
@@ -494,6 +536,12 @@ export async function getSpaceDetail(spaceId: string) {
   };
 }
 
+/**
+ * Removes the authenticated user from a space
+ *
+ * @param spaceId - The ID of the space to leave
+ * @returns Success message
+ */
 export async function leaveSpace(spaceId: string) {
   const parsed = spaceIdSchema.safeParse(spaceId);
   if (!parsed.success) throw new Error("Invalid space id");
@@ -583,6 +631,13 @@ export async function leaveSpace(spaceId: string) {
   return { success: true } as const;
 }
 
+/**
+ * Creates a secure invite link for a space (admin only)
+ *
+ * @param spaceId - The ID of the space to create invite for
+ * @param expiresInMinutes - Link expiration time in minutes (default: 60)
+ * @returns Invite link URL
+ */
 export async function createInviteLink(spaceId: string, expiresInMinutes = 60) {
   const parsed = spaceIdSchema.safeParse(spaceId);
   if (!parsed.success) throw new Error("Invalid space id");
@@ -672,6 +727,13 @@ export async function setMemberRole(
   return updatedMembers.map(mapMemberData);
 }
 
+/**
+ * Removes a member from a space (admin only)
+ *
+ * @param spaceId - The ID of the space
+ * @param targetUserId - The ID of the user to remove
+ * @returns Updated member list
+ */
 export async function removeMember(spaceId: string, targetUserId: string) {
   const parsedId = spaceIdSchema.safeParse(spaceId);
   if (!parsedId.success) throw new Error("Invalid space id");
@@ -722,6 +784,13 @@ export async function removeMember(spaceId: string, targetUserId: string) {
   return updatedMembers.map(mapMemberData);
 }
 
+/**
+ * Updates space information (admin only)
+ *
+ * @param spaceId - The ID of the space to update
+ * @param payload - Object containing new name and optional description
+ * @returns Updated space information
+ */
 export async function updateSpaceInfo(
   spaceId: string,
   payload: { name: string; description?: string }

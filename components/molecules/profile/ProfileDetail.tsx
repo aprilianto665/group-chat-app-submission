@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * ProfileDetail Component
+ *
+ * User profile display component with:
+ * - User avatar with fallback to initials
+ * - User name and username display
+ * - Back navigation functionality
+ * - Logout functionality with NextAuth integration
+ * - Clean, centered layout design
+ * - Responsive design with proper spacing
+ * - Accessibility features with proper labels
+ * - Professional styling with consistent theming
+ */
+
 import React from "react";
 
 import { Avatar } from "../../atoms/Avatar";
@@ -8,6 +22,9 @@ import { Button } from "../../atoms/Button";
 import { BackArrowIcon, LogoutIcon } from "../../atoms/Icons";
 import { signOut } from "next-auth/react";
 
+/**
+ * Props interface for ProfileDetail component
+ */
 interface ProfileDetailProps {
   avatar?: string;
   name: string;
@@ -15,12 +32,29 @@ interface ProfileDetailProps {
   onBack?: () => void;
 }
 
+/**
+ * ProfileDetail Component Implementation
+ *
+ * Renders user profile information with avatar, name, username, and logout functionality.
+ * Provides back navigation and integrates with NextAuth for authentication.
+ *
+ * @param avatar - Optional user avatar image URL
+ * @param name - User's display name
+ * @param username - User's username (without @ symbol)
+ * @param onBack - Optional callback for back navigation
+ */
 export const ProfileDetail: React.FC<ProfileDetailProps> = ({
   avatar,
   name,
   username,
   onBack,
 }) => {
+  // ===== EVENT HANDLERS =====
+
+  /**
+   * Handles user logout functionality
+   * Signs out the user and redirects to login page
+   */
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/auth/login" });
   };
