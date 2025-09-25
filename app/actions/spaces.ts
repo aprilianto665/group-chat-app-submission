@@ -60,7 +60,6 @@ type NoteBlockDB = {
   type: "TEXT" | "HEADING" | "TODO";
   content: string;
   todoTitle: string | null;
-  collapsed: boolean;
   items: NoteItemDB[];
 };
 type NoteFull = {
@@ -79,7 +78,7 @@ export async function listUserSpaces() {
     include: {
       space: true,
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: { joinedAt: "asc" },
   });
 
   const spaces = (await prisma.space.findMany({
@@ -87,7 +86,7 @@ export async function listUserSpaces() {
     include: {
       members: {
         include: { user: true },
-        orderBy: { createdAt: "asc" },
+        orderBy: { joinedAt: "asc" },
       },
       messages: {
         orderBy: { createdAt: "asc" },
@@ -262,8 +261,11 @@ export async function createSpaceFromForm(
         const blockBlob = container.getBlockBlobClient(uniqueName);
 
         const arrayBuffer = await blobFile.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        await blockBlob.uploadData(buffer, {
+        const nodeBuffer =
+          typeof Buffer !== "undefined"
+            ? Buffer.from(arrayBuffer)
+            : new Uint8Array(arrayBuffer);
+        await blockBlob.uploadData(nodeBuffer as unknown as Buffer, {
           blobHTTPHeaders: { blobContentType: contentType },
         });
         iconUrl = blockBlob.url;
@@ -274,7 +276,9 @@ export async function createSpaceFromForm(
     return { success: "Space created", created };
   } catch (err) {
     console.error("createSpaceFromForm error:", err);
-    return { error: "Internal server error" };
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
+    return { error: message };
   }
 }
 
@@ -293,12 +297,12 @@ export async function joinSpace(spaceId: string) {
   const existing = await prisma.spaceMember.findUnique({
     where: { spaceId_userId: { spaceId, userId } },
   });
-  if (existing) return existing.id;
+  if (existing) return `${spaceId}:${userId}`;
 
   const member = await prisma.spaceMember.create({
     data: { spaceId, userId, role: "MEMBER" },
   });
-  return member.id;
+  return `${member.spaceId}:${member.userId}`;
 }
 
 export async function getSpaceDetail(spaceId: string) {
@@ -401,7 +405,6 @@ export async function getSpaceDetail(spaceId: string) {
             : "todo",
         content: b.content,
         todoTitle: b.todoTitle ?? undefined,
-        collapsed: b.collapsed,
         items: (b.items as NoteItemDB[]).map((it) => ({
           id: it.id,
           text: it.text,
@@ -536,7 +539,7 @@ export async function setMemberRole(
   const updatedMembers = await prisma.spaceMember.findMany({
     where: { spaceId },
     include: { user: true },
-    orderBy: { createdAt: "asc" },
+    orderBy: { joinedAt: "asc" },
   });
 
   const actor = await prisma.user.findUnique({
@@ -575,7 +578,7 @@ export async function removeMember(spaceId: string, targetUserId: string) {
   const updatedMembers = await prisma.spaceMember.findMany({
     where: { spaceId },
     include: { user: true },
-    orderBy: { createdAt: "asc" },
+    orderBy: { joinedAt: "asc" },
   });
 
   const actor = await prisma.user.findUnique({

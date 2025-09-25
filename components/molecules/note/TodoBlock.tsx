@@ -43,6 +43,7 @@ const TodoBlockComponent: React.FC<TodoBlockProps> = ({
   const [newTodoDescription, setNewTodoDescription] = useState("");
 
   const updateUIOnly = onUpdateBlockUI ?? onUpdateBlock;
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const items = useMemo(() => block.items ?? [], [block.items]);
   const completedItems = useMemo(
     () => items.filter((item) => item.done).length,
@@ -110,18 +111,13 @@ const TodoBlockComponent: React.FC<TodoBlockProps> = ({
         />
         <button
           type="button"
-          onClick={() =>
-            updateUIOnly((b) => ({
-              ...b,
-              collapsed: !b.collapsed,
-            }))
-          }
+          onClick={() => setIsCollapsed((v) => !v)}
           className="mt-0.5 text-gray-400 hover:text-gray-600 p-1"
-          aria-label={block.collapsed ? "Expand list" : "Collapse list"}
+          aria-label={isCollapsed ? "Expand list" : "Collapse list"}
         >
           <ChevronDownIcon
             className={`w-5 h-5 transition-transform ${
-              block.collapsed ? "rotate-180" : "rotate-0"
+              isCollapsed ? "rotate-180" : "rotate-0"
             }`}
           />
         </button>
@@ -131,7 +127,7 @@ const TodoBlockComponent: React.FC<TodoBlockProps> = ({
         <ProgressBar completed={completedItems} total={items.length} />
       </div>
 
-      {!block.collapsed && (
+      {!isCollapsed && (
         <div className="mt-2 space-y-2">
           <DndContext
             sensors={itemSensors}
@@ -169,7 +165,7 @@ const TodoBlockComponent: React.FC<TodoBlockProps> = ({
         </div>
       )}
 
-      {!block.collapsed && (
+      {!isCollapsed && (
         <div className="relative">
           <Button
             variant="text"

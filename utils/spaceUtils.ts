@@ -1,13 +1,28 @@
 import { prisma } from "@/lib/prisma";
 import { sendActivityMessage } from "@/app/actions/messages";
 
-/**
- * Maps database member data to the expected format
- */
-export const mapMemberData = (member: any) => ({
+type MemberLike = {
+  spaceId: string;
+  userId: string;
+  id: string;
+  role: "ADMIN" | "MEMBER";
+  joinedAt?: Date;
+  createdAt?: Date;
+  user: {
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    avatar?: string | null;
+  };
+};
+
+export const mapMemberData = (member: MemberLike) => ({
+  spaceId: member.spaceId,
+  userId: member.userId,
   id: member.id,
   role: member.role,
-  joinedAt: member.createdAt.toISOString(),
+  joinedAt: (member.joinedAt ?? member.createdAt)?.toISOString(),
   user: {
     id: member.user.id,
     name: member.user.name,
@@ -17,18 +32,12 @@ export const mapMemberData = (member: any) => ({
   },
 });
 
-/**
- * Gets user display name (name or email fallback)
- */
 export const getUserDisplayName = (
   user: { name?: string; email?: string } | null
 ): string => {
   return user?.name || user?.email || "Someone";
 };
 
-/**
- * Checks if user is admin of a space
- */
 export const checkAdminPermission = async (
   spaceId: string,
   userId: string
@@ -40,9 +49,6 @@ export const checkAdminPermission = async (
   return membership?.role === "ADMIN";
 };
 
-/**
- * Sends activity message with error handling
- */
 export const sendActivityMessageSafe = async (
   spaceId: string,
   content: string
@@ -50,19 +56,14 @@ export const sendActivityMessageSafe = async (
   try {
     await sendActivityMessage(spaceId, content);
   } catch (error) {
-    // Silently fail for activity messages
     console.warn("Failed to send activity message:", error);
   }
 };
 
-/**
- * Creates activity message content for member operations
- */
 export const createMemberActivityMessage = (
   action: "added" | "removed" | "role_changed" | "made_admin",
   actorName: string,
-  targetName: string,
-  role?: "ADMIN" | "MEMBER"
+  targetName: string
 ): string => {
   const messages = {
     added: `<strong>${actorName}</strong> joined the space`,

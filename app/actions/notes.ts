@@ -16,7 +16,6 @@ export async function createNote(
     type: "text" | "heading" | "todo";
     content: string;
     todoTitle?: string;
-    collapsed?: boolean;
     items?: Array<{
       id?: string;
       text: string;
@@ -43,7 +42,6 @@ export async function createNote(
             type: "TEXT" | "HEADING" | "TODO";
             content: string;
             todoTitle: string | null;
-            collapsed: boolean;
             items: {
               id: string;
               text: string;
@@ -66,7 +64,6 @@ export async function createNote(
               type: "text" | "heading" | "todo";
               content: string;
               todoTitle?: string;
-              collapsed?: boolean;
               items?: { text: string; done?: boolean; description?: string }[];
             },
             idx: number
@@ -79,7 +76,6 @@ export async function createNote(
                 : "TODO",
             content: b.content ?? "",
             todoTitle: b.todoTitle,
-            collapsed: b.collapsed ?? false,
             sortOrder: idx,
             items:
               b.items && b.items.length
@@ -121,7 +117,6 @@ export async function createNote(
         type: "TEXT" | "HEADING" | "TODO";
         content: string;
         todoTitle?: string | null;
-        collapsed: boolean;
         items: {
           id: string;
           text: string;
@@ -138,7 +133,6 @@ export async function createNote(
             : "todo",
         content: b.content,
         todoTitle: b.todoTitle ?? undefined,
-        collapsed: b.collapsed,
         items: b.items.map(
           (it: {
             id: string;
@@ -165,7 +159,6 @@ export async function updateNote(
     type: "text" | "heading" | "todo";
     content: string;
     todoTitle?: string;
-    collapsed?: boolean;
     items?: Array<{
       id?: string;
       text: string;
@@ -210,7 +203,6 @@ export async function updateNote(
             type: "TEXT" | "HEADING" | "TODO";
             content: string;
             todoTitle: string | null;
-            collapsed: boolean;
             items: {
               id: string;
               text: string;
@@ -232,7 +224,6 @@ export async function updateNote(
               type: "text" | "heading" | "todo";
               content: string;
               todoTitle?: string;
-              collapsed?: boolean;
               items?: { text: string; done?: boolean; description?: string }[];
             },
             idx: number
@@ -245,7 +236,6 @@ export async function updateNote(
                 : "TODO",
             content: b.content ?? "",
             todoTitle: b.todoTitle,
-            collapsed: b.collapsed ?? false,
             sortOrder: idx,
             items:
               b.items && b.items.length
@@ -287,7 +277,6 @@ export async function updateNote(
         type: "TEXT" | "HEADING" | "TODO";
         content: string;
         todoTitle?: string | null;
-        collapsed: boolean;
         items: {
           id: string;
           text: string;
@@ -304,7 +293,6 @@ export async function updateNote(
             : "todo",
         content: b.content,
         todoTitle: b.todoTitle ?? undefined,
-        collapsed: b.collapsed,
         items: b.items.map(
           (it: {
             id: string;

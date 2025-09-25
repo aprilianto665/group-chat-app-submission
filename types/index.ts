@@ -20,7 +20,7 @@ export interface Space {
 }
 
 export interface Message {
-  id: string;
+  id: string | number;
   content: string;
   timestamp: string;
   isSent?: boolean;
@@ -43,7 +43,7 @@ export type SpaceWithMessages = Space & {
 };
 
 export interface NoteBlockItem {
-  id: string;
+  id: string | number;
   text: string;
   done: boolean;
   description?: string;
@@ -55,7 +55,6 @@ export interface NoteBlock {
   content: string;
   todoTitle?: string;
   items?: NoteBlockItem[];
-  collapsed?: boolean;
 }
 
 export interface Note {
@@ -81,7 +80,8 @@ export interface SpaceMemberUser {
 }
 
 export interface SpaceMember {
-  id: string;
+  spaceId: string;
+  userId: string;
   user: SpaceMemberUser;
   role: Role;
   joinedAt?: string;

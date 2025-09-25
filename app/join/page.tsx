@@ -72,7 +72,7 @@ export default async function JoinPage({
 
     const existing = await prisma.spaceMember.findUnique({
       where: { spaceId_userId: { spaceId: s, userId } },
-      select: { id: true },
+    select: { spaceId: true },
     });
     if (existing) {
       redirect("/");

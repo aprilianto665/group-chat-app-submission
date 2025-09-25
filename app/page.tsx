@@ -67,7 +67,6 @@ export default async function Home() {
             type: "text" | "heading" | "todo";
             content: string;
             todoTitle?: string;
-            collapsed?: boolean;
             items?: {
               id?: string;
               text: string;
@@ -84,7 +83,6 @@ export default async function Home() {
             type: "text" | "heading" | "todo";
             content: string;
             todoTitle?: string;
-            collapsed?: boolean;
             items?: {
               id?: string;
               text: string;

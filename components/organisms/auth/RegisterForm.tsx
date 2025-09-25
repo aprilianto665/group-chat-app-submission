@@ -74,13 +74,22 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       <FormField type="email" label="Email Address" name="email" required />
 
-      <FormField type="password" label="Password" name="password" required />
+      <FormField
+        type="password"
+        label="Password"
+        name="password"
+        required
+        minLength={8}
+        maxLength={72}
+      />
 
       <FormField
         type="password"
         label="Confirm Password"
         name="confirmPassword"
         required
+        minLength={8}
+        maxLength={72}
       />
 
       <div className="text-left">

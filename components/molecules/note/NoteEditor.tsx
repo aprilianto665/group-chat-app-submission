@@ -63,6 +63,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     width: number;
     height: number;
   } | null>(null);
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const blockRowRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const blockRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
@@ -79,6 +80,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     setOpenBlockMenuId(null);
     // Set hasChanges to true for draft notes (new notes)
     setHasChanges(note?.id === "draft");
+    setCollapsedIds(new Set());
   }, [note?.id, note?.title, note?.blocks]);
 
   useEffect(() => {
@@ -140,10 +142,24 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
 
   const handleUpdateBlockUI = useCallback(
     (blockId: string, updater: (b: NoteBlock) => NoteBlock) => {
+      // UI-only updater retained for other UI tweaks, but collapse is handled locally
       setBlocks((prev) => prev.map((b) => (b.id === blockId ? updater(b) : b)));
     },
     []
   );
+
+  const isCollapsed = useCallback(
+    (blockId: string) => collapsedIds.has(blockId),
+    [collapsedIds]
+  );
+  const toggleCollapsed = useCallback((blockId: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(blockId)) next.delete(blockId);
+      else next.add(blockId);
+      return next;
+    });
+  }, []);
 
   const handleSave = useCallback(() => {
     // Allow saving if it's a draft note (new note) or if there are changes
@@ -408,20 +424,15 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                     </div>
                     <button
                       type="button"
-                      onClick={() =>
-                        handleUpdateBlockUI(block.id, (b) => ({
-                          ...b,
-                          collapsed: !b.collapsed,
-                        }))
-                      }
+                      onClick={() => toggleCollapsed(block.id)}
                       className="mt-0.5 text-gray-400 hover:text-gray-600 p-1"
                       aria-label={
-                        block.collapsed ? "Expand list" : "Collapse list"
+                        isCollapsed(block.id) ? "Expand list" : "Collapse list"
                       }
                     >
                       <ChevronDownIcon
                         className={`w-5 h-5 transition-transform ${
-                          block.collapsed ? "rotate-180" : "rotate-0"
+                          isCollapsed(block.id) ? "rotate-180" : "rotate-0"
                         }`}
                       />
                     </button>
@@ -456,7 +467,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
                       );
                     })()}
                   </div>
-                  {!block.collapsed && (
+                  {!isCollapsed(block.id) && (
                     <div className="space-y-1">
                       {(block.items ?? []).map((it) => (
                         <div key={it.id} className="flex items-start gap-2">

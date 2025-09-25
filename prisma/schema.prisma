@@ -1,94 +1,15 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
-}
-
-model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  username  String    @unique
-  name      String
-  password  String
-  avatar    String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  messages  Message[]
-  memberships SpaceMember[]
-  notes      Note[]
-
-  @@map("users")
-}
-
-model Space {
-  id          String    @id @default(cuid())
-  name        String
-  icon        String?
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  messages    Message[]
-  members     SpaceMember[]
-  notes       Note[]
-
-  @@map("spaces")
-}
-
-model Message {
-  id        String   @id @default(cuid())
-  content   String
-  spaceId   String
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  space Space @relation(fields: [spaceId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
-
-  @@map("messages")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
   ADMIN
   MEMBER
-}
-
-model SpaceMember {
-  id        String   @id @default(cuid())
-  spaceId   String
-  userId    String
-  role      Role     @default(MEMBER)
-  joinedAt  DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  space Space @relation(fields: [spaceId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
-
-  @@unique([spaceId, userId])
-  @@map("space_members")
-}
-
-model Note {
-  id        String   @id @default(cuid())
-  title     String
-  spaceId   String
-  authorId  String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  space Space @relation(fields: [spaceId], references: [id])
-  author User? @relation(fields: [authorId], references: [id])
-  blocks NoteBlock[]
-
-  @@map("notes")
 }
 
 enum BlockType {
@@ -97,16 +18,96 @@ enum BlockType {
   TODO
 }
 
-model NoteBlock {
-  id         String    @id @default(cuid())
-  noteId     String
-  type       BlockType
-  content    String    @default("")
-  todoTitle  String?
-  collapsed  Boolean   @default(false)
-  sortOrder  Int       @default(0)
+model User {
+  id         String       @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  email      String       @unique @db.Citext
+  username   String       @unique @db.Citext
+  name       String       @db.VarChar(80)
+  password   String       @db.VarChar(72)
+  avatar     String?      @db.VarChar(2048)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
-  note Note @relation(fields: [noteId], references: [id])
+  messages   Message[]
+  memberships SpaceMember[]
+  notes      Note[]       @relation("UserNotes")
+
+  @@map("users")
+}
+
+model Space {
+  id          String       @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  name        String       @db.VarChar(80)
+  icon        String?      @db.VarChar(2048)
+  description String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  messages    Message[]
+  members     SpaceMember[]
+  notes       Note[]
+
+  @@map("spaces")
+}
+
+model Message {
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  content   String   @db.Text
+  spaceId   String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([spaceId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+model SpaceMember {
+  spaceId   String   @db.Uuid
+  userId    String   @db.Uuid
+  role      Role     @default(MEMBER)
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([spaceId, userId])
+  @@index([userId])
+  @@index([spaceId])
+  @@map("space_members")
+}
+
+model Note {
+  id        String   @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  title     String   @db.VarChar(200)
+  spaceId   String   @db.Uuid
+  authorId  String?  @db.Uuid
+  sortOrder Int      @db.SmallInt @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  space  Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  author User?  @relation("UserNotes", fields: [authorId], references: [id], onDelete: SetNull)
+  blocks NoteBlock[]
+
+  @@index([spaceId, sortOrder])
+  @@map("notes")
+}
+
+model NoteBlock {
+  id         String    @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  noteId     String    @db.Uuid
+  type       BlockType
+  content    String    @db.Text @default("")
+  todoTitle  String?   @db.VarChar(200)
+  sortOrder  Int       @db.SmallInt @default(0)
+
+  note  Note         @relation(fields: [noteId], references: [id], onDelete: Cascade)
   items NoteTodoItem[]
 
   @@index([noteId, sortOrder])
@@ -114,14 +115,14 @@ model NoteBlock {
 }
 
 model NoteTodoItem {
-  id          String   @id @default(cuid())
-  blockId     String
-  text        String
+  id          BigInt   @id @default(autoincrement()) @db.BigInt
+  blockId     String   @db.Uuid
+  text        String   @db.VarChar(500)
   done        Boolean  @default(false)
-  description String?
-  sortOrder   Int      @default(0)
+  description String?  @db.Text
+  sortOrder   Int      @db.SmallInt @default(0)
 
-  block NoteBlock @relation(fields: [blockId], references: [id])
+  block NoteBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
 
   @@index([blockId, sortOrder])
   @@map("note_todo_items")

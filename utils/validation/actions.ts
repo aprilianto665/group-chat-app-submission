@@ -17,7 +17,6 @@ export const noteBlockSchema = z.object({
   type: z.enum(["text", "heading", "todo"]),
   content: z.string().default(""),
   todoTitle: z.string().optional(),
-  collapsed: z.boolean().optional(),
   items: z.array(noteBlockItemSchema).optional(),
 });
 

@@ -12,7 +12,6 @@ export type NoteBlockPayload = {
   type: "text" | "heading" | "todo";
   content: string;
   todoTitle?: string;
-  collapsed?: boolean;
   items?: NoteBlockItemPayload[];
 };
 
