@@ -9,14 +9,39 @@ Create a `.env.local` file in the root directory with the following variables:
 ### 1. Database Configuration
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/binder_db"
+# Database Connection URLs
+DATABASE_URL="postgresql://username:password@host:port/database"
+DIRECT_URL="postgresql://username:password@host:port/database"
 ```
 
 **Setup Instructions:**
 
+Choose one of the following database options:
+
+**Option A: Local PostgreSQL**
+
 1. Install PostgreSQL on your system
-2. Create a new database named `binder_db`
-3. Update the connection string with your actual credentials
+2. Create a new database
+3. Update connection strings with your credentials
+
+**Option B: Cloud PostgreSQL Services**
+
+- [Supabase](https://supabase.com/) - Free tier available
+- [Railway](https://railway.app/) - Free tier available
+- [Neon](https://neon.tech/) - Free tier available
+- [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql)
+- [AWS RDS PostgreSQL](https://aws.amazon.com/rds/postgresql/)
+
+**Option C: Docker PostgreSQL**
+
+```bash
+docker run --name postgres-groupchat \
+  -e POSTGRES_DB=groupchat \
+  -e POSTGRES_USER=username \
+  -e POSTGRES_PASSWORD=password \
+  -p 5432:5432 \
+  -d postgres:15
+```
 
 ### 2. NextAuth Configuration
 
@@ -67,7 +92,8 @@ AZURE_STORAGE_CONTAINER_NAME=avatars
 
 ```env
 # Database
-DATABASE_URL="postgresql://username:password@localhost:5432/binder_db"
+DATABASE_URL="postgresql://username:password@host:port/database"
+DIRECT_URL="postgresql://username:password@host:port/database"
 
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
@@ -79,16 +105,28 @@ PUSHER_KEY=your-pusher-key
 PUSHER_SECRET=your-pusher-secret
 PUSHER_CLUSTER=your-pusher-cluster
 
-# Azure Storage (File Uploads)
+# File Storage (Choose one)
+# Option 1: Azure Storage
 AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=your-account;AccountKey=your-key;EndpointSuffix=core.windows.net
 AZURE_STORAGE_CONTAINER_NAME=avatars
+
+# Option 2: AWS S3
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=your-region
+AWS_S3_BUCKET=your-bucket-name
+
+# Option 3: Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 ## Service Setup Guides
 
-### PostgreSQL Setup
+### Database Setup
 
-**Option 1: Local Installation**
+**Option 1: Local PostgreSQL**
 
 ```bash
 # macOS (using Homebrew)
@@ -96,25 +134,35 @@ brew install postgresql
 brew services start postgresql
 
 # Create database
-createdb binder_db
+createdb groupchat
+
+# Enable citext extension (if needed)
+psql groupchat -c "CREATE EXTENSION IF NOT EXISTS citext;"
 ```
 
-**Option 2: Docker**
+**Option 2: Docker PostgreSQL**
 
 ```bash
-docker run --name postgres-binder \
-  -e POSTGRES_DB=binder_db \
+docker run --name postgres-groupchat \
+  -e POSTGRES_DB=groupchat \
   -e POSTGRES_USER=username \
   -e POSTGRES_PASSWORD=password \
   -p 5432:5432 \
   -d postgres:15
+
+# Enable citext extension
+docker exec -it postgres-groupchat psql -U username -d groupchat -c "CREATE EXTENSION IF NOT EXISTS citext;"
 ```
 
-**Option 3: Cloud Services**
+**Option 3: Cloud PostgreSQL Services**
 
-- [Supabase](https://supabase.com/) (Free tier available)
-- [Railway](https://railway.app/) (Free tier available)
-- [Neon](https://neon.tech/) (Free tier available)
+- [Supabase](https://supabase.com/) - Free tier, supports citext
+- [Railway](https://railway.app/) - Free tier available
+- [Neon](https://neon.tech/) - Free tier, supports citext
+- [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql) - Limited extensions
+- [AWS RDS PostgreSQL](https://aws.amazon.com/rds/postgresql/) - Full PostgreSQL support
+
+**Note:** Some cloud providers may not support all PostgreSQL extensions. If you encounter `citext` errors, consider using application-level case-insensitive handling or choose a provider that supports the extension.
 
 ### Pusher Setup
 
@@ -124,13 +172,29 @@ docker run --name postgres-binder \
 4. Select "React" as the front-end tech
 5. Copy the credentials to your `.env.local`
 
-### Azure Storage Setup
+### File Storage Setup
+
+**Option 1: Azure Storage**
 
 1. Go to [Azure Portal](https://portal.azure.com/)
 2. Create a new Storage Account
 3. Go to "Containers" and create a new container named `avatars`
 4. Set the access level to "Blob (anonymous read access for blobs only)"
 5. Go to "Access keys" and copy the connection string
+
+**Option 2: AWS S3**
+
+1. Go to [AWS Console](https://console.aws.amazon.com/)
+2. Create an S3 bucket
+3. Configure bucket permissions for public read access
+4. Create IAM user with S3 access
+5. Copy access key and secret key
+
+**Option 3: Cloudinary**
+
+1. Go to [Cloudinary Dashboard](https://cloudinary.com/)
+2. Create a new account or use existing
+3. Copy cloud name, API key, and API secret from dashboard
 
 ## Verification Steps
 
@@ -153,9 +217,10 @@ After setting up all services, verify your configuration:
 
 ### Database Issues
 
-- Ensure PostgreSQL is running
+- Ensure PostgreSQL is running (for local setup)
 - Check connection string format
 - Verify database exists
+- For `citext` errors: Enable extension or use application-level case-insensitive handling
 
 ### Pusher Issues
 
@@ -163,11 +228,12 @@ After setting up all services, verify your configuration:
 - Verify cluster region matches your location
 - Check browser console for connection errors
 
-### Azure Storage Issues
+### File Storage Issues
 
-- Verify connection string format
-- Check container permissions
-- Ensure container name matches environment variable
+- Verify connection string/credentials format
+- Check bucket/container permissions
+- Ensure bucket/container name matches environment variable
+- For AWS S3: Verify IAM permissions and region settings
 
 ## Production Deployment
 
@@ -186,9 +252,21 @@ PUSHER_KEY=your-prod-pusher-key
 PUSHER_SECRET=your-prod-pusher-secret
 PUSHER_CLUSTER=your-prod-pusher-cluster
 
-# Production Azure Storage
+# Production File Storage (choose one)
+# Azure Storage
 AZURE_STORAGE_CONNECTION_STRING=your-prod-azure-storage-connection-string
 AZURE_STORAGE_CONTAINER_NAME=prod-avatars
+
+# AWS S3
+AWS_ACCESS_KEY_ID=your-prod-access-key
+AWS_SECRET_ACCESS_KEY=your-prod-secret-key
+AWS_REGION=your-prod-region
+AWS_S3_BUCKET=your-prod-bucket-name
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-prod-cloud-name
+CLOUDINARY_API_KEY=your-prod-api-key
+CLOUDINARY_API_SECRET=your-prod-api-secret
 ```
 
 ## Security Notes

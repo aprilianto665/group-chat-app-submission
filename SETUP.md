@@ -2,7 +2,7 @@
 
 ## Environment Variables
 
-Buat file `.env.local` di root project dengan konten berikut:
+Create a `.env.local` file in the root project with the following content:
 
 ```env
 # NextAuth
@@ -10,7 +10,8 @@ NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key-here
 
 # Database
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://username:password@host:port/database"
+DIRECT_URL="postgresql://username:password@host:port/database"
 ```
 
 ## Database Setup
@@ -21,11 +22,16 @@ DATABASE_URL="file:./dev.db"
 npx prisma generate
 ```
 
-2. Push schema ke database:
+2. Push schema to database:
 
 ```bash
 npx prisma db push
 ```
+
+**Note:** If you encounter `citext` extension errors, you may need to:
+
+- Enable the extension in your database: `CREATE EXTENSION IF NOT EXISTS citext;`
+- Or modify the schema to use `@db.VarChar` instead of `@db.Citext`
 
 ## Running the Application
 
@@ -41,22 +47,22 @@ npm install
 npm run dev
 ```
 
-3. Buka http://localhost:3000/auth/register untuk test fitur register
+3. Open http://localhost:3000/auth/register to test the registration feature
 
 ## Features
 
-- ✅ User registration dengan validasi
-- ✅ Password hashing menggunakan bcrypt-ts
-- ✅ Database integration dengan Prisma
-- ✅ NextAuth setup (untuk login nanti)
-- ✅ Form validation dan error handling
+- ✅ User registration with validation
+- ✅ Password hashing using bcrypt-ts
+- ✅ Database integration with Prisma
+- ✅ NextAuth setup (for login)
+- ✅ Form validation and error handling
 - ✅ Responsive UI
 
 ## API Endpoints
 
 - `POST /api/auth/[...nextauth]` - NextAuth endpoints
 
-Pendaftaran akun kini menggunakan Server Actions (`app/actions/register.ts`), bukan endpoint REST terpisah.
+Account registration now uses Server Actions (`app/actions/register.ts`), not separate REST endpoints.
 
 ## Database Schema
 
