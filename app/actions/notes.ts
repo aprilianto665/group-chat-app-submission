@@ -7,6 +7,7 @@ import {
   updateNoteSchema,
   reorderNotesSchema,
 } from "@/utils/validation/actions";
+import { pusherServer } from "@/lib/pusher";
 
 export async function createNote(
   spaceId: string,
@@ -106,7 +107,7 @@ export async function createNote(
     },
   });
 
-  return {
+  const noteData = {
     id: String(created.id),
     title: created.title,
     createdAt: created.createdAt.toISOString(),
@@ -149,6 +150,15 @@ export async function createNote(
       })
     ),
   };
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "note:created", {
+      note: noteData,
+      spaceId,
+    });
+  }
+
+  return noteData;
 }
 
 export async function updateNote(
@@ -174,6 +184,13 @@ export async function updateNote(
     throw new Error("Invalid note payload");
   }
   await requireAuth();
+
+  const note = await prisma.note.findUnique({
+    where: { id: noteId },
+    select: { spaceId: true },
+  });
+
+  if (!note) throw new Error("Note not found");
 
   const blockIds = await (
     prisma as unknown as {
@@ -270,7 +287,7 @@ export async function updateNote(
     },
   });
 
-  return {
+  const noteData = {
     id: String(updated.id),
     title: updated.title,
     createdAt: updated.createdAt.toISOString(),
@@ -313,10 +330,26 @@ export async function updateNote(
       })
     ),
   };
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${note.spaceId}`, "note:updated", {
+      note: noteData,
+      spaceId: note.spaceId,
+    });
+  }
+
+  return noteData;
 }
 
 export async function deleteNote(noteId: string) {
   await requireAuth();
+
+  const note = await prisma.note.findUnique({
+    where: { id: noteId },
+    select: { spaceId: true },
+  });
+
+  if (!note) throw new Error("Note not found");
 
   await prisma.$transaction(async (tx) => {
     const blocks = await (
@@ -348,6 +381,15 @@ export async function deleteNote(noteId: string) {
       tx as unknown as { note: { delete: (args: unknown) => Promise<void> } }
     ).note.delete({ where: { id: noteId } });
   });
+
+  // Broadcast note deletion to all users in the space
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${note.spaceId}`, "note:deleted", {
+      noteId,
+      spaceId: note.spaceId,
+    });
+  }
+
   return true;
 }
 
@@ -365,5 +407,13 @@ export async function reorderNotes(spaceId: string, orderedIds: string[]) {
       await client.note.update({ where: { id }, data: { sortOrder: idx } });
     }
   });
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "notes:reordered", {
+      spaceId,
+      orderedIds,
+    });
+  }
+
   return orderedIds;
 }

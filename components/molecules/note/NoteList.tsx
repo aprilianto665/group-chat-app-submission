@@ -43,14 +43,34 @@ const NoteListComponent: React.FC<NoteListProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
-  const noteIds = useMemo(() => notes.map((n) => n.id), [notes]);
+  const uniqueNotes = useMemo(() => {
+    return notes.reduce((acc, note) => {
+      if (!acc.find((n) => n.id === note.id)) {
+        acc.push(note);
+      }
+      return acc;
+    }, [] as Note[]);
+  }, [notes]);
+
+  const noteIds = useMemo(() => uniqueNotes.map((n) => n.id), [uniqueNotes]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = noteIds.indexOf(String(active.id));
-    const newIndex = noteIds.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    const oldIndex = noteIds.indexOf(activeId);
+    const newIndex = noteIds.indexOf(overId);
+
+    console.log("Drag end:", { activeId, overId, oldIndex, newIndex, noteIds });
+
+    if (oldIndex === -1 || newIndex === -1) {
+      console.warn("Invalid drag indices:", { oldIndex, newIndex });
+      return;
+    }
+
     const reordered = arrayMove(noteIds, oldIndex, newIndex);
     onReorder?.(reordered);
   };
@@ -84,9 +104,9 @@ const NoteListComponent: React.FC<NoteListProps> = ({
               items={noteIds}
               strategy={verticalListSortingStrategy}
             >
-              {notes.map((note) => (
+              {uniqueNotes.map((note, index) => (
                 <SortableNoteRow
-                  key={note.id}
+                  key={`note-${note.id}-${index}`}
                   note={note}
                   isActive={activeNoteId === note.id}
                   onSelect={onSelect}
@@ -127,7 +147,9 @@ const SortableNoteRow: React.FC<{
       className={`w-full text-left px-2 py-2 text-sm hover:bg-gray-50 rounded cursor-grab active:cursor-grabbing ${
         isActive ? "bg-blue-50" : ""
       }`}
-      onClick={() => onSelect(String(note.id))}
+      onClick={() => {
+        onSelect(note.id);
+      }}
       title={note.title || "Untitled"}
       {...attributes}
       {...listeners}

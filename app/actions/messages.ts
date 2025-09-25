@@ -7,6 +7,7 @@ import {
   sendMessageSchema,
   sendActivitySchema,
 } from "@/utils/validation/actions";
+import { pusherServer } from "@/lib/pusher";
 
 export async function listMessages(spaceId: string) {
   await requireAuth();
@@ -38,7 +39,7 @@ export async function sendMessage(spaceId: string, content: string) {
     include: { user: true },
   });
 
-  return {
+  const payload = {
     id: Number(created.id),
     content: created.content,
     timestamp: created.createdAt.toISOString(),
@@ -46,6 +47,12 @@ export async function sendMessage(spaceId: string, content: string) {
     username: created.user?.username,
     type: "text" as const,
   };
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "message:new", payload);
+  }
+
+  return payload;
 }
 
 export async function sendActivityMessage(
@@ -62,7 +69,7 @@ export async function sendActivityMessage(
     include: { user: true },
   });
 
-  return {
+  const payload = {
     id: Number(created.id),
     content: htmlContent,
     timestamp: created.createdAt.toISOString(),
@@ -70,4 +77,10 @@ export async function sendActivityMessage(
     username: created.user?.username,
     type: "activity" as const,
   };
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "activity:new", payload);
+  }
+
+  return payload;
 }

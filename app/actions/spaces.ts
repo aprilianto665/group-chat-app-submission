@@ -14,6 +14,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import crypto from "crypto";
 import type { SpaceWithNotes } from "@/types";
 import { sendActivityMessage } from "./messages";
+import { pusherServer } from "@/lib/pusher";
 import {
   mapMemberData,
   getUserDisplayName,
@@ -216,7 +217,7 @@ export async function createSpace(
     };
   }>;
 
-  return {
+  const spaceData = {
     id: space.id,
     name: space.name,
     icon: space.icon ?? undefined,
@@ -226,6 +227,14 @@ export async function createSpace(
     messages: [],
     notes: [],
   };
+
+  if (pusherServer) {
+    await pusherServer.trigger("global", "space:created", {
+      space: spaceData,
+    });
+  }
+
+  return spaceData;
 }
 
 export type CreateSpaceFormState = {
@@ -340,7 +349,28 @@ export async function joinSpace(spaceId: string) {
 
   const member = await prisma.spaceMember.create({
     data: { spaceId, userId, role: "MEMBER" },
+    include: { user: true },
   });
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "member:joined", {
+      spaceId,
+      member: {
+        userId: member.userId,
+        role: member.role,
+        joinedAt: member.joinedAt.toISOString(),
+        user: {
+          id: user?.id,
+          name: user?.name,
+          username: user?.username,
+          avatar: user?.avatar,
+        },
+      },
+    });
+  }
+
   return `${member.spaceId}:${member.userId}`;
 }
 
@@ -533,6 +563,20 @@ export async function leaveSpace(spaceId: string) {
         spaceId,
         `<strong>${displayName}</strong> left the space`
       );
+
+      if (pusherServer) {
+        await pusherServer.trigger(`space-${spaceId}`, "member:left", {
+          spaceId,
+          userId,
+          displayName,
+        });
+      }
+    } else {
+      if (pusherServer) {
+        await pusherServer.trigger("global", "space:deleted", {
+          spaceId,
+        });
+      }
     }
   } catch {}
 
@@ -615,6 +659,16 @@ export async function setMemberRole(
 
   await sendActivityMessageSafe(spaceId, message);
 
+  // Broadcast member role change via Pusher
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "member:role-changed", {
+      spaceId,
+      targetUserId,
+      role,
+      members: updatedMembers.map(mapMemberData),
+    });
+  }
+
   return updatedMembers.map(mapMemberData);
 }
 
@@ -656,6 +710,14 @@ export async function removeMember(spaceId: string, targetUserId: string) {
 
   const message = createMemberActivityMessage("removed", actorName, targetName);
   await sendActivityMessageSafe(spaceId, message);
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "member:removed", {
+      spaceId,
+      targetUserId,
+      members: updatedMembers.map(mapMemberData),
+    });
+  }
 
   return updatedMembers.map(mapMemberData);
 }
@@ -701,6 +763,14 @@ export async function updateSpaceInfo(
       `<strong>${displayName}</strong> just updated the space info`
     );
   } catch {}
+
+  if (pusherServer) {
+    await pusherServer.trigger(`space-${spaceId}`, "space:info-updated", {
+      spaceId,
+      name: updated.name,
+      description: updated.description,
+    });
+  }
 
   return updated;
 }
@@ -805,6 +875,19 @@ export async function updateSpaceFromForm(
         `<strong>${displayName}</strong> just updated the space info`
       );
     } catch {}
+
+    if (pusherServer) {
+      await pusherServer.trigger(
+        `space-${parsedId.data}`,
+        "space:info-updated",
+        {
+          spaceId: parsedId.data,
+          name: updated.name,
+          description: updated.description,
+          icon: updated.icon,
+        }
+      );
+    }
 
     return {
       success: "Space updated",
