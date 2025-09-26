@@ -170,13 +170,20 @@ export const AppWrapper: React.FC<{
 
     /**
      * Handles space creation events from global channel
-     * Adds new spaces to the spaces list, avoiding duplicates
+     * Adds new spaces to the spaces list only if the current user is a member
      * @param data - Object containing the new space data
      */
     const onSpaceCreated = (data: { space: SpaceWithNotes }) => {
       setSpaces((prev) => {
         const exists = prev.find((s) => s.id === data.space.id);
         if (exists) return prev;
+
+        const isUserMember = data.space.members?.some(
+          (member) => member.userId === user.id
+        );
+
+        if (!isUserMember) return prev;
+
         return [data.space, ...prev];
       });
     };
@@ -201,7 +208,7 @@ export const AppWrapper: React.FC<{
       globalChannel.unbind("space:deleted", onSpaceDeleted);
       pusherClient?.unsubscribe("global");
     };
-  }, [activeSpaceId]);
+  }, [activeSpaceId, user.id]);
 
   useEffect(() => {
     if (!activeSpaceId || !pusherClient) return;
