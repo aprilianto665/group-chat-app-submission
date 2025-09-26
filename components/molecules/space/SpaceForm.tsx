@@ -51,6 +51,9 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
     createSpaceFromForm,
     {} as CreateSpaceFormState
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastSubmitAt, setLastSubmitAt] = useState<number>(0);
+  const THROTTLE_MS = 2000;
 
   useEffect(() => {
     return () => {
@@ -100,7 +103,21 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
 
   return (
     <div className="p-4">
-      <form action={formAction} className="space-y-8">
+      <form
+        action={async (formData: FormData) => {
+          const now = Date.now();
+          if (isSubmitting || now - lastSubmitAt < THROTTLE_MS) return;
+          setIsSubmitting(true);
+          setLastSubmitAt(now);
+          try {
+            await formAction(formData);
+          } finally {
+            setTimeout(() => setIsSubmitting(false), THROTTLE_MS);
+          }
+        }}
+        className="space-y-8"
+        aria-busy={isSubmitting}
+      >
         <div className="mb-4">
           <Button
             type="button"
@@ -178,7 +195,7 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             variant="send"
             size="md"
             className="w-full rounded-full"
-            disabled={!spaceName.trim()}
+            disabled={!spaceName.trim() || isSubmitting}
           >
             Create Space
           </Button>
