@@ -9,9 +9,8 @@ A modern, real-time group chat application built with Next.js 15, featuring coll
 - **Real-time Messaging**: Instant messaging with Pusher WebSocket integration
 - **Space Management**: Create and manage multiple chat spaces
 - **User Authentication**: Secure login/register with NextAuth.js and bcrypt
-- **Collaborative Notes**: Rich text editor with todo lists and drag-and-drop reordering
+- **Collaborative Notes (Real-time)**: Rich text/heading/todo blocks with drag-and-drop ordering, instantly synced across members via Pusher
 - **Member Management**: Role-based access control (Admin/Member)
-- **Responsive Design**: Mobile-first design with Tailwind CSS
 
 ### Technical Features
 
@@ -19,6 +18,7 @@ A modern, real-time group chat application built with Next.js 15, featuring coll
 - **Prisma ORM**: Type-safe database operations with PostgreSQL
 - **Server Actions**: Modern Next.js server-side data mutations
 - **Real-time Updates**: Live updates for messages, notes, and member activities
+- **Drag-and-Drop (DnD)**: Reordering for note blocks and todo items
 - **File Upload**: Azure Blob Storage integration for avatar uploads
 - **Form Validation**: Comprehensive validation with Zod schemas
 
@@ -29,6 +29,7 @@ A modern, real-time group chat application built with Next.js 15, featuring coll
 - **Database**: PostgreSQL
 - **Authentication**: NextAuth.js with credentials provider
 - **Real-time**: Pusher WebSocket
+- **Drag-and-Drop**: @dnd-kit (core, sortable)
 - **File Storage**: Azure Blob Storage
 - **State Management**: Zustand
 - **Validation**: Zod
@@ -58,26 +59,85 @@ npm install
 
 ### 3. Environment Configuration
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file in the root directory with the following variables:
+
+#### Required Environment Variables
 
 ```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/binder_db"
+# Database Configuration
+DATABASE_URL="postgresql://username:password@host:port/database"
+DIRECT_URL="postgresql://username:password@host:port/database"
 
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-super-secret-key-here
 
-# Pusher Configuration (for real-time features)
+# Pusher Configuration (Real-time Features)
 PUSHER_APP_ID=your-pusher-app-id
 PUSHER_KEY=your-pusher-key
 PUSHER_SECRET=your-pusher-secret
 PUSHER_CLUSTER=your-pusher-cluster
 
-# Azure Storage (for file uploads)
-AZURE_STORAGE_CONNECTION_STRING=your-azure-storage-connection-string
+# Azure Storage Configuration (File Uploads)
+AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=your-account;AccountKey=your-key;EndpointSuffix=core.windows.net
 AZURE_STORAGE_CONTAINER_NAME=avatars
 ```
+
+#### Database Setup Options
+
+**Option A: Local PostgreSQL**
+
+```bash
+# macOS (using Homebrew)
+brew install postgresql
+brew services start postgresql
+
+# Create database
+createdb groupchat
+
+# Enable citext extension (if needed)
+psql groupchat -c "CREATE EXTENSION IF NOT EXISTS citext;"
+```
+
+**Option B: Docker PostgreSQL**
+
+```bash
+docker run --name postgres-groupchat \
+  -e POSTGRES_DB=groupchat \
+  -e POSTGRES_USER=username \
+  -e POSTGRES_PASSWORD=password \
+  -p 5432:5432 \
+  -d postgres:15
+
+# Enable citext extension
+docker exec -it postgres-groupchat psql -U username -d groupchat -c "CREATE EXTENSION IF NOT EXISTS citext;"
+```
+
+**Option C: Cloud PostgreSQL Services**
+
+- [Supabase](https://supabase.com/) - Free tier, supports citext
+- [Railway](https://railway.app/) - Free tier available
+- [Neon](https://neon.tech/) - Free tier, supports citext
+- [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql)
+- [AWS RDS PostgreSQL](https://aws.amazon.com/rds/postgresql/)
+
+#### Service Setup Guides
+
+**Pusher Setup:**
+
+1. Go to [Pusher Dashboard](https://dashboard.pusher.com/)
+2. Click "Create app"
+3. Choose a name and cluster
+4. Select "React" as the front-end tech
+5. Copy the credentials to your `.env.local`
+
+**Azure Storage Setup:**
+
+1. Go to [Azure Portal](https://portal.azure.com/)
+2. Create a new Storage Account
+3. Go to "Containers" and create a new container named `avatars`
+4. Set the access level to "Blob (anonymous read access for blobs only)"
+5. Go to "Access keys" and copy the connection string
 
 ### 4. Database Setup
 
@@ -85,14 +145,19 @@ Generate Prisma client and run migrations:
 
 ```bash
 # Generate Prisma client
-npm run prisma:generate
+npx prisma generate
 
 # Push schema to database
-npm run prisma:db:push
+npx prisma db push
 
 # (Optional) Open Prisma Studio to view data
-npm run prisma:studio
+npx prisma studio
 ```
+
+**Note:** If you encounter `citext` extension errors, you may need to:
+
+- Enable the extension in your database: `CREATE EXTENSION IF NOT EXISTS citext;`
+- Or modify the schema to use `@db.VarChar` instead of `@db.Citext`
 
 ### 5. Start Development Server
 
@@ -101,6 +166,23 @@ npm run dev
 ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000)
+
+### 6. Verification Steps
+
+After setting up all services, verify your configuration:
+
+1. **Database Connection:**
+
+   ```bash
+   npm run prisma:db:push
+   ```
+
+2. **Pusher Connection:**
+
+   - Start the app and check browser console for Pusher connection logs
+
+3. **File Storage:**
+   - Try uploading an avatar image in the app
 
 ## 🏗️ Project Structure
 
@@ -135,7 +217,7 @@ The application will be available at [http://localhost:3000](http://localhost:30
 ### Key Features
 
 - **Spaces**: Organize conversations into different spaces
-- **Notes**: Create collaborative documents with rich text and todo lists
+- **Notes (Real-time)**: Collaborative editor for text/headings/todo lists with drag-and-drop reordering. Edits are broadcast in real-time to all members in the space.
 - **Real-time**: See messages and updates instantly
 - **Member Roles**: Admins can manage space settings and members
 
@@ -176,7 +258,7 @@ The application follows **Atomic Design** principles:
 ### Data Flow
 
 1. **Server Actions**: Handle data mutations and business logic
-2. **Pusher**: Broadcast real-time updates to connected clients
+2. **Pusher**: Broadcast real-time updates to connected clients (notes emit `note:created`, `note:updated`, `note:deleted` on channel `space-<spaceId>`)
 3. **Prisma**: Type-safe database operations
 4. **Zod**: Runtime validation for all inputs
 
@@ -188,21 +270,51 @@ The application follows **Atomic Design** principles:
 - **Authorization**: Role-based access control
 - **SQL Injection Protection**: Prisma ORM with parameterized queries
 
+## 🔧 Troubleshooting
+
+### Database Issues
+
+- Ensure PostgreSQL is running (for local setup)
+- Check connection string format
+- Verify database exists
+- For `citext` errors: Enable extension or use application-level case-insensitive handling
+
+### Pusher Issues
+
+- Check app credentials in Pusher dashboard
+- Verify cluster region matches your location
+- Check browser console for connection errors
+
+### File Storage Issues (Azure)
+
+- Verify connection string format
+- Check container permissions
+- Ensure container name matches `AZURE_STORAGE_CONTAINER_NAME`
+
 ## 🚀 Deployment
 
 ### Environment Variables for Production
 
-Ensure all environment variables are properly configured in your production environment:
+For production deployment, update these variables:
 
 ```env
-DATABASE_URL=your-production-database-url
+# Production database
+DATABASE_URL="postgresql://prod_user:prod_password@prod_host:5432/prod_db"
+DIRECT_URL="postgresql://prod_user:prod_password@prod_host:5432/prod_db"
+
+# Production URL
 NEXTAUTH_URL=https://your-domain.com
-NEXTAUTH_SECRET=your-production-secret
-PUSHER_APP_ID=your-pusher-app-id
-PUSHER_KEY=your-pusher-key
-PUSHER_SECRET=your-pusher-secret
-PUSHER_CLUSTER=your-pusher-cluster
-AZURE_STORAGE_CONNECTION_STRING=your-azure-storage-connection-string
+NEXTAUTH_SECRET=your-production-secret-key
+
+# Production Pusher (recommended to use separate app)
+PUSHER_APP_ID=your-prod-pusher-app-id
+PUSHER_KEY=your-prod-pusher-key
+PUSHER_SECRET=your-prod-pusher-secret
+PUSHER_CLUSTER=your-prod-pusher-cluster
+
+# Production File Storage (Azure)
+AZURE_STORAGE_CONNECTION_STRING=your-prod-azure-storage-connection-string
+AZURE_STORAGE_CONTAINER_NAME=prod-avatars
 ```
 
 ### Build and Deploy
@@ -212,26 +324,10 @@ npm run build
 npm run start
 ```
 
-## 🤝 Contributing
+### Security Notes
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-
-- Create an issue in the repository
-- Check the documentation in `/docs` folder
-- Review the code comments for implementation details
-
----
-
-Built with ❤️ using Next.js, TypeScript, and modern web technologies.
+- Never commit `.env.local` to version control
+- Use strong, unique secrets for production
+- Regularly rotate API keys and secrets
+- Use environment-specific Pusher apps for better security
+- Consider using Azure Key Vault for production secrets
