@@ -211,27 +211,77 @@ export const AppWrapper: React.FC<{
   }, [activeSpaceId, user.id]);
 
   useEffect(() => {
+    if (!pusherClient) return;
+
+    const subscriptions = spaces
+      .filter((space) => space.id !== activeSpaceId)
+      .map((space) => {
+        const channel = pusherClient!.subscribe(`space-${space.id}`);
+
+        const handleGlobalMessage = (message: import("@/types").Message) => {
+          if (message.type !== "activity") {
+            setSpaces((prev) =>
+              prev.map((s) =>
+                s.id === space.id
+                  ? {
+                      ...s,
+                      lastMessage: message.content,
+                      lastMessageSender: message.senderName,
+                      lastMessageTimestamp: message.timestamp,
+                    }
+                  : s
+              )
+            );
+          }
+        };
+
+        channel.bind("message:new", handleGlobalMessage);
+
+        return () => {
+          channel.unbind("message:new", handleGlobalMessage);
+          pusherClient?.unsubscribe(`space-${space.id}`);
+        };
+      });
+
+    return () => {
+      subscriptions.forEach((cleanup) => cleanup());
+    };
+  }, [spaces, activeSpaceId]);
+
+  useEffect(() => {
     if (!activeSpaceId || !pusherClient) return;
 
     const channel = pusherClient.subscribe(`space-${activeSpaceId}`);
 
     /**
      * Handles new message events from Pusher
-     * Adds new messages to the active space's message list
+     * Adds new messages to the active space's message list and updates lastMessage
      * @param message - The new message received
      */
     const onNewMessage = (message: import("@/types").Message) => {
       setSpaces((prev) =>
-        prev.map((s) =>
-          s.id === activeSpaceId
-            ? {
-                ...s,
-                messages: s.messages.find((m) => m.id === message.id)
-                  ? s.messages
-                  : [...s.messages, message],
-              }
-            : s
-        )
+        prev.map((s) => {
+          if (s.id === activeSpaceId) {
+            return {
+              ...s,
+              messages: s.messages.find((m) => m.id === message.id)
+                ? s.messages
+                : [...s.messages, message],
+              // Update lastMessage for the active space
+              lastMessage:
+                message.type !== "activity" ? message.content : s.lastMessage,
+              lastMessageSender:
+                message.type !== "activity"
+                  ? message.senderName
+                  : s.lastMessageSender,
+              lastMessageTimestamp:
+                message.type !== "activity"
+                  ? message.timestamp
+                  : s.lastMessageTimestamp,
+            };
+          }
+          return s;
+        })
       );
     };
 
@@ -485,12 +535,28 @@ export const AppWrapper: React.FC<{
   const sortedSpaces = useMemo(() => {
     const copy = [...spaces];
     copy.sort((a, b) => {
+      const aLastMessageTs = a.lastMessageTimestamp
+        ? new Date(a.lastMessageTimestamp).getTime()
+        : 0;
+      const bLastMessageTs = b.lastMessageTimestamp
+        ? new Date(b.lastMessageTimestamp).getTime()
+        : 0;
+
       const aLast = a.messages[a.messages.length - 1]?.timestamp;
       const bLast = b.messages[b.messages.length - 1]?.timestamp;
       const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      const aTs = Math.max(aLast ? new Date(aLast).getTime() : 0, aCreated);
-      const bTs = Math.max(bLast ? new Date(bLast).getTime() : 0, bCreated);
+
+      const aTs = Math.max(
+        aLastMessageTs,
+        aLast ? new Date(aLast).getTime() : 0,
+        aCreated
+      );
+      const bTs = Math.max(
+        bLastMessageTs,
+        bLast ? new Date(bLast).getTime() : 0,
+        bCreated
+      );
       return bTs - aTs;
     });
     return copy;

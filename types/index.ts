@@ -15,6 +15,7 @@ export interface Space {
   description?: string;
   lastMessage?: string;
   lastMessageSender?: string;
+  lastMessageTimestamp?: string;
   createdAt?: string;
   members?: SpaceMember[];
 }
