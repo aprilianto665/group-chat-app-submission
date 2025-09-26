@@ -43,7 +43,7 @@ export async function listMessages(spaceId: string) {
   });
 
   return msgs.map((m) => ({
-    id: Number(m.id),
+    id: String(m.id),
     content: m.content,
     timestamp: m.createdAt.toISOString(),
     senderName: m.user?.name,
@@ -72,7 +72,7 @@ export async function sendMessage(spaceId: string, content: string) {
   });
 
   const payload = {
-    id: Number(created.id),
+    id: String(created.id),
     content: created.content,
     timestamp: created.createdAt.toISOString(),
     senderName: created.user?.name,
@@ -111,7 +111,7 @@ export async function sendActivityMessage(
   });
 
   const payload = {
-    id: Number(created.id),
+    id: String(created.id),
     content: htmlContent,
     timestamp: created.createdAt.toISOString(),
     senderName: created.user?.name,

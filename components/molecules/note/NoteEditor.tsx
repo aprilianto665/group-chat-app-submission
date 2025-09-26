@@ -60,6 +60,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import type { Note, NoteBlock } from "@/types";
 import { NoteHeader } from "./NoteHeader";
@@ -145,6 +146,13 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
    * Changes tracking state - whether there are unsaved changes
    */
   const [hasChanges, setHasChanges] = useState(false);
+
+  /**
+   * Throttling state for save operations
+   */
+  const [isPending, startTransition] = useTransition();
+  const [lastSaveAt, setLastSaveAt] = useState<number>(0);
+  const THROTTLE_MS = 2000; // 2 seconds
 
   /**
    * Drag state - whether any block is currently being dragged
@@ -240,7 +248,7 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     (blockId: string, e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const content = e.target.value;
       setBlocks((prev) =>
-        prev.map((b) => (b.id === blockId ? { ...b, content } : b))
+        prev.map((b) => (String(b.id) === blockId ? { ...b, content } : b))
       );
       setHasChanges(true);
     },
@@ -273,13 +281,15 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
    * @param blockId - ID of the block to delete
    */
   const handleDeleteBlock = useCallback((blockId: string) => {
-    setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+    setBlocks((prev) => prev.filter((b) => String(b.id) !== blockId));
     setHasChanges(true);
   }, []);
 
   const handleUpdateBlock = useCallback(
     (blockId: string, updater: (b: NoteBlock) => NoteBlock) => {
-      setBlocks((prev) => prev.map((b) => (b.id === blockId ? updater(b) : b)));
+      setBlocks((prev) =>
+        prev.map((b) => (String(b.id) === blockId ? updater(b) : b))
+      );
       setHasChanges(true);
     },
     []
@@ -302,8 +312,16 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
    * Handles saving the note with current title and blocks
    * Validates changes and ensures title is not empty
    * Exits editing mode after successful save
+   * Includes throttling to prevent duplicate saves
    */
   const handleSave = useCallback(() => {
+    const now = Date.now();
+
+    // Check throttling
+    if (isPending || (now - lastSaveAt < THROTTLE_MS && lastSaveAt > 0)) {
+      return;
+    }
+
     // Allow saving if it's a draft note (new note) or if there are changes
     const isDraft = note?.id === "draft";
     if (!hasChanges && !isDraft) {
@@ -314,10 +332,23 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
     // Ensure title is not empty for draft notes
     const finalTitle = title.trim() || "Untitled";
 
-    onSave({ title: finalTitle, blocks });
-    setHasChanges(false);
-    setIsEditing(false);
-  }, [onSave, title, blocks, hasChanges, note?.id]);
+    setLastSaveAt(now);
+
+    startTransition(() => {
+      onSave({ title: finalTitle, blocks });
+      setHasChanges(false);
+      setIsEditing(false);
+    });
+  }, [
+    onSave,
+    title,
+    blocks,
+    hasChanges,
+    note?.id,
+    isPending,
+    lastSaveAt,
+    THROTTLE_MS,
+  ]);
 
   // ===== COMPUTED VALUES =====
 
@@ -690,6 +721,8 @@ const NoteEditorComponent: React.FC<NoteEditorProps> = ({
       <SaveButton
         isVisible={isEditing || hasChanges || note?.id === "draft"}
         onClick={handleSave}
+        disabled={isPending}
+        isLoading={isPending}
       />
     </div>
   );

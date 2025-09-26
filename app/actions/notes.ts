@@ -447,7 +447,7 @@ export async function deleteNote(noteId: string) {
   // Broadcast note deletion to all users in the space
   if (pusherServer) {
     await pusherServer.trigger(`space-${note.spaceId}`, "note:deleted", {
-      noteId,
+      noteId: String(noteId),
       spaceId: note.spaceId,
     });
   }

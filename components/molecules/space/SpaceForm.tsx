@@ -11,7 +11,7 @@
  * - Form state management with useActionState
  */
 
-import React, { useEffect, useState, useActionState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
@@ -47,13 +47,12 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
   const [spaceName, setSpaceName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [state, formAction] = useActionState<CreateSpaceFormState, FormData>(
-    createSpaceFromForm,
+  const [state, setState] = useState<CreateSpaceFormState>(
     {} as CreateSpaceFormState
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [lastSubmitAt, setLastSubmitAt] = useState<number>(0);
-  const THROTTLE_MS = 2000;
+  const THROTTLE_MS = 3000;
 
   useEffect(() => {
     return () => {
@@ -101,23 +100,36 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const now = Date.now();
+
+    if (isPending || (now - lastSubmitAt < THROTTLE_MS && lastSubmitAt > 0)) {
+      return;
+    }
+
+    setLastSubmitAt(now);
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      try {
+        const result = await createSpaceFromForm(
+          {} as CreateSpaceFormState,
+          formData
+        );
+        setState(result);
+      } catch (error) {
+        console.error("Form submission error:", error);
+        setState({ error: "Failed to create space" });
+      }
+    });
+  };
+
   return (
     <div className="p-4">
-      <form
-        action={async (formData: FormData) => {
-          const now = Date.now();
-          if (isSubmitting || now - lastSubmitAt < THROTTLE_MS) return;
-          setIsSubmitting(true);
-          setLastSubmitAt(now);
-          try {
-            await formAction(formData);
-          } finally {
-            setTimeout(() => setIsSubmitting(false), THROTTLE_MS);
-          }
-        }}
-        className="space-y-8"
-        aria-busy={isSubmitting}
-      >
+      <form onSubmit={handleSubmit} className="space-y-8" aria-busy={isPending}>
         <div className="mb-4">
           <Button
             type="button"
@@ -195,9 +207,9 @@ export const SpaceForm: React.FC<SpaceFormProps> = ({
             variant="send"
             size="md"
             className="w-full rounded-full"
-            disabled={!spaceName.trim() || isSubmitting}
+            disabled={!spaceName.trim() || isPending}
           >
-            Create Space
+            {isPending ? "Creating..." : "Create Space"}
           </Button>
         </div>
       </form>

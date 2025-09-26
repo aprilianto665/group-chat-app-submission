@@ -345,7 +345,11 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
           name: newName,
           description: newDesc || undefined,
         });
-        updated = { name: res.name, description: res.description ?? undefined };
+        updated = {
+          name: res.name,
+          description: res.description ?? undefined,
+          icon: icon,
+        };
       }
 
       if (updated) {
@@ -363,6 +367,8 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
         }
       }
       setIsEditing(false);
+      setDraftIconFile(null);
+      setDraftIconPreview(null);
     } finally {
       setIsSaving(false);
     }
@@ -375,6 +381,7 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     draftIconFile,
     name,
     description,
+    icon,
   ]);
 
   /**

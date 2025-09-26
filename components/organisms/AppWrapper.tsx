@@ -266,7 +266,9 @@ export const AppWrapper: React.FC<{
           s.id === activeSpaceId
             ? {
                 ...s,
-                notes: s.notes.find((n) => n.id === data.note.id)
+                notes: s.notes.find(
+                  (n) => String(n.id) === String(data.note.id)
+                )
                   ? s.notes
                   : [data.note, ...s.notes],
               }
@@ -287,7 +289,7 @@ export const AppWrapper: React.FC<{
             ? {
                 ...s,
                 notes: s.notes.map((n) =>
-                  n.id === data.note.id ? data.note : n
+                  String(n.id) === String(data.note.id) ? data.note : n
                 ),
               }
             : s
@@ -304,7 +306,10 @@ export const AppWrapper: React.FC<{
       setSpaces((prev) =>
         prev.map((s) =>
           s.id === activeSpaceId
-            ? { ...s, notes: s.notes.filter((n) => n.id !== data.noteId) }
+            ? {
+                ...s,
+                notes: s.notes.filter((n) => String(n.id) !== data.noteId),
+              }
             : s
         )
       );
@@ -325,7 +330,7 @@ export const AppWrapper: React.FC<{
             ? {
                 ...s,
                 notes: data.orderedIds
-                  .map((id: string) => s.notes.find((n) => n.id === id))
+                  .map((id: string) => s.notes.find((n) => String(n.id) === id))
                   .filter((n): n is Note => Boolean(n)),
               }
             : s
