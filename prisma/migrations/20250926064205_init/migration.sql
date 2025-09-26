@@ -1,7 +1,3 @@
--- Ensure required extensions
-CREATE EXTENSION IF NOT EXISTS citext;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 -- CreateEnum
 CREATE TYPE "public"."Role" AS ENUM ('ADMIN', 'MEMBER');
 
