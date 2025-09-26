@@ -243,25 +243,12 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
       try {
         const updated = await setMemberRole(spaceId, targetUserId, "ADMIN");
         handleMembersUpdatedEvent(updated as unknown as SpaceMember[]);
-        if (typeof window !== "undefined") {
-          const actorName = user?.name || user?.email || "Someone";
-          const target = members.find(
-            (mm) => mm.user.id === targetUserId
-          )?.user;
-          const targetName = target?.name || target?.email || "this member";
-          const activityContent = `<strong>${actorName}</strong> made <strong>${targetName}</strong> an admin`;
-          window.dispatchEvent(
-            new CustomEvent("space-updated", {
-              detail: { spaceId, activityContent },
-            })
-          );
-        }
       } finally {
         setIsActingOnMemberId(null);
         setOpenDropdownFor(null);
       }
     },
-    [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
+    [spaceId, handleMembersUpdatedEvent]
   );
 
   /**
@@ -276,25 +263,12 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
       try {
         const updated = await removeMember(spaceId, targetUserId);
         handleMembersUpdatedEvent(updated as unknown as SpaceMember[]);
-        if (typeof window !== "undefined") {
-          const actorName = user?.name || user?.email || "Someone";
-          const target = members.find(
-            (mm) => mm.user.id === targetUserId
-          )?.user;
-          const targetName = target?.name || target?.email || "this member";
-          const activityContent = `<strong>${actorName}</strong> removed <strong>${targetName}</strong> from the space`;
-          window.dispatchEvent(
-            new CustomEvent("space-updated", {
-              detail: { spaceId, activityContent },
-            })
-          );
-        }
       } finally {
         setIsActingOnMemberId(null);
         setOpenDropdownFor(null);
       }
     },
-    [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
+    [spaceId, handleMembersUpdatedEvent]
   );
 
   /**
@@ -309,25 +283,12 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
       try {
         const updated = await setMemberRole(spaceId, targetUserId, "MEMBER");
         handleMembersUpdatedEvent(updated as unknown as SpaceMember[]);
-        if (typeof window !== "undefined") {
-          const actorName = user?.name || user?.email || "Someone";
-          const target = members.find(
-            (mm) => mm.user.id === targetUserId
-          )?.user;
-          const targetName = target?.name || target?.email || "this member";
-          const activityContent = `<strong>${actorName}</strong> removed admin role from <strong>${targetName}</strong>`;
-          window.dispatchEvent(
-            new CustomEvent("space-updated", {
-              detail: { spaceId, activityContent },
-            })
-          );
-        }
       } finally {
         setIsActingOnMemberId(null);
         setOpenDropdownFor(null);
       }
     },
-    [spaceId, handleMembersUpdatedEvent, members, user?.name, user?.email]
+    [spaceId, handleMembersUpdatedEvent]
   );
 
   /**
@@ -389,8 +350,6 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
 
       if (updated) {
         if (typeof window !== "undefined") {
-          const displayName = user?.name || user?.email || "Someone";
-          const activityContent = `<strong>${displayName}</strong> just updated the space info`;
           window.dispatchEvent(
             new CustomEvent("space-updated", {
               detail: {
@@ -398,7 +357,6 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
                 name: updated.name,
                 description: updated.description,
                 icon: updated.icon,
-                activityContent,
               },
             })
           );
@@ -415,8 +373,6 @@ const SpaceInfoPanelComponent: React.FC<SpaceInfoPanelProps> = ({
     draftName,
     draftDescription,
     draftIconFile,
-    user?.name,
-    user?.email,
     name,
     description,
   ]);

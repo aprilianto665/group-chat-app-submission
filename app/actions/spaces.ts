@@ -928,7 +928,7 @@ export async function updateSpaceFromForm(
       data: {
         name,
         description: description || undefined,
-        ...(iconUrl ? { icon: iconUrl } : {}),
+        ...(iconUrl !== undefined ? { icon: iconUrl } : {}),
       },
       select: { name: true, description: true, icon: true },
     });

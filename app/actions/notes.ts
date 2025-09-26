@@ -214,10 +214,27 @@ export async function updateNote(
     }>;
   }>
 ) {
-  const parsed = updateNoteSchema.safeParse({ noteId, title, blocks });
+  const normalizedBlocks = blocks.map((block) => ({
+    ...block,
+    id: block.id ? String(block.id) : undefined,
+    items: block.items?.map((item) => ({
+      ...item,
+      id: item.id ? String(item.id) : undefined,
+    })),
+  }));
+
+  const parsed = updateNoteSchema.safeParse({
+    noteId: String(noteId),
+    title,
+    blocks: normalizedBlocks,
+  });
   if (!parsed.success) {
     console.error("Validation failed:", parsed.error.errors);
-    console.error("Data:", { noteId, title, blocks });
+    console.error("Data:", {
+      noteId: String(noteId),
+      title,
+      blocks: normalizedBlocks,
+    });
     throw new Error("Invalid note payload");
   }
   await requireAuth();
